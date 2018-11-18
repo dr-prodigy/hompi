@@ -1,0 +1,10 @@
+config.py
+/spidev.py
+*.pyc
+*.sqlite*
+.idea
+*.DS_Store
+*.png
+*.jpg
+*.jpeg
+/venv*

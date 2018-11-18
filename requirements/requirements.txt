@@ -1,0 +1,14 @@
+Adafruit-GPIO==1.0.3
+Adafruit-PureIO==0.2.3
+Adafruit-WS2801==1.0.1
+caribou==0.2.1
+click==6.6
+Flask==0.11.1
+holidays==0.9.8
+itsdangerous==0.24
+Jinja2==2.8
+MarkupSafe==0.23
+python-dateutil==1.5
+Pillow==4.3.0
+tendo==0.2.8
+Werkzeug==0.11.11
