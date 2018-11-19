@@ -1,3 +1,4 @@
+=====
 hompi
 =====
 
@@ -32,31 +33,27 @@ Android and iOS.
 Main features
 -------------
 
-* Heating management (manual and automatic customizable modes and programmes,
-data logging, reports)
-* Interface to W1 thermometer sensors (DS18B20)
-* LCD dashboard with graphic chars controlled via I2C (HD44780 16x2 or 20x4)
-displaying all running information
-* LED strip support (eg: WS2801) for ambient light, Xmas lights, sequences...
-* Support for GPIO relays (boiler control, home gate, home illumination, etc.)
-* (Optional) integration with various external API (weather, aphorisms, etc.)
-* Multiple **hompi** servers can interoperate and share data
-* More..
+- Heating management (manual and automatic customizable modes and programmes, data logging, reports)
+- Interface to W1 thermometer sensors (DS18B20)
+- LCD dashboard with graphic chars controlled via I2C (HD44780 16x2 or 20x4) displaying all running information
+- LED strip support (eg: WS2801) for ambient light, Xmas lights, sequences...
+- Support for GPIO relays (boiler control, home gate, home illumination, etc.)
+- (Optional) integration with various external API (weather, aphorisms, etc.)
+- Multiple **hompi** servers can interoperate and share data
+- More..
 
 
 Prerequisites
 -------------
 
-* Raspberry Pi any version (code works also on any bash-powered sys, such as
-Linux / MacOS / Win10, ... for testing and development with stubbed I/O (stub
-libs provided)
-* Raspbian Wheezy or greater (or compatible)
-* GPIO, SPI, I2C modules (required for accessing peripherals)
-* LAN / internet connection (note: after setup, it can even possibly
-work offline, given that no external control is required)
-* Python and relevant tools:
-    * *virtualenv*
-    * *pip*
+- Raspberry Pi any version (code works also on any bash-powered sys, such as Linux / MacOS / Win10, ... for testing and development with stubbed I/O (stub libs provided)
+- Raspbian Wheezy or greater (or compatible)
+- GPIO, SPI, I2C modules (required for accessing peripherals)
+- LAN / internet connection (note: after setup, it can even possibly work offline, given that no external control is required)
+- Python and relevant tools:
+    - *virtualenv*
+    - *pip*
+- (Optional) - *espeak* application is required to enable speech synthesis .. __: http://espeak.sourceforge.net/
 
 
 Wiring
@@ -68,7 +65,13 @@ Please refer to *misc/gpio.txt* file for wiring details.
 Usage
 -----
 
-After cloning repository, run
+After cloning repository
+
+.. code-block:: bash
+
+    $ git clone https://github.com/dr-prodigy/hompi.git
+
+Run
 
 .. code-block:: bash
 
@@ -81,6 +84,18 @@ or, for Python3:
     $ ./scripts/install_py3.sh
 
 Upon completion, copy *config_sample.py* to *config.py*, and modify as needed.
+
+.. code-block:: bash
+
+    $ cp config_sample.sh config.py
+    $ vi config.py
+
+(Optional) - To run ambient module ( *MODULE_AMBIENT = True* ) on not GPIO-capable devices
+(ie: Linux, MacOS, Win..), you need to stub *spidev.py* library using command
+
+.. code-block:: bash
+
+    $ ln -s ./stubs/spidev.py .
 
 Start server in debug mode with
 
@@ -109,18 +124,17 @@ specific documentation about setup and usage.
 To Do
 -----
 
-* Web User Interface
-* Web API documentation
-* Config files documentation
-* Wiring and install documentation
-* Pictures, demo vids (homesite?)
-* Integration with other devices and protocols (433Mhz modules, ZigBee, ...)
+- Web User Interface
+- Web API documentation
+- Config files documentation
+- Wiring and install documentation
+- Pictures, demo vids (homesite?)
+- Integration with other devices and protocols (433Mhz modules, ZigBee, ...)
 
 
 Contributions
 -------------
 
-.. _issues: https://github.com/dr-prodigy/hompi/issues
 .. _issues: https://github.com/dr-prodigy/hompi/issues
 .. __: https://github.com/dr-prodigy/hompi/pulls
 
@@ -130,7 +144,7 @@ Issues_ and `Pull Requests`__ are always welcome.
 License
 -------
 
-.. __: https://github.com/dr-prodigy/hompi/raw/master/LICENSE.md
+.. __: https://github.com/dr-prodigy/hompi/blob/master/LICENSE.md
 
 Code and documentation are available according to the GPL v.3.0 License
 (see LICENSE__).
