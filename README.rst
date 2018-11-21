@@ -12,12 +12,17 @@ Description
 for Raspberry Pi to provide a complete and reliable home automation system
 to control heating, gates, ambient lights, etc. (more to come!).
 
+The system is designed to be boxed and headless, interfacing all needed
+peripherals (thermometre, relays, LED strips, ...) directly.
+All information (temperature, time, heating program, weather, aphorisms..)
+are accessible through an LCD display (Hitachi 16x2 or 20x4 both supported).
+
 It is suitable for any RPi version and has a very low CPU consumption
 (avg 5-10% on a Pi1/2), so your Pi can still do lots of things :)
 
-Everything is implemented in code and local libs (ie: no cloud services needed
-to work) and access to peripherals is made via native Pi's GPIO or LAN/WiFi
-(= simple, fast, reliable).
+Everything is implemented in code and local libs (ie: no cloud services
+required to work) and access to peripherals is made via native Pi's GPIO or
+LAN/WiFi (= simple, fast, reliable).
 
 All functions are exposed and controlled through a secured open web API
 developed with Flask (can be accessed on local subnet and/or internet through
@@ -46,6 +51,8 @@ Main features
 Prerequisites
 -------------
 
+_espeak: http://espeak.sourceforge.net/
+
 - Raspberry Pi any version (code works also on any bash-powered sys, such as Linux / MacOS / Win10, ... for testing and development with stubbed I/O (stub libs provided)
 - Raspbian Wheezy or greater (or compatible)
 - GPIO, SPI, I2C modules (required for accessing peripherals)
@@ -53,13 +60,15 @@ Prerequisites
 - Python and relevant tools:
     - *virtualenv*
     - *pip*
-- (Optional) - *espeak* application is required to enable speech synthesis .. __: http://espeak.sourceforge.net/
+- (Optional) - espeak_ application is required to enable speech synthesis ..
 
 
 Wiring
 ------
 
-Please refer to *misc/gpio.txt* file for wiring details.
+.. _gpio: https://github.com/dr-prodigy/hompi/blob/master/misc/gpio.txt
+
+Please refer to `misc/gpio.txt`_ file for wiring details.
 
 
 Usage
@@ -136,7 +145,7 @@ Contributions
 -------------
 
 .. _issues: https://github.com/dr-prodigy/hompi/issues
-.. __: https://github.com/dr-prodigy/hompi/pulls
+.. __pull_requests: https://github.com/dr-prodigy/hompi/pulls
 
 Issues_ and `Pull Requests`__ are always welcome.
 
@@ -144,7 +153,7 @@ Issues_ and `Pull Requests`__ are always welcome.
 License
 -------
 
-.. __: https://github.com/dr-prodigy/hompi/blob/master/LICENSE.md
+.. _license: https://github.com/dr-prodigy/hompi/blob/master/LICENSE.md
 
 Code and documentation are available according to the GPL v.3.0 License
-(see LICENSE__).
+(see LICENSE_).
