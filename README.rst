@@ -51,7 +51,7 @@ Main features
 Prerequisites
 -------------
 
-_espeak: http://espeak.sourceforge.net/
+.. _: http://espeak.sourceforge.net/
 
 - Raspberry Pi any version (code works also on any bash-powered sys, such as Linux / MacOS / Win10, ... for testing and development with stubbed I/O (stub libs provided)
 - Raspbian Wheezy or greater (or compatible)
@@ -66,7 +66,7 @@ _espeak: http://espeak.sourceforge.net/
 Wiring
 ------
 
-.. _gpio: https://github.com/dr-prodigy/hompi/blob/master/misc/gpio.txt
+.. _: https://github.com/dr-prodigy/hompi/blob/master/misc/gpio.txt
 
 Please refer to `misc/gpio.txt`_ file for wiring details.
 
@@ -144,8 +144,8 @@ To Do
 Contributions
 -------------
 
-.. _issues: https://github.com/dr-prodigy/hompi/issues
-.. __pull_requests: https://github.com/dr-prodigy/hompi/pulls
+.. _: https://github.com/dr-prodigy/hompi/issues
+.. __: https://github.com/dr-prodigy/hompi/pulls
 
 Issues_ and `Pull Requests`__ are always welcome.
 
@@ -153,7 +153,7 @@ Issues_ and `Pull Requests`__ are always welcome.
 License
 -------
 
-.. _license: https://github.com/dr-prodigy/hompi/blob/master/LICENSE.md
+.. _: https://github.com/dr-prodigy/hompi/blob/master/LICENSE.md
 
 Code and documentation are available according to the GPL v.3.0 License
 (see LICENSE_).
