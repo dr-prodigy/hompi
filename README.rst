@@ -51,7 +51,7 @@ Main features
 Prerequisites
 -------------
 
-.. _: http://espeak.sourceforge.net/
+.. __: http://espeak.sourceforge.net/
 
 - Raspberry Pi any version (code works also on any bash-powered sys, such as Linux / MacOS / Win10, ... for testing and development with stubbed I/O (stub libs provided)
 - Raspbian Wheezy or greater (or compatible)
@@ -60,15 +60,15 @@ Prerequisites
 - Python and relevant tools:
     - *virtualenv*
     - *pip*
-- (Optional) - espeak_ application is required to enable speech synthesis ..
+- (Optional) - espeak__ application is required to enable speech synthesis ..
 
 
 Wiring
 ------
 
-.. _: https://github.com/dr-prodigy/hompi/blob/master/misc/gpio.txt
+.. __: https://github.com/dr-prodigy/hompi/blob/master/misc/gpio.txt
 
-Please refer to `misc/gpio.txt`_ file for wiring details.
+Please refer to `misc/gpio.txt`__ file for wiring details.
 
 
 Usage
@@ -144,7 +144,7 @@ To Do
 Contributions
 -------------
 
-.. _: https://github.com/dr-prodigy/hompi/issues
+.. _issues: https://github.com/dr-prodigy/hompi/issues
 .. __: https://github.com/dr-prodigy/hompi/pulls
 
 Issues_ and `Pull Requests`__ are always welcome.
