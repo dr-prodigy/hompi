@@ -233,7 +233,7 @@ def main():
                 refreshing = True
             else:
                 try:
-                    # man age lcd and sleep timing
+                    # manage lcd and sleep timing
                     loop_delay = (datetime.datetime.now() -
                                   cycle_start_time).total_seconds()
                     frame_to_play = int(math.floor((1.0 - loop_delay) / .125))
@@ -241,15 +241,24 @@ def main():
                         frame_to_play = 0
 
                     # frameskip to 1 sec
+                    elapsed = 0
                     for _ in range(8 - frame_to_play):
-                        lcd.update(io_status)
+                        elapsed += lcd.update(io_status)
                     if frame_to_play > 0:
                         first_delay = (1.0 - loop_delay) - frame_to_play * .125
-                        time.sleep(first_delay)
-                        # run lasting frames (4fps)
+                        if (elapsed < first_delay):
+                            elapsed = 0
+                            time.sleep(first_delay - elapsed)
+                        else:
+                            elapsed -= first_delay
+                        # run remaining frames (8fps)
                         for _ in range(frame_to_play):
-                            lcd.update(io_status)
-                            time.sleep(.125)
+                            elapsed += lcd.update(io_status)
+                            if (elapsed < .125):
+                                elapsed = 0
+                                time.sleep(.125 - elapsed)
+                            else:
+                                elapsed =- .125
 
                 except (KeyboardInterrupt, SystemExit):
                     # cleanup sensors & LCD

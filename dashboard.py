@@ -445,8 +445,9 @@ class Dashboard():
     def update(self, io_status, refresh_requested=False):
         global CURRENT_CHARSET, NEW_CHARSET
         if DISPLAY_TYPE == NONE:
-            return
+            return 0
 
+        start_time = datetime.datetime.now()
         tmp_lines = [''] * LCD_ROWS
 
         # backlight change timeout expired: set backlight with no timeout
@@ -493,6 +494,7 @@ class Dashboard():
                     self.lcd.lcd_display_string(tmp_lines[no], no)
 
         self.echo_display(tmp_lines)
+        return (datetime.datetime.now() - start_time).total_seconds()
 
     def cleanup(self):
         if DISPLAY_TYPE == NONE:
