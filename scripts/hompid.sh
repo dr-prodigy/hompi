@@ -16,13 +16,21 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
+# *** kill running daemons ***
+# kill hompi server
+kill $(ps aux |grep '[b]in/hompi' | awk '{print $2}')
+
+# Uncomment next line if flask debugger is run as server (localhost:5000)
+# kill $(ps aux |grep '[w]s_api' | awk '{print $2}')
+
+# *** restart ***
 # move to script directory
 cd $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # Enable virtualenv
 cd ..
 . venv/bin/activate
 
-# Start hompi in background (no logging)
+# Daemonize hompi (suppress logging)
 nohup ./hompi >/dev/null 2>>~/hompi_error.log&
 
 # Uncomment next line to run flask debugger as server (localhost:5000)
