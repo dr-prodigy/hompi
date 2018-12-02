@@ -236,29 +236,29 @@ def main():
                     # manage lcd and sleep timing
                     loop_delay = (datetime.datetime.now() -
                                   cycle_start_time).total_seconds()
-                    frame_to_play = int(math.floor((1.0 - loop_delay) / .125))
-                    if frame_to_play < 1:
-                        frame_to_play = 1
+                    frame_to_play = int(math.floor((1.0 - loop_delay) / .25))
+                    if frame_to_play < 0:
+                        frame_to_play = 0
 
                     # frameskip to 1 sec
                     elapsed = 0
-                    for _ in range(8 - frame_to_play):
+                    for _ in range(4 - frame_to_play):
                         elapsed += lcd.update(io_status, draw=False)
                     if frame_to_play > 0:
-                        first_delay = (1.0 - loop_delay) - frame_to_play * .125
+                        first_delay = (1.0 - loop_delay) - frame_to_play * .25
                         if (elapsed < first_delay):
-                            elapsed = 0
                             time.sleep(first_delay - elapsed)
+                            elapsed = 0
                         else:
                             elapsed -= first_delay
-                        # run remaining frames (8fps)
+                        # run remaining frames (4fps)
                         for _ in range(frame_to_play):
                             elapsed += lcd.update(io_status)
-                            if (elapsed < .125):
+                            if (elapsed < .25):
+                                time.sleep(.25 - elapsed)
                                 elapsed = 0
-                                time.sleep(.125 - elapsed)
                             else:
-                                elapsed =- .125
+                                elapsed =- .25
 
                 except (KeyboardInterrupt, SystemExit):
                     # cleanup sensors & LCD
@@ -367,7 +367,7 @@ def get_temperature():
                 io_status.heating_status == 'warming':
             temp += TEST_DELTA_THERMO_ON_TEMP_C
             # sensors delay test
-            time.sleep(random.uniform(.0, 1.5))
+            time.sleep(random.uniform(.0, .2))
     else:
         temp = sensor.read_temp()
     # skip wrong reads (null or > 50°C)
