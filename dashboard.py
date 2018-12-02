@@ -442,7 +442,7 @@ class Dashboard():
         if (change):
             self.position = [-LCD_LINE_DELAY] * LCD_ROWS
 
-    def update(self, io_status, refresh_requested=False):
+    def update(self, io_status, refresh_requested=False, draw=True):
         global CURRENT_CHARSET, NEW_CHARSET
         if DISPLAY_TYPE == NONE:
             return 0
@@ -454,7 +454,7 @@ class Dashboard():
         if datetime.datetime.now() > self._backlight_change:
             self.set_backlight(not self._is_backlit)
 
-        if self._is_backlit or refresh_requested:
+        if draw and (self._is_backlit or refresh_requested):
             if CURRENT_CHARSET != NEW_CHARSET:
                 CURRENT_CHARSET = NEW_CHARSET
                 self.cleanup()
@@ -488,7 +488,7 @@ class Dashboard():
             if switch_on and no == LCD_ROWS - 1:
                 tmp_lines[no] = tmp_lines[no][:-1] + '#'
 
-            if self._is_backlit or refresh_requested:
+            if draw and (self._is_backlit or refresh_requested):
                 if self.old_line[no] != tmp_lines[no]:
                     self.old_line[no] = tmp_lines[no]
                     self.lcd.lcd_display_string(tmp_lines[no], no)
