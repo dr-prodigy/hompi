@@ -234,19 +234,18 @@ def main():
             else:
                 try:
                     # manage lcd and sleep timing
-                    loop_delay = (datetime.datetime.now() -
+                    elapsed = (datetime.datetime.now() -
                                   cycle_start_time).total_seconds()
-                    frame_to_play = int(math.floor((1.0 - loop_delay) / .25))
+                    frame_to_play = int(math.floor((1.0 - elapsed) / .25))
                     if frame_to_play < 0:
                         frame_to_play = 0
 
                     # frameskip to 1 sec
-                    elapsed = 0
                     for _ in range(4 - frame_to_play):
                         elapsed += lcd.update(io_status, draw=False)
                     if frame_to_play > 0:
-                        first_delay = (1.0 - loop_delay) - frame_to_play * .25
-                        if (elapsed < first_delay):
+                        first_delay = (1.0 - elapsed) - frame_to_play * .25
+                        if (first_delay > elapsed):
                             time.sleep(first_delay - elapsed)
                             elapsed = 0
                         else:
@@ -256,8 +255,10 @@ def main():
                             elapsed += lcd.update(io_status)
                             if (elapsed < .25):
                                 time.sleep(.25 - elapsed)
+                                print('{}'.format(elapsed))
                                 elapsed = 0
                             else:
+                                print('SKIPPED')
                                 elapsed =- .25
 
                 except (KeyboardInterrupt, SystemExit):
