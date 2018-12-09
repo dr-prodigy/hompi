@@ -51,6 +51,7 @@ class Ambient():
         global AMBIENT_ENABLED
 
         self._poweroff_time = datetime.datetime(9999, 12, 31)
+        self._current_ambient_command = ''
         self._set_current_ambient_color('000000')
 
         try:
@@ -102,6 +103,11 @@ class Ambient():
         # restore cursor pos and color
         sys.stdout.write("\033[0m\x1b8")
 
+    def _set_ambient_color_command(self, color):
+        command = AMBIENT_MODULE_CMD
+        command += config.AMBIENT_SETCOLOR_COMMAND.format(color) + ' &'
+        return command
+
     def cleanup(self):
         if not AMBIENT_ENABLED or not config.AMBIENT_INIT_COMMAND:
             return
@@ -114,6 +120,7 @@ class Ambient():
         print('*AMBIENT cleanup* - Executing: {}'.format(command))
         os.system(command)
         self._set_current_ambient_color('000000')
+        self._current_ambient_command = ''
 
     def update(self):
         if not AMBIENT_ENABLED:
@@ -148,14 +155,25 @@ class Ambient():
         os.system(command)
         self._set_current_ambient_color('000000')
 
-    def set_ambient_color(self, color):
+        # refresh command
+        self._current_ambient_command = \
+            self._set_ambient_color_command('000000')
+
+    def set_ambient_color(self, color,
+                              timeout=datetime.datetime(9999, 12, 31)):
         if not AMBIENT_ENABLED or not config.AMBIENT_SETCOLOR_COMMAND:
             return
 
-        command = AMBIENT_MODULE_CMD
-        command += config.AMBIENT_SETCOLOR_COMMAND.format(color) + ' &'
+        command = self._set_ambient_color_command(color)
         print('*AMBIENT setcolor* - Executing: {}'.format(command))
         os.system(command)
+
+        self._poweroff_time = timeout
+
+        # no refresh command (only ambient color)
+        self._set_current_ambient_color(color)
+        self._current_ambient_command = ''
+
         return color
 
     def set_ambient_crossfade(self, color,
@@ -171,9 +189,25 @@ class Ambient():
             print('*AMBIENT crossfade* - Executing: {}'.format(command))
             os.system(command)
 
-            self._set_current_ambient_color(color)
             self._poweroff_time = timeout
+
+            # no refresh command (only ambient color)
+            self._set_current_ambient_color(color)
+            self._current_ambient_command = ''
         return color
+
+    def set_ambient_xmas_daisy(self, brightness = 1, rgb = ''):
+        if not AMBIENT_ENABLED or not config.AMBIENT_XMAS_DAISY_COMMAND:
+            return
+        command = AMBIENT_MODULE_CMD
+        command += config.AMBIENT_XMAS_DAISY_COMMAND.format(
+            brightness, rgb) + ' &'
+        print('*AMBIENT xmas_daisy* - Executing: {}'.format(command))
+        os.system(command)
+
+        # refresh command (repeat)
+        self._set_current_ambient_color('000000')
+        self._current_ambient_command = command
 
     def ambient_ack(self):
         if not AMBIENT_ENABLED or not config.AMBIENT_ACK_COMMAND:
@@ -185,3 +219,18 @@ class Ambient():
             self._current_ambient_color) + ' &'
         print('*AMBIENT ack* - Executing: {}'.format(command))
         os.system(command)
+
+    def ambient_refresh(self):
+        if not AMBIENT_ENABLED:
+            return
+
+        if self._current_ambient_command:
+            print('*AMBIENT refresh* - Executing: {}'.format(
+                self._current_ambient_command))
+            os.system(self._current_ambient_command)
+        else:
+            print('*AMBIENT refresh* - Resetting color to {}'
+                  .format(self._current_ambient_color))
+            self.set_ambient_color(self._current_ambient_color)
+
+        return self._current_ambient_color

@@ -61,6 +61,7 @@ class Status:
         hide_message = datetime.datetime.now()
         # ambient
         self.current_ambient_color = '000000'
+        self.current_ambient_command = ''
         self.ext_temp_c = 0.0
         # meteo
         if config.MODULE_METEO:
@@ -127,6 +128,7 @@ class SystemInfo:
 
         if config.MODULE_AMBIENT:
             self.modules.append('ambient')
+            self.ambient_commands = ['AMBIENT_COLOR', 'AMBIENT_XMAS']
         if config.MODULE_APHORISM:
             self.modules.append('aphorism')
         if config.MODULE_DB_LOG:

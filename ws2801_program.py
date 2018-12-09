@@ -256,9 +256,8 @@ def theater_chase_rainbow(wait=.05):
                     pixels.set_pixel(i+q, 0)  # turn every third pixel off
 
 
-def christmas_daisy(brightness='1', rgb='', blink='0'):
+def xmas_daisy(brightness='1', rgb=''):
     brightness = float(brightness)
-    blink = int(blink)
     if rgb:
         rgb = int(rgb, 16)
         b = rgb >> 16 & 0xFF
@@ -333,7 +332,7 @@ if __name__ == "__main__":
         "theater_chase_rainbow": theater_chase_rainbow,
         "wipe_in_out": wipe_in_out,
         "curtain_in_out": curtain_in_out,
-        "christmas_daisy": christmas_daisy,
+        "xmas_daisy": xmas_daisy,
     }
     # Get the function from switcher dictionary
 

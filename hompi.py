@@ -140,9 +140,7 @@ def main():
             if secs_elapsed >= task_at_secs['refresh']:
                 # ambient color
                 if config.MODULE_AMBIENT:
-                    io_status.current_ambient_color = \
-                        ambient.set_ambient_color(
-                            io_status.current_ambient_color)
+                    io_status.current_ambient_color = ambient.ambient_refresh()
                 # temp sensor failure: reset temp sampling
                 if config.MODULE_TEMP and temp_avg_sum == 0:
                     temp_avg_accu = temp_avg_counter = 0.0
@@ -612,7 +610,8 @@ def process_input():
                 io_status.send_message(parser[1])
                 is_status_changed = True
                 show_ack = True
-            elif parser[0].upper() == 'AMBIENT':
+            elif parser[0].upper() == 'AMBIENT' or \
+                    parser[0].upper() == 'AMBIENT_COLOR':
                 try:
                     if config.MODULE_AMBIENT:
                         io_status.current_ambient_color = \
@@ -620,6 +619,14 @@ def process_input():
                                 parser[1],
                                 datetime.datetime.now() +
                                 datetime.timedelta(hours=4))
+                except Exception as e:
+                    log_data('PARSERROR: {}\n{}'.format(
+                            _command,
+                            traceback.format_exc()))
+            elif parser[0].upper() == 'AMBIENT_XMAS':
+                try:
+                    if config.MODULE_AMBIENT:
+                        ambient.set_ambient_xmas_daisy(parser[1])
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
