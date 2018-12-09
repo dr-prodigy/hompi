@@ -227,52 +227,34 @@ def main():
             # sync ambient color
             io_status.current_ambient_color = ambient.update()
 
-            # catch command "interrupt" (jump to new cycle)
-            if sig_command:
-                sig_command = False
-                refreshing = True
-            else:
-                try:
-                    # manage lcd and sleep timing
-                    elapsed = (datetime.datetime.now() -
-                                  cycle_start_time).total_seconds()
-                    frame_to_play = int(math.floor((1.0 - elapsed) / .25))
-                    if frame_to_play < 0:
-                        frame_to_play = 0
+            try:
+                # update lcd screen to 1 sec approx.
+                cycle_duration = (datetime.datetime.now() - cycle_start_time)\
+                    .total_seconds()
+                while (cycle_duration < 1):
+                    # catch command "interrupt" (jump to new cycle)
+                    if sig_command:
+                        break
+                    frame_duration = lcd.update(io_status)
+                    time.sleep(.25 - frame_duration)
+                    cycle_duration += .25
 
-                    # frameskip to 1 sec
-                    for _ in range(4 - frame_to_play):
-                        elapsed += lcd.update(io_status, draw=False)
-                    if frame_to_play > 0:
-                        first_delay = (1.0 - elapsed) - frame_to_play * .25
-                        if (first_delay > elapsed):
-                            time.sleep(first_delay - elapsed)
-                            elapsed = 0
-                        else:
-                            elapsed -= first_delay
-                        # run remaining frames (4fps)
-                        for _ in range(frame_to_play):
-                            elapsed += lcd.update(io_status)
-                            if (elapsed < .25):
-                                time.sleep(.25 - elapsed)
-                                print('{}'.format(elapsed))
-                                elapsed = 0
-                            else:
-                                print('SKIPPED')
-                                elapsed =- .25
+                if sig_command:
+                    sig_command = False
+                    refreshing = True
 
-                except (KeyboardInterrupt, SystemExit):
-                    # cleanup sensors & LCD
-                    sensor.cleanup()
-                    lcd.cleanup()
-                    ambient.cleanup()
-                    raise
-                except Exception:
-                    # LCD I/O error: refresh LCD screen
-                    sys.stderr.write(traceback.format_exc())
-                    sys.stderr.write('LCD I/O error: trying to recover..')
-                    lcd = dashboard.Dashboard()
-                    time.sleep(1)
+            except (KeyboardInterrupt, SystemExit):
+                # cleanup sensors & LCD
+                sensor.cleanup()
+                lcd.cleanup()
+                ambient.cleanup()
+                raise
+            except Exception:
+                # LCD I/O error: refresh LCD screen
+                sys.stderr.write(traceback.format_exc())
+                sys.stderr.write('LCD I/O error: trying to recover..')
+                lcd = dashboard.Dashboard()
+                time.sleep(1)
 
 
 # initialize DB, I/O, signal handlers, tasks, message
