@@ -123,7 +123,8 @@ def get_list(list, key=None):
     list_table = ('gm_timetable' if list == 'timetable' else
                   ('gm_timetable_day_type' if list == 'daytype' else
                    ('gm_temp' if list == 'temp' else
-                    'gm_control')))
+                    ('gm_timetable_type_data' if list == 'typedata' else
+                    'gm_control'))))
 
     try:
         dbmgr = db.DatabaseManager()
@@ -138,13 +139,27 @@ def get_list(list, key=None):
                 """.format(list_table, list_table), key)
             else:
                 cur = dbmgr.query("""
-                SELECT `{}`.*, `timetable_id` FROM `{}`
-                INNER JOIN `gm_timetable_temp` ON `temp_id` = `gm_temp`.`id`
-                ORDER BY `gm_temp`.`id`
-            """.format(list_table, list_table))
+                    SELECT `{}`.*, `timetable_id` FROM `{}`
+                    INNER JOIN `gm_timetable_temp` ON `temp_id` = `gm_temp`.`id`
+                    ORDER BY `gm_temp`.`id`
+                """.format(list_table, list_table))
         else:
-            cur = dbmgr.query(
-                "SELECT * FROM {} ORDER BY id".format(list_table))
+            if key:
+                if list == 'typedata':
+                    cur = dbmgr.query("""
+                        SELECT * FROM {}
+                        WHERE `day_type_id` = ?
+                        ORDER BY `id`
+                        """.format(list_table), key)
+                else:
+                   cur = dbmgr.query("""
+                        SELECT * FROM {}
+                        WHERE `id` = ?
+                        ORDER BY `id`
+                        """.format(list_table), key)
+            else:
+                cur = dbmgr.query(
+                    "SELECT * FROM {} ORDER BY id".format(list_table))
         r = [dict((cur.description[i][0], value)
                   for i, value in enumerate(row)) for row in cur.fetchall()]
         # one = False
