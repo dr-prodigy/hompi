@@ -128,7 +128,7 @@ class SystemInfo:
 
         if config.MODULE_AMBIENT:
             self.modules.append('ambient')
-            self.ambient_commands = ['AMBIENT_COLOR', 'AMBIENT_XMAS']
+            self.ambient_commands = ['AMBIENT_XMAS']
         if config.MODULE_APHORISM:
             self.modules.append('aphorism')
         if config.MODULE_DB_LOG:

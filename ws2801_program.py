@@ -285,6 +285,7 @@ def xmas_daisy(brightness='1', rgb=''):
     while (datetime.datetime.now() - initial_time).total_seconds() < 300:
         switched = random.randint(1, 2)
         flashed = random.randint(1, 2)
+        delay = random.uniform(.04, .1)
         for cycles in range(5):
             for frames in range(2):
                 for flash in range(1, 21):  # starts with off
@@ -295,8 +296,7 @@ def xmas_daisy(brightness='1', rgb=''):
                                 else 0
                         pixels.set_pixel(i, color)
                     pixels.show()
-                    time.sleep(.06)
-                # time.sleep(.5)
+                    time.sleep(delay)
 
 
 # Input a value 0 to 255 to get a color value.
