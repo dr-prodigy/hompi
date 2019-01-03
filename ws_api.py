@@ -238,6 +238,60 @@ def set_temp(data_json):
     return "Ok"
 
 
+@app.route('/hompi/_set_timetable/<data_json>')
+def set_timetable(data_json):
+    if not _check_sharedkey():
+        return "Forbidden", 403
+
+    try:
+        days = ['monday','tuesday','wednesday','thursday',
+                'friday','saturday','sunday','pre_holiday',
+                'holiday']
+        _data = json.loads(data_json)
+
+        dbmgr = db.DatabaseManager()
+        if _data['day'] in days:
+            dbmgr.query("""UPDATE gm_timetable
+                SET {} = ?
+                WHERE id = ?
+                """.format(_data['day']),
+                        (_data['day_type_id'], _data['id']))
+        else:
+            return "Error", 400  # BAD_REQUEST
+    except Exception:
+        print("set_timetable_data({}): error".format(data_json))
+        print(traceback.format_exc())
+        return "Error", 400  # BAD_REQUEST
+    return "Ok"
+
+
+@app.route('/hompi/_set_timetable_data/<data_json>')
+def set_timetable_data(data_json):
+    if not _check_sharedkey():
+        return "Forbidden", 403
+
+    try:
+        _data = json.loads(data_json)
+        dbmgr = db.DatabaseManager()
+        first = True
+        for _tt_item in _data:
+            if first:
+                first = False
+                dbmgr.query("""DELETE FROM gm_timetable_type_data
+                    WHERE day_type_id = ?""", (_tt_item['day_type_id'],))
+            dbmgr.query("""INSERT INTO gm_timetable_type_data
+                (orderby, temp_id, time_hhmm, day_type_id)
+                VALUES(?,?,?,?)""",
+                    (_tt_item['orderby'], _tt_item['temp_id'],
+                     _tt_item['time_hhmm'], _tt_item['day_type_id']))
+        _signal_server()
+    except Exception:
+        print("set_timetable_data({}): error".format(data_json))
+        print(traceback.format_exc())
+        return "Error", 400  # BAD_REQUEST
+    return "Ok"
+
+
 @app.route('/hompi/_get_image/<image_name>')
 def get_image(image_name):
     if not _check_sharedkey():

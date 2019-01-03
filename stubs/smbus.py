@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) Maurizio Montel (dr-prodigy)
+# Copyright (C) 2018 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com> <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
 # hompi is free software: you can redistribute it and/or modify
