@@ -127,16 +127,18 @@ def get_list(list, key=None):
                     'gm_control'))))
 
     try:
+
         dbmgr = db.DatabaseManager()
         if list == 'temp':
             if key:
+                _key = int(key)
                 cur = dbmgr.query("""
                     SELECT `{}`.*, `timetable_id` FROM `{}`
                     INNER JOIN `gm_timetable_temp` ON
                         `temp_id` = `gm_temp`.`id`
                     WHERE `gm_timetable_temp`.`timetable_id` = ?
                     ORDER BY `gm_temp`.`id`
-                """.format(list_table, list_table), key)
+                """.format(list_table, list_table), (_key))
             else:
                 cur = dbmgr.query("""
                     SELECT `{}`.*, `timetable_id` FROM `{}`
@@ -145,18 +147,19 @@ def get_list(list, key=None):
                 """.format(list_table, list_table))
         else:
             if key:
+                _key = int(key)
                 if list == 'typedata':
                     cur = dbmgr.query("""
                         SELECT * FROM {}
                         WHERE `day_type_id` = ?
                         ORDER BY `id`
-                        """.format(list_table), key)
+                        """.format(list_table), (_key,))
                 else:
                    cur = dbmgr.query("""
                         SELECT * FROM {}
                         WHERE `id` = ?
                         ORDER BY `id`
-                        """.format(list_table), key)
+                        """.format(list_table), (_key,))
             else:
                 cur = dbmgr.query(
                     "SELECT * FROM {} ORDER BY id".format(list_table))
@@ -209,9 +212,11 @@ def set_control(data_json):
 
     try:
         _data = json.loads(data_json)
+        _id = int(_data['timetable_id'])
+
         dbmgr = db.DatabaseManager()
         dbmgr.query('UPDATE gm_control SET timetable_id = ?',
-                    (_data['timetable_id']))
+                    (_id,))
         _signal_server()
     except Exception:
         print("set_control({}): error".format(data_json))
@@ -227,9 +232,12 @@ def set_temp(data_json):
 
     try:
         _data = json.loads(data_json)
+        _temp_c = float(_data['temp_c'])
+        _id = int(_data['id'])
+
         dbmgr = db.DatabaseManager()
         dbmgr.query("""UPDATE gm_temp SET temp_c = ?
-            WHERE id = ?""", (_data['temp_c'], _data['id']))
+            WHERE id = ?""", (_temp_c, _id))
         _signal_server()
     except Exception:
         print("set_temp({}): error".format(data_json))
@@ -248,6 +256,8 @@ def set_timetable(data_json):
                 'friday','saturday','sunday','pre_holiday',
                 'holiday']
         _data = json.loads(data_json)
+        _id = int(_data['id'])
+        _day_type_id = int(_data['day_type_id'])
 
         dbmgr = db.DatabaseManager()
         if _data['day'] in days:
@@ -255,7 +265,7 @@ def set_timetable(data_json):
                 SET {} = ?
                 WHERE id = ?
                 """.format(_data['day']),
-                        (_data['day_type_id'], _data['id']))
+                        (_day_type_id, _id))
         else:
             return "Error", 400  # BAD_REQUEST
     except Exception:
@@ -275,6 +285,10 @@ def set_timetable_data(data_json):
         dbmgr = db.DatabaseManager()
         first = True
         for _tt_item in _data:
+            _orderby = int(_tt_item['orderby'])
+            _temp_id = int(_tt_item['temp_id'])
+            _time_hhmm = int(_tt_item['time_hhmm'])
+            _day_type_id = int(_tt_item['day_type_id'])
             if first:
                 first = False
                 dbmgr.query("""DELETE FROM gm_timetable_type_data
@@ -282,8 +296,8 @@ def set_timetable_data(data_json):
             dbmgr.query("""INSERT INTO gm_timetable_type_data
                 (orderby, temp_id, time_hhmm, day_type_id)
                 VALUES(?,?,?,?)""",
-                    (_tt_item['orderby'], _tt_item['temp_id'],
-                     _tt_item['time_hhmm'], _tt_item['day_type_id']))
+                    (_orderby, _temp_id,
+                     _time_hhmm, _day_type_id))
         _signal_server()
     except Exception:
         print("set_timetable_data({}): error".format(data_json))
@@ -326,9 +340,13 @@ def send(data_json):
 
     try:
         _data = json.loads(data_json)
+
+        _temp_c = int(_data['temp_c'])
+        _id = int(_data['id'])
+
         dbmgr = db.DatabaseManager()
         dbmgr.query("""UPDATE gm_temp SET temp_c = ?
-            WHERE id = ?""", (_data['temp_c'], _data['id']))
+            WHERE id = ?""", (_temp_c, _id))
         _signal_server()
     except Exception:
         print("send({}): error".format(data_json))
