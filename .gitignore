@@ -4,7 +4,7 @@ config.py
 *.sqlite*
 .idea
 *.DS_Store
-*.png
+/res/images/*.png
 *.jpg
 *.jpeg
 /venv*
