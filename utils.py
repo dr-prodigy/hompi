@@ -17,30 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
-import glob
-import ntpath
+import sys
+import datetime
 
-_current_file = 0
-
-
-def _path_leaf(path):
-    head, tail = ntpath.split(path)
-    return tail or ntpath.basename(head)
+def log_stderr(data):
+    cur_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    sys.stderr.write('{} - {}\n'.format(cur_date, data))
 
 
-def _image_list(path):
-    return glob.glob(path)
-
-
-def current_image(path):
-    global _current_file
-    images = _image_list(path)
-
-    if len(images) > 0:
-        if _current_file >= len(images):
-            _current_file = 0
-        image_path = _path_leaf(images[_current_file])
-        _current_file += 1
-        return image_path
-
-    return ''

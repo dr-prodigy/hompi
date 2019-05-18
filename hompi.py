@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2018 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
+# Copyright (C)2018-19 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
 # hompi is free software: you can redistribute it and/or modify
@@ -37,6 +37,7 @@ import ambient
 import random
 
 from tendo import singleton
+from utils import log_stderr
 
 io_status = io_data.Status()
 sensor = sensors.Sensors()
@@ -205,7 +206,7 @@ def main():
             ambient.cleanup()
             raise
         except Exception:
-            sys.stderr.write(traceback.format_exc())
+            log_stderr(traceback.format_exc())
             log_data('EXC: {}'.format(traceback.format_exc()))
         finally:
             # stop refreshing cycle, reset status change
@@ -250,8 +251,8 @@ def main():
                 raise
             except Exception:
                 # LCD I/O error: refresh LCD screen
-                sys.stderr.write(traceback.format_exc())
-                sys.stderr.write('LCD I/O error: trying to recover..')
+                log_stderr(traceback.format_exc())
+                log_stderr('LCD I/O error: trying to recover..')
                 lcd = dashboard.Dashboard()
                 time.sleep(1)
 
@@ -313,7 +314,7 @@ def meteo():
                 io_status.place += ' (*)'
     except (KeyError, ValueError):
         io_status.place = 'Error fetching meteo'
-        sys.stderr.write(traceback.format_exc())
+        log_stderr(traceback.format_exc())
         log_data('METEOEXC: {}'.format(traceback.format_exc()))
 
 
@@ -330,7 +331,7 @@ def aphorism():
                 io_status.aphorism_text += ' (*)'
     except Exception:
         io_status.aphorism_text = 'Error fetching aphorism'
-        sys.stderr.write(traceback.format_exc())
+        log_stderr(traceback.format_exc())
         log_data('APHOEXC: {}'.format(traceback.format_exc()))
 
 
@@ -350,11 +351,12 @@ def get_temperature():
             temp += TEST_DELTA_THERMO_ON_TEMP_C
             # sensors delay test
             time.sleep(random.uniform(.0, .2))
+        temp = 52
     else:
         temp = sensor.read_temp()
     # skip wrong reads (null or > 50°C)
     if not temp or temp > 50.0:
-        sys.stderr.write('Temp sensor error: {}'.format(temp))
+        log_stderr('Temp sensor error: received {}'.format(temp))
     else:
         # accumulate temperature read
         temp_avg_counter += 1 + (.5 / task_every_secs['update_io'] /
@@ -700,9 +702,8 @@ def log_data(event):
     except (KeyboardInterrupt, SystemExit):
         raise
     except Exception:
-        sys.stderr.write('log_data error: {}'.format(traceback.format_exc()))
+        log_stderr('log_data error: {}'.format(traceback.format_exc()))
         time.sleep(1)
-
 
 if __name__ == "__main__":
     main()

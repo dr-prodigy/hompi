@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2018 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
+# Copyright (C)2018-19 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
 # hompi is free software: you can redistribute it and/or modify
@@ -23,6 +23,8 @@ import datetime
 import traceback
 
 import config
+
+from utils import log_stderr
 
 LEDSTRIP_ELEMENTS = 32
 
@@ -60,8 +62,8 @@ class Ambient():
         except KeyboardInterrupt:
             raise
         except Exception:
-            sys.stderr.write(traceback.format_exc())
-            sys.stderr.write(
+            log_stderr(traceback.format_exc())
+            log_stderr(
                 '*AMBIENT ERR* : LED strip init failed - disabling AMBIENT')
             AMBIENT_ENABLED = False
 

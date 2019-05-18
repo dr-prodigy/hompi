@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2018 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
+# Copyright (C)2018-19 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
 # hompi is free software: you can redistribute it and/or modify
@@ -24,6 +24,8 @@ import math
 from time import strftime
 
 import config
+
+from utils import log_stderr
 
 NONE = 0
 GPIO_CharLCD = 1
@@ -264,8 +266,8 @@ class Dashboard():
         except KeyboardInterrupt:
             raise
         except Exception:
-            sys.stderr.write(traceback.format_exc())
-            sys.stderr.write('ERR: LCD init failed - disabling display')
+            log_stderr(traceback.format_exc())
+            log_stderr('ERR: LCD init failed - disabling display')
             DISPLAY_TYPE = NONE
 
     def _load_charset(self):

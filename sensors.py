@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2018 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
+# Copyright (C)2018-19 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
 # hompi is free software: you can redistribute it and/or modify
@@ -27,6 +27,8 @@ import hashlib
 import traceback
 import datetime
 import dateutil.parser
+
+from utils import log_stderr
 
 # GPIO import
 try:
@@ -107,7 +109,7 @@ class Sensors():
         except request.URLError:
             print('WARNING: meteo not available.')
         except Exception:
-            sys.stderr.write(traceback.format_exc())
+            log_stderr(traceback.format_exc())
         finally:
             return meteo
 
@@ -196,7 +198,7 @@ class Sensors():
             except request.URLError:
                 print('WARNING: {} server not available.'.format(server))
             except Exception:
-                sys.stderr.write(traceback.format_exc())
+                log_stderr.write(traceback.format_exc())
 
     # forward command to hompi slaves
     def hompi_slaves_forward_command(self, hompi_slaves, command):
@@ -215,7 +217,7 @@ class Sensors():
                     print(
                         'WARNING: {} server not available.'.format(slave_id))
                 except Exception:
-                    sys.stderr.write(traceback.format_exc())
+                    log_stderr(traceback.format_exc())
 
     def cleanup(self):
         self.set_heating(False)
