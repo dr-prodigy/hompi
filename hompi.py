@@ -253,8 +253,8 @@ def main():
                 # LCD I/O error: refresh LCD screen
                 log_stderr(traceback.format_exc())
                 log_stderr('LCD I/O error: trying to recover..')
-                lcd = dashboard.Dashboard()
                 time.sleep(1)
+                lcd = dashboard.Dashboard()
 
 
 # initialize DB, I/O, signal handlers, tasks, message
