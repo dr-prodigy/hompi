@@ -351,7 +351,6 @@ def get_temperature():
             temp += TEST_DELTA_THERMO_ON_TEMP_C
             # sensors delay test
             time.sleep(random.uniform(.0, .2))
-        temp = 52
     else:
         temp = sensor.read_temp()
     # skip wrong reads (null or > 50°C)
