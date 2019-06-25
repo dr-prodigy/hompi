@@ -106,6 +106,8 @@ def main():
 
     # main loop
     log_data('start')
+    lcd.show_command('HOMPI')
+
     while True:
         try:
             # save cycle start time
@@ -587,6 +589,7 @@ def process_input():
                     if (int(parser[1])):
                         dbmgr.query('UPDATE gm_control SET timetable_id = ?',
                                     (parser[1]))
+                        lcd.show_command('TT CHANGE')
                         sig_command = show_ack = True
                 except Exception:
                     log_data('PARSERROR: {}'.format(_command))
@@ -598,6 +601,7 @@ def process_input():
                             'UPDATE gm_temp SET temp_c = ? WHERE id = ?',
                             (parser2[1], parser2[0]))
                         sig_command = show_ack = True
+                        lcd.show_command('TP CHANGE')
                 except Exception as e:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'LCD':
@@ -606,6 +610,7 @@ def process_input():
                                       datetime.datetime.now() +
                                       datetime.timedelta(hours=4))
                 else:
+                    lcd.show_command('LCD ON')
                     lcd.set_backlight(1)
                 show_ack = True
             elif parser[0].upper() == 'MESSAGE':
@@ -621,6 +626,7 @@ def process_input():
                                 parser[1],
                                 datetime.datetime.now() +
                                 datetime.timedelta(hours=4))
+                        lcd.show_command('COLOR')
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
@@ -629,6 +635,7 @@ def process_input():
                 try:
                     if config.MODULE_AMBIENT:
                         ambient.set_ambient_xmas_daisy(parser[1])
+                        lcd.show_command('XMAS')
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
@@ -640,6 +647,7 @@ def process_input():
                     # assume gate is 1st switch
                     io_status.send_switch_command(0)
                     show_ack = True
+                    lcd.show_command('GATE')
             elif parser[0].upper() == 'BUTTON':
                 try:
                     button_no = int(parser[1])
@@ -649,6 +657,7 @@ def process_input():
                             and not io_status.sw_status[button_no]:
                         io_status.send_switch_command(button_no)
                         show_ack = True
+                        lcd.show_command('BUTTON' + button_no)
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                         _command,

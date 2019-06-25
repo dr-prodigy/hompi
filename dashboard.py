@@ -247,6 +247,8 @@ class Dashboard():
         self._current_program = -1
         self._is_backlit = True
         self._backlight_change = datetime.datetime(9999, 12, 31)
+        self._command = ''
+        self._message_timeout = datetime.datetime(9999, 12, 31)
         self.line = [''] * LCD_ROWS
         self.old_line = [''] * LCD_ROWS
         self.position = [-LCD_LINE_DELAY] * LCD_ROWS
@@ -462,33 +464,50 @@ class Dashboard():
                 self.cleanup()
                 self._load_charset()
 
-        blink_off = datetime.datetime.now().second % 2 == 0
+        blink_off = datetime.datetime.now().second % 2 != 0
+
         # lines update
+        if datetime.datetime.now() >= self._message_timeout:
+            self._command = ''
+
         for no in range(0, LCD_ROWS):
-            if len(self.line[no]) > LCD_COLUMNS:
-                self.position[no] += 1
-                if self.position[no] > len(
-                        self.line[no]) - LCD_COLUMNS + LCD_LINE_DELAY:
-                    self.position[no] = -LCD_LINE_DELAY
-            position = 0 if self.position[no] < 0 else \
-                len(self.line[no]) - LCD_COLUMNS if self.position[no] > \
-                len(self.line[no]) - LCD_COLUMNS else \
-                self.position[no]
-            cur_line = self.line[no][position:len(self.line[no])].ljust(
-                LCD_COLUMNS)[0:LCD_COLUMNS]
-            if blink_off:
-                cur_line = cur_line.replace('\xA5', ' ')
-                cur_line = cur_line.replace('^', ' ')
+            if self._command:
+                if no == int(LCD_ROWS / 2):
+                    tmp_lines[no] = ' ' * ((LCD_COLUMNS - len(self._command)) / 2 + 1) + \
+                                    self._command
+                    tmp_lines[no] += ' ' * (LCD_COLUMNS - len(self._command))
+                else:
+                    tmp_lines[no] = ' ' * LCD_COLUMNS
             else:
-                cur_line = cur_line.replace('^', ':')
-            tmp_lines[no] = cur_line
+                if len(self.line[no]) > LCD_COLUMNS:
+                    self.position[no] += 1
+                    if self.position[no] > len(
+                            self.line[no]) - LCD_COLUMNS + LCD_LINE_DELAY:
+                        self.position[no] = -LCD_LINE_DELAY
+                position = 0 if self.position[no] < 0 else \
+                    len(self.line[no]) - LCD_COLUMNS if self.position[no] > \
+                    len(self.line[no]) - LCD_COLUMNS else \
+                    self.position[no]
+                cur_line = self.line[no][position:len(self.line[no])].ljust(
+                    LCD_COLUMNS)[0:LCD_COLUMNS]
+                tmp_lines[no] = cur_line
+
+            if blink_off:
+                tmp_lines[no] = tmp_lines[no].replace('\xA5', ' ')
+                tmp_lines[no] = tmp_lines[no].replace('^', ' ')
+                tmp_lines[no] = tmp_lines[no].replace('@', ' ')
+                tmp_lines[no] = tmp_lines[no].replace('¶', ' ')
+            else:
+                tmp_lines[no] = tmp_lines[no].replace('^', ':')
+                tmp_lines[no] = tmp_lines[no].replace('@', '<')
+                tmp_lines[no] = tmp_lines[no].replace('¶', '>')
 
             # show switch command on lowest right
             switch_on = False
             for sw in range(len(config.BUTTONS)):
                 switch_on |= io_status.sw_status[sw]
             if switch_on and no == LCD_ROWS - 1:
-                tmp_lines[no] = tmp_lines[no][:-1] + '#'
+                tmp_lines[no] = tmp_lines[no][:-2] + ' #'
 
             if draw and (self._is_backlit or refresh_requested):
                 if self.old_line[no] != tmp_lines[no]:
@@ -529,6 +548,11 @@ class Dashboard():
 
         self._is_backlit = state
         self._backlight_change = timeout
+
+    def show_command(self, message):
+        self._command = '@@ ' + message + ' ¶¶'
+        self._message_timeout = datetime.datetime.now() + \
+                            datetime.timedelta(seconds=3)
 
     def echo_display(self, lines):
         # move cursor home
