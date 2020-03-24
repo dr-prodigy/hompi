@@ -473,7 +473,9 @@ class Dashboard():
         for no in range(0, LCD_ROWS):
             if self._command:
                 if no == int(LCD_ROWS / 2):
-                    tmp_lines[no] = ' ' * ((LCD_COLUMNS - len(self._command)) / 2 + 1) + \
+                    tmp_lines[no] = ' ' * \
+                                    int((LCD_COLUMNS -
+                                         len(self._command)) / 2 + 1) + \
                                     self._command
                     tmp_lines[no] += ' ' * (LCD_COLUMNS - len(self._command))
                 else:
