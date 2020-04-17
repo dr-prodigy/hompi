@@ -39,7 +39,7 @@ import random
 import socket
 
 from tendo import singleton
-from utils import log_stderr, os_command
+from utils import log_stderr, os_async_command
 
 io_status = io_data.Status()
 sensor = sensors.Sensors()
@@ -681,7 +681,7 @@ def show_message(lcd_message, telegram_message=""):
         if telegram_message == "":
             telegram_message = lcd_message
         telegram_message = socket.gethostname() + ": " + telegram_message
-        os_command('telegram "' + telegram_message + '"')
+        os_async_command('telegram "' + telegram_message + '"')
     lcd.show_command(lcd_message)
 
 
