@@ -17,9 +17,15 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import sys
 import datetime
+
 
 def log_stderr(data):
     cur_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     sys.stderr.write('{} - {}\n'.format(cur_date, data))
+
+
+def os_command(command):
+    os.system(command)

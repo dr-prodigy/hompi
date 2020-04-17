@@ -81,5 +81,7 @@ AMBIENT_ACK_COMMAND = 'curtain_in_out {} {}'
 AMBIENT_XMAS_DAISY_COMMAND = 'xmas_daisy {} {}'
 AMBIENT_TRANSITION_FRAMES = 100
 
+ENABLE_TELEGRAM = False
+
 # API PRE-SHARED KEY
 API_KEY = 'change-me'

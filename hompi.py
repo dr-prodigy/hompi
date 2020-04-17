@@ -36,8 +36,10 @@ import resources
 import ambient
 import random
 
+import socket
+
 from tendo import singleton
-from utils import log_stderr
+from utils import log_stderr, os_command
 
 io_status = io_data.Status()
 sensor = sensors.Sensors()
@@ -106,7 +108,7 @@ def main():
 
     # main loop
     log_data('start')
-    lcd.show_command('HOMPI')
+    show_message('HOMPI', 'HOMPI START')
 
     while True:
         try:
@@ -589,19 +591,19 @@ def process_input():
                     if (int(parser[1])):
                         dbmgr.query('UPDATE gm_control SET timetable_id = ?',
                                     (parser[1]))
-                        lcd.show_command('TT CHANGE')
+                        show_message('TT CHANGE')
                         sig_command = show_ack = True
                 except Exception:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'TEMP':
                 try:
                     parser2 = parser[1].split(',')
-                    if int(parser2[0]) and float(parser2[1]):
+                    if int(parser2[0]) and flssoat(parser2[1]):
                         dbmgr.query(
                             'UPDATE gm_temp SET temp_c = ? WHERE id = ?',
                             (parser2[1], parser2[0]))
                         sig_command = show_ack = True
-                        lcd.show_command('TP CHANGE')
+                        show_message('TP CHANGE')
                 except Exception as e:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'LCD':
@@ -610,7 +612,7 @@ def process_input():
                                       datetime.datetime.now() +
                                       datetime.timedelta(hours=4))
                 else:
-                    lcd.show_command('LCD ON')
+                    show_message('LCD ON')
                     lcd.set_backlight(1)
                 show_ack = True
             elif parser[0].upper() == 'MESSAGE':
@@ -626,7 +628,7 @@ def process_input():
                                 parser[1],
                                 datetime.datetime.now() +
                                 datetime.timedelta(hours=4))
-                        lcd.show_command('COLOR')
+                        show_message('COLOR', 'AMBIENT COLOR ' + parser[1])
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
@@ -635,7 +637,7 @@ def process_input():
                 try:
                     if config.MODULE_AMBIENT:
                         ambient.set_ambient_xmas_daisy(parser[1])
-                        lcd.show_command('XMAS')
+                        show_message('COLOR', 'AMBIENT XMAS')
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
@@ -647,7 +649,7 @@ def process_input():
                     # assume gate is 1st switch
                     io_status.send_switch_command(0)
                     show_ack = True
-                    lcd.show_command('GATE')
+                    show_message('GATE', 'GATE OPEN')
             elif parser[0].upper() == 'BUTTON':
                 try:
                     button_no = int(parser[1])
@@ -657,7 +659,7 @@ def process_input():
                             and not io_status.sw_status[button_no]:
                         io_status.send_switch_command(button_no)
                         show_ack = True
-                        lcd.show_command('BUTTON' + button_no)
+                        show_message('BUTTON' + button_no)
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                         _command,
@@ -672,6 +674,15 @@ def process_input():
             ambient.ambient_ack()
 
         is_status_changed |= sig_command
+
+
+def show_message(lcd_message, telegram_message=""):
+    if config.ENABLE_TELEGRAM:
+        if telegram_message == "":
+            telegram_message = lcd_message
+        telegram_message = socket.gethostname() + ": " + telegram_message
+        os_command('telegram "' + telegram_message + '"')
+    lcd.show_command(lcd_message)
 
 
 def log_data(event):
