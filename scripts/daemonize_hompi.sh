@@ -16,23 +16,35 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
+# Set to true if flask debugger is run as web server (localhost:5000)
+# (for production purposes better rely on a WSGI server)
+run_flask_debugger=false
+
+# set HOMPI_HOME to default, if not yet set
+: "${HOMPI_HOME:=/home/pi/hompi}"
+
 # *** kill running daemons ***
-# kill hompi server
+echo Killing hompi server..
 kill $(ps aux |grep '[b]in/hompi' | awk '{print $2}')
 
-# Uncomment next line if flask debugger is run as server (localhost:5000)
-# kill $(ps aux |grep '[w]s_api' | awk '{print $2}')
+if [ "run_flask_debugger" = true ] ; then
+  echo Killing flask debugger
+  kill $(ps aux |grep '[w]s_api' | awk '{print $2}')
+fi
+
+echo Moving to $HOMPI_HOME..
+cd $HOMPI_HOME
 
 # *** restart ***
-# move to script directory
-cd $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # Enable virtualenv
-cd ..
+echo Enabling virtualenv..
 . venv/bin/activate
 
 # Daemonize hompi (suppress logging)
+echo Daemonizing hompi..
 nohup ./hompi >/dev/null 2>>~/hompi_error.log&
 
-# Uncomment next line to run flask debugger as server (localhost:5000)
-# (for production purposes better rely on a WSGI server)
-# nohup python ws_api.py >/dev/null&
+if [ "run_flask_debugger" = true ] ; then
+  echo Starting flask debugger..
+  nohup python ws_api.py >/dev/null&
+fi
