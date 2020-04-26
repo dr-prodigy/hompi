@@ -27,7 +27,7 @@ run_flask_debugger=false
 echo Killing hompi server..
 kill $(ps aux |grep '[b]in/hompi' | awk '{print $2}')
 
-if [ "run_flask_debugger" = true ] ; then
+if [ "$run_flask_debugger" = true ] ; then
   echo Killing flask debugger
   kill $(ps aux |grep '[w]s_api' | awk '{print $2}')
 fi
@@ -44,7 +44,7 @@ echo Enabling virtualenv..
 echo Daemonizing hompi..
 nohup ./hompi >/dev/null 2>>~/hompi_error.log&
 
-if [ "run_flask_debugger" = true ] ; then
+if [ "$run_flask_debugger" = true ] ; then
   echo Starting flask debugger..
   nohup python ws_api.py >/dev/null&
 fi
