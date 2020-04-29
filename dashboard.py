@@ -242,8 +242,6 @@ BIGNUMMATRIX = {
 
 class Dashboard():
     def __init__(self):
-        global DISPLAY_TYPE
-
         self._current_program = -1
         self._is_backlit = True
         self._backlight_change = datetime.datetime(9999, 12, 31)
@@ -252,6 +250,11 @@ class Dashboard():
         self.line = [''] * LCD_ROWS
         self.old_line = [''] * LCD_ROWS
         self.position = [-LCD_LINE_DELAY] * LCD_ROWS
+
+        self._reset_display()
+
+    def _reset_display(self):
+        global DISPLAY_TYPE
 
         try:
             if DISPLAY_TYPE == GPIO_CharLCD:
@@ -352,6 +355,9 @@ class Dashboard():
                 else:
                     self._current_program = 1
                     continue
+
+            if self._current_program == 1:
+                self._reset_display()
 
             # line2 default: heating status
             line2options = '{:.1f}\xDFC'.format(io_status.req_temp_c)
