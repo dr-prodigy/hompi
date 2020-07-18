@@ -649,7 +649,7 @@ def process_input():
                     gate_button_index = -1
                     index = 0
                     for button in config.BUTTONS:
-                        if 'GATE' == button.upper():
+                        if 'GATE' == button[1].upper():
                             gate_button_index = index
                             break
                         index += 1
