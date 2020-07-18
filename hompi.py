@@ -646,10 +646,16 @@ def process_input():
                 # execute gate only once per cycle, and not while another
                 # is running
                 if len(config.BUTTONS):
-                    gate_button = \
-                        map(str.upper(), config.BUTTONS).index('GATE')
-                    if not io_status.sw_status[gate_button]:
-                        io_status.send_switch_command(gate_button)
+                    gate_button_index = -1
+                    index = 0
+                    for button in config.BUTTONS:
+                        if 'GATE' == button.upper():
+                            gate_button_index = index
+                            break
+                        index += 1
+                    if gate_button_index > -1 and \
+                            not io_status.sw_status[gate_button_index]:
+                        io_status.send_switch_command(gate_button_index)
                         show_ack = True
                         show_message('GATE', 'GATE OPEN')
             elif parser[0].upper() == 'BUTTON':
