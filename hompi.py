@@ -598,7 +598,7 @@ def process_input():
             elif parser[0].upper() == 'TEMP':
                 try:
                     parser2 = parser[1].split(',')
-                    if int(parser2[0]) and flssoat(parser2[1]):
+                    if int(parser2[0]) and float(parser2[1]):
                         dbmgr.query(
                             'UPDATE gm_temp SET temp_c = ? WHERE id = ?',
                             (parser2[1], parser2[0]))
