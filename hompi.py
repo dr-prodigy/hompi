@@ -593,7 +593,7 @@ def process_input():
                     if (int(parser[1])):
                         dbmgr.query('UPDATE gm_control SET timetable_id = ?',
                                     (parser[1]))
-                        show_message('TT CHANGE')
+                        show_message('TT CHANGE', 'TT CHANGE: ' + parser[1])
                         sig_command = show_ack = True
                 except Exception:
                     log_data('PARSERROR: {}'.format(_command))
@@ -605,7 +605,7 @@ def process_input():
                             'UPDATE gm_temp SET temp_c = ? WHERE id = ?',
                             (parser2[1], parser2[0]))
                         sig_command = show_ack = True
-                        show_message('TP CHANGE')
+                        show_message('TP CHANGE', 'TP CHANGE: ' + parser2[1])
                 except Exception as e:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'LCD':
@@ -619,6 +619,7 @@ def process_input():
                 show_ack = True
             elif parser[0].upper() == 'MESSAGE':
                 io_status.send_message(parser[1])
+                show_message('', 'MESSAGE: ' + parser[1])
                 is_status_changed = True
                 show_ack = True
             elif parser[0].upper() == 'AMBIENT' or \
@@ -630,7 +631,7 @@ def process_input():
                                 parser[1],
                                 datetime.datetime.now() +
                                 datetime.timedelta(hours=4))
-                        show_message('COLOR', 'AMBIENT COLOR ' + parser[1])
+                        show_message('COLOR', 'AMBIENT COLOR: #' + parser[1])
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
@@ -674,10 +675,12 @@ def process_input():
                     log_data('PARSERROR: {}\n{}'.format(
                         _command,
                         traceback.format_exc()))
+                    show_message('', 'PARSERROR: {}'.format(_command))
             else:
                 log_data('NOTIMPLEMENTED: {}'.format(_command))
         else:
             log_data('PARSERROR: {}'.format(_command))
+            show_message('PARSERROR: {}'.format(_command))
 
         # show ambient ack
         if config.MODULE_AMBIENT and show_ack:
@@ -690,9 +693,12 @@ def show_message(lcd_message, telegram_message=""):
     if config.ENABLE_TELEGRAM:
         if telegram_message == "":
             telegram_message = lcd_message
-        telegram_message = socket.gethostname() + ": " + telegram_message
-        os_async_command('telegram "' + telegram_message + '"')
-    lcd.show_command(lcd_message)
+        if telegram_message != "":
+            telegram_message = "{}: {}".format(
+                socket.gethostname(), telegram_message)
+            os_async_command('telegram "' + telegram_message + '"')
+    if lcd_message != "":
+        lcd.show_command(lcd_message)
 
 
 def log_data(event):
