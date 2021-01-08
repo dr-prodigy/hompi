@@ -89,16 +89,16 @@ LCD_LINE_DELAY = 3
 SYMBOLDATA = [
     # on icon (flame) /x00
     [0b01000,
-     0b00100,
+     0b01001,
      0b00110,
      0b01011,
-     0b10111,
-     0b10111,
+     0b10101,
+     0b10101,
      0b01110,
      0b00000],
     # warming icon (empty flame) /x01
     [0b01000,
-     0b00100,
+     0b01001,
      0b00110,
      0b01001,
      0b10001,
