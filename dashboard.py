@@ -154,9 +154,9 @@ BIGNUMDATA = [
      0b01110,
      0b00000],
     # cooling icon (smokey) /x02
-    [0b00100,
+    [0b01000,
+     0b10000,
      0b01000,
-     0b00100,
      0b10101,
      0b10101,
      0b10101,
@@ -211,8 +211,8 @@ BIGNUMDATA = [
 BIGNUMMATRIX = {
     '0': ['\xFF\x05\xFF ',
           '\xFF\x06\xFF '],
-    '1': ['\x06\xFF  ',
-          '\x06\xFF\x06 '],
+    '1': ['\x06\xFF ',
+          ' \xFF '],
     '2': ['\x05\x07\xFF ',
           '\xFF\x06\x06 '],
     '3': ['\x05\x07\xFF ',
