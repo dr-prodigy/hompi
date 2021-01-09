@@ -384,7 +384,9 @@ class Dashboard():
         main_temp1 = main_temp2 = ''
         for char in main_temp:
             try:
-                if char == '.' or char == ':':
+                if char == '.' \
+                        or char == ':' \
+                        or char == '\'':
                     main_temp1 = main_temp1[:-1]
                     main_temp2 = main_temp2[:-1]
                 main_temp1 += BIGNUMMATRIX[char][0]
@@ -402,11 +404,13 @@ class Dashboard():
                 self.set_charset(CHARSET_BIGNUM)
 
                 if self._current_program % 4 == 0:
-                    self.line[0] = '{} {}'.format(heating_icon, main_temp1)
-                    self.line[1] = '{} {}'.format(mode_icon, main_temp2)
+                    self.line[0] = '{} {}'.format(heating_icon,
+                                                  main_temp1.center(14))
+                    self.line[1] = '{} {}'.format(mode_icon,
+                                                  main_temp2.center(14))
                 else:
-                    self.line[0] = main_temp1[0:16]
-                    self.line[1] = main_temp2[0:16]
+                    self.line[0] = main_temp1.center(17)[0:16]
+                    self.line[1] = main_temp2.center(17)[0:16]
             else:
                 # +----------------+
                 # |_ 11:41   22.3°C|
