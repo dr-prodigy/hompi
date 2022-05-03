@@ -63,7 +63,7 @@ log_temp_avg_counter = 0
 
 try:
     if config.HOLIDAYS_COUNTRY:
-        holiday_list = holidays.CountryHoliday(config.HOLIDAYS_COUNTRY)
+        holiday_list = holidays.country_holidays(config.HOLIDAYS_COUNTRY)
     else:
         print("WARN: config.HOLIDAYS_COUNTRY missing, defaulting to IT")
         holiday_list = holidays.IT()
@@ -145,7 +145,7 @@ def main():
             if secs_elapsed >= task_at_secs['refresh']:
                 # restart LCD
                 lcd = dashboard.Dashboard()
-                lcd.update_content(io_status, False)
+                update_lcd_content()
                 # ambient color
                 if config.MODULE_AMBIENT:
                     io_status.current_ambient_color = ambient.ambient_refresh()
@@ -197,7 +197,7 @@ def main():
 
             # update LCD message (NOT ON REFRESH)
             if secs_elapsed >= task_at_secs['update_lcd_content']:
-                update_lcd_content()
+                update_lcd_content(True)
 
             # status speech
             if is_status_changed and config.MODULE_SPEECH:
@@ -262,6 +262,7 @@ def main():
                 log_stderr('LCD I/O error: trying to recover..')
                 time.sleep(1)
                 lcd = dashboard.Dashboard()
+                update_lcd_content()
 
 
 # initialize DB, I/O, signal handlers, tasks, message
@@ -535,7 +536,7 @@ def refresh_program(time_):
     ))
 
 
-def update_lcd_content(change=True):
+def update_lcd_content(change=False):
     if change:
         lcd.change_dashboard_program(io_status)
 
@@ -740,6 +741,7 @@ def log_data(event):
     except Exception:
         log_stderr('log_data error: {}'.format(traceback.format_exc()))
         time.sleep(1)
+
 
 if __name__ == "__main__":
     main()

@@ -242,11 +242,10 @@ BIGNUMMATRIX = {
 }
 
 
-class Dashboard():
+class Dashboard:
     def __init__(self):
         global PAUSED
 
-        print('Dashboard init')
         self._current_program = -1
         self._is_backlit = True
         self._backlight_change = datetime.datetime(9999, 12, 31)
@@ -321,7 +320,7 @@ class Dashboard():
             ' ' if io_status.short_mode_desc == 'O' else \
             io_status.short_mode_desc
 
-        while (True):
+        while True:
             # line2 additional modules
             if self._current_program in {3, 4, 7, 8, 11, 12}:
                 if io_status.hompi_slaves:
@@ -454,7 +453,7 @@ class Dashboard():
                 self.line[3] = line2options
 
         # if program is changed, reset positions
-        if (change):
+        if change:
             self.position = [-LCD_LINE_DELAY] * LCD_ROWS
 
     def update(self, io_status, refresh_requested=False, draw=True):
@@ -564,12 +563,11 @@ class Dashboard():
 
     def show_command(self, message):
         self._command = '@@ ' + message + ' ¶¶'
-        self._message_timeout = datetime.datetime.now() + \
-                            datetime.timedelta(seconds=3)
+        self._message_timeout = datetime.datetime.now() + datetime.timedelta(seconds=3)
 
     def echo_display(self, lines):
         # move cursor home
-        sys.stdout.write("\x1b7\x1b[H\n")
+        sys.stdout.write("\x1b[H")
         if CURRENT_CHARSET == CHARSET_SYMBOL:
             replace_chars = ['*', '+', '=', 'A', 'M', '?', '?', '?', '>', '°',
                              '?', '.']
