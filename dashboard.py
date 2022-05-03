@@ -32,6 +32,8 @@ GPIO_CharLCD = 1
 I2C_LCD = 2
 
 DISPLAY_TYPE = NONE
+PAUSED = False
+
 try:
     DISPLAY_TYPE = config.MODULE_LCD
 except Exception:
@@ -242,8 +244,9 @@ BIGNUMMATRIX = {
 
 class Dashboard():
     def __init__(self):
-        global DISPLAY_TYPE
+        global PAUSED
 
+        print('Dashboard init')
         self._current_program = -1
         self._is_backlit = True
         self._backlight_change = datetime.datetime(9999, 12, 31)
@@ -254,6 +257,7 @@ class Dashboard():
         self.position = [-LCD_LINE_DELAY] * LCD_ROWS
 
         try:
+            PAUSED = False
             if DISPLAY_TYPE == GPIO_CharLCD:
                 # initialize display
                 self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5,
@@ -269,10 +273,13 @@ class Dashboard():
             raise
         except Exception:
             log_stderr(traceback.format_exc())
-            log_stderr('ERR: LCD init failed - disabling display')
-            DISPLAY_TYPE = NONE
+            log_stderr('ERR: LCD init failed: PAUSED')
+            PAUSED = True
 
     def _load_charset(self):
+        if PAUSED:
+            return
+
         if CURRENT_CHARSET == CHARSET_SYMBOL:
             if DISPLAY_TYPE == GPIO_CharLCD:
                 for font_count in range(0, 4):
@@ -287,7 +294,7 @@ class Dashboard():
                 self.lcd.lcd_load_custom_chars(BIGNUMDATA)
 
     def set_charset(self, charset=CHARSET_SYMBOL):
-        global CURRENT_CHARSET, NEW_CHARSET
+        global NEW_CHARSET
         NEW_CHARSET = charset
 
     def change_dashboard_program(self, io_status):
@@ -296,7 +303,7 @@ class Dashboard():
         self.update(io_status)
 
     def update_content(self, io_status, change=True):
-        if not config.MODULE_LCD:
+        if not config.MODULE_LCD or PAUSED:
             return
 
         # heating_simplified_icon = \
@@ -452,7 +459,7 @@ class Dashboard():
 
     def update(self, io_status, refresh_requested=False, draw=True):
         global CURRENT_CHARSET, NEW_CHARSET
-        if DISPLAY_TYPE == NONE:
+        if DISPLAY_TYPE == NONE or PAUSED:
             return 0
 
         start_time = datetime.datetime.now()
@@ -524,7 +531,7 @@ class Dashboard():
         return (datetime.datetime.now() - start_time).total_seconds()
 
     def cleanup(self):
-        if DISPLAY_TYPE == NONE:
+        if DISPLAY_TYPE == NONE or PAUSED:
             return
 
         if DISPLAY_TYPE == I2C_LCD:
@@ -538,7 +545,7 @@ class Dashboard():
     def set_backlight(self, state, timeout=datetime.datetime(9999, 12, 31)):
         global CURRENT_CHARSET, NEW_CHARSET
 
-        if DISPLAY_TYPE == NONE:
+        if DISPLAY_TYPE == NONE or PAUSED:
             return
 
         # set backlight and re-initialize LCD screen text on backlight on
