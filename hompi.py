@@ -77,7 +77,7 @@ task_every_secs = {
     'get_temp': 4.0,
     'get_meteo': 300.0,  # 5 mins
     'get_aphorism': 241.0,  # 4 mins
-    'refresh': 304.0,  # 5 mins (multiple of get_temp)
+    'refresh': 64.0,  # 1 min (multiple of get_temp)
     'update_temp': 40.0,
     'update_io': 10.0,
 }
@@ -145,6 +145,7 @@ def main():
             if secs_elapsed >= task_at_secs['refresh']:
                 # restart LCD
                 lcd = dashboard.Dashboard()
+                lcd.update_content(io_status, False)
                 # ambient color
                 if config.MODULE_AMBIENT:
                     io_status.current_ambient_color = ambient.ambient_refresh()
