@@ -144,8 +144,7 @@ def main():
             # re-sync things
             if secs_elapsed >= task_at_secs['refresh']:
                 # restart LCD
-                lcd.refresh_display()
-                #update_lcd_content()
+                lcd.refresh_display(io_status)
                 # ambient color
                 if config.MODULE_AMBIENT:
                     io_status.current_ambient_color = ambient.ambient_refresh()

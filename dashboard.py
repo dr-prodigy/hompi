@@ -272,7 +272,7 @@ class Dashboard:
             elif DISPLAY_TYPE == I2C_LCD:
                 self.lcd.lcd_load_custom_chars(BIGNUMDATA)
 
-    def refresh_display(self):
+    def refresh_display(self, io_status = None):
         global PAUSED
         try:
             PAUSED = False
@@ -293,6 +293,9 @@ class Dashboard:
             log_stderr(traceback.format_exc())
             log_stderr('ERR: LCD init failed: PAUSED')
             PAUSED = True
+
+        if io_status:
+            self.update(io_status)
 
     def set_charset(self, charset=CHARSET_SYMBOL):
         global NEW_CHARSET
