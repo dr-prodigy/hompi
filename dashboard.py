@@ -244,8 +244,6 @@ BIGNUMMATRIX = {
 
 class Dashboard:
     def __init__(self):
-        global PAUSED
-
         self._current_program = -1
         self._is_backlit = True
         self._backlight_change = datetime.datetime(9999, 12, 31)
@@ -255,6 +253,27 @@ class Dashboard:
         self.old_line = [''] * LCD_ROWS
         self.position = [-LCD_LINE_DELAY] * LCD_ROWS
 
+        self.refresh_display()
+
+    def _load_charset(self):
+        if PAUSED:
+            return
+
+        if CURRENT_CHARSET == CHARSET_SYMBOL:
+            if DISPLAY_TYPE == GPIO_CharLCD:
+                for font_count in range(0, 4):
+                    self.lcd.create_char(font_count, SYMBOLDATA[font_count])
+            elif DISPLAY_TYPE == I2C_LCD:
+                self.lcd.lcd_load_custom_chars(SYMBOLDATA)
+        elif CURRENT_CHARSET == CHARSET_BIGNUM:
+            if DISPLAY_TYPE == GPIO_CharLCD:
+                for font_count in range(0, 8):
+                    self.lcd.create_char(font_count, BIGNUMDATA[font_count])
+            elif DISPLAY_TYPE == I2C_LCD:
+                self.lcd.lcd_load_custom_chars(BIGNUMDATA)
+
+    def refresh_display(self):
+        global PAUSED
         try:
             PAUSED = False
             if DISPLAY_TYPE == GPIO_CharLCD:
@@ -274,23 +293,6 @@ class Dashboard:
             log_stderr(traceback.format_exc())
             log_stderr('ERR: LCD init failed: PAUSED')
             PAUSED = True
-
-    def _load_charset(self):
-        if PAUSED:
-            return
-
-        if CURRENT_CHARSET == CHARSET_SYMBOL:
-            if DISPLAY_TYPE == GPIO_CharLCD:
-                for font_count in range(0, 4):
-                    self.lcd.create_char(font_count, SYMBOLDATA[font_count])
-            elif DISPLAY_TYPE == I2C_LCD:
-                self.lcd.lcd_load_custom_chars(SYMBOLDATA)
-        elif CURRENT_CHARSET == CHARSET_BIGNUM:
-            if DISPLAY_TYPE == GPIO_CharLCD:
-                for font_count in range(0, 8):
-                    self.lcd.create_char(font_count, BIGNUMDATA[font_count])
-            elif DISPLAY_TYPE == I2C_LCD:
-                self.lcd.lcd_load_custom_chars(BIGNUMDATA)
 
     def set_charset(self, charset=CHARSET_SYMBOL):
         global NEW_CHARSET
