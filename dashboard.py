@@ -287,15 +287,17 @@ class Dashboard:
                 self.lcd = I2C_LCD_driver.lcd(I2C_ADDRESS, I2C_BUS)
             # load symbol font data
             self._load_charset()
+
+            if io_status:
+                # force lines refresh
+                self.old_line = [''] * LCD_ROWS
+                self.update(io_status)
         except KeyboardInterrupt:
             raise
         except Exception:
             log_stderr(traceback.format_exc())
             log_stderr('ERR: LCD init failed: PAUSED')
             PAUSED = True
-
-        if io_status:
-            self.update(io_status)
 
     def set_charset(self, charset=CHARSET_SYMBOL):
         global NEW_CHARSET
