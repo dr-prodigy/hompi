@@ -198,10 +198,6 @@ def main():
             if secs_elapsed >= task_at_secs['update_lcd_content']:
                 update_lcd_content(True)
 
-            # status speech
-            if is_status_changed:
-                say(io_status.get_status_text())
-
         except (KeyboardInterrupt, SystemExit):
             # cleanup sensors & LCD
             sensor.cleanup()
@@ -591,7 +587,7 @@ def process_input():
                                     (parser[1]))
                         show_message('TT CHANGE', 'TT CHANGE: ' + parser[1])
                         sig_command = show_ack = True
-                        say('TIMETABLE CHANGE')
+                        say('TIMETABLE CHANGE', say_status=True)
                 except Exception:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'TEMP':
@@ -603,7 +599,7 @@ def process_input():
                             (parser2[1], parser2[0]))
                         sig_command = show_ack = True
                         show_message('TP CHANGE', 'TP CHANGE: ' + parser2[1])
-                        say('TEMPERATURE CHANGE')
+                        say('TEMPERATURE CHANGE', say_status=True)
                 except Exception as e:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'LCD':
@@ -707,9 +703,12 @@ def show_message(lcd_message, telegram_message=""):
         lcd.show_command(lcd_message)
 
 
-def say(message):
+def say(message, say_status = False):
     if config.MODULE_SPEECH:
-        command = config.SPEECH_COMMAND.format('HOMPI - ' + message ) + ' &'
+        command = config.SPEECH_COMMAND.format(
+            'HOMPI - ' + message
+            + (' - ' + io_status.get_status_text()) if say_status else '')\
+                  + ' &'
         print('status changed: executing {}'.format(command))
         os.system(command)
 
