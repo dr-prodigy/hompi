@@ -109,6 +109,7 @@ def main():
     # main loop
     log_data('start')
     show_message('HOMPI', 'HOMPI START')
+    say('START')
 
     while True:
         try:
@@ -229,12 +230,12 @@ def main():
                 # update lcd screen to 1 sec approx.
                 cycle_duration = (datetime.datetime.now() - cycle_start_time)\
                     .total_seconds()
-                while cycle_duration < 1:
+                for loop in range(4):
                     # catch command "interrupt" (jump to new cycle)
                     if sig_command:
                         break
                     frame_duration = lcd.update(io_status)
-                    if frame_duration < .25:
+                    if frame_duration < .25 and cycle_duration < 1:
                         time.sleep(.25 - frame_duration)
                     cycle_duration += .25
 
