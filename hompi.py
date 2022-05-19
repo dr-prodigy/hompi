@@ -199,11 +199,8 @@ def main():
                 update_lcd_content(True)
 
             # status speech
-            if is_status_changed and config.MODULE_SPEECH:
-                command = config.SPEECH_COMMAND.format(
-                    io_status.get_status_text()) + ' &'
-                print('status changed: executing {}'.format(command))
-                os.system(command)
+            if is_status_changed:
+                say(io_status.get_status_text())
 
         except (KeyboardInterrupt, SystemExit):
             # cleanup sensors & LCD
@@ -261,7 +258,6 @@ def main():
                 log_stderr('LCD I/O error: trying to recover..')
                 time.sleep(1)
                 lcd.refresh_display(io_status)
-
 
 # initialize DB, I/O, signal handlers, tasks, message
 def init():
@@ -595,6 +591,7 @@ def process_input():
                                     (parser[1]))
                         show_message('TT CHANGE', 'TT CHANGE: ' + parser[1])
                         sig_command = show_ack = True
+                        say('TIMETABLE CHANGE')
                 except Exception:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'TEMP':
@@ -606,6 +603,7 @@ def process_input():
                             (parser2[1], parser2[0]))
                         sig_command = show_ack = True
                         show_message('TP CHANGE', 'TP CHANGE: ' + parser2[1])
+                        say('TEMPERATURE CHANGE')
                 except Exception as e:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'LCD':
@@ -615,11 +613,13 @@ def process_input():
                                       datetime.timedelta(hours=4))
                 else:
                     show_message('LCD ON')
+                    say('L C D ON')
                     lcd.set_backlight(1)
                 show_ack = True
             elif parser[0].upper() == 'MESSAGE':
                 io_status.send_message(parser[1])
                 show_message('', 'MESSAGE: ' + parser[1])
+                say('MESSAGE: ' + parser[1])
                 is_status_changed = True
                 show_ack = True
             elif parser[0].upper() == 'AMBIENT' or \
@@ -632,6 +632,8 @@ def process_input():
                                 datetime.datetime.now() +
                                 datetime.timedelta(hours=4))
                         show_message('COLOR', 'AMBIENT COLOR: #' + parser[1])
+                        say('AMBIENT COLOR' +
+                            ' OFF' if parser[1] == '000000' else '')
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
@@ -641,6 +643,7 @@ def process_input():
                     if config.MODULE_AMBIENT:
                         ambient.set_ambient_xmas_daisy(parser[1])
                         show_message('COLOR', 'AMBIENT XMAS')
+                        say('AMBIENT CHRISTMAS')
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
@@ -661,6 +664,7 @@ def process_input():
                         io_status.send_switch_command(gate_button_index)
                         show_ack = True
                         show_message('GATE', 'GATE OPEN')
+                        say('GATE OPEN')
             elif parser[0].upper() == 'BUTTON':
                 try:
                     button_no = int(parser[1])
@@ -671,6 +675,7 @@ def process_input():
                         io_status.send_switch_command(button_no)
                         show_ack = True
                         show_message('BUTTON' + button_no)
+                        say('BUTTON ' + button_no)
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                         _command,
@@ -699,6 +704,13 @@ def show_message(lcd_message, telegram_message=""):
             os_async_command('telegram "' + telegram_message + '"')
     if lcd_message != "":
         lcd.show_command(lcd_message)
+
+
+def say(message):
+    if config.MODULE_SPEECH:
+        command = config.SPEECH_COMMAND.format('HOMPI - ' + message + ' &')
+        print('status changed: executing {}'.format(command))
+        os.system(command)
 
 
 def log_data(event):
