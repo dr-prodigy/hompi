@@ -209,6 +209,10 @@ def main():
             log_stderr(traceback.format_exc())
             log_data('EXC: {}'.format(traceback.format_exc()))
         finally:
+            # refresh message
+            if refreshing:
+                say('', say_status=True)
+
             # stop refreshing cycle, reset status change
             refreshing = is_status_changed = False
 
@@ -588,7 +592,7 @@ def process_input():
                                     (parser[1]))
                         show_message('TT CHANGE', 'TT CHANGE: ' + parser[1])
                         sig_command = show_ack = True
-                        say('TIMETABLE CHANGE', say_status=True)
+                        say('TIMETABLE CHANGE')
                 except Exception:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'TEMP':
@@ -600,7 +604,7 @@ def process_input():
                             (parser2[1], parser2[0]))
                         sig_command = show_ack = True
                         show_message('TP CHANGE', 'TP CHANGE: ' + parser2[1])
-                        say('TEMPERATURE CHANGE', say_status=True)
+                        say('TEMPERATURE CHANGE')
                 except Exception as e:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'LCD':
