@@ -708,7 +708,7 @@ def say(message, say_status = False):
     if config.MODULE_SPEECH:
         command = config.SPEECH_COMMAND.format(
             'HOMPI - ' + message
-            + (' - ' + io_status.get_status_text()) if say_status else '')\
+            + (' - ' + io_status.get_status_text() if say_status else '')) \
                   + ' &'
         print('status changed: executing {}'.format(command))
         os.system(command)
