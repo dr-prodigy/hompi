@@ -708,7 +708,7 @@ def show_message(lcd_message, telegram_message=""):
 
 def say(message):
     if config.MODULE_SPEECH:
-        command = config.SPEECH_COMMAND.format('HOMPI - ' + message + ' &')
+        command = config.SPEECH_COMMAND.format('HOMPI - ' + message ) + ' &'
         print('status changed: executing {}'.format(command))
         os.system(command)
 
