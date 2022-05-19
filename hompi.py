@@ -611,6 +611,7 @@ def process_input():
                     lcd.set_backlight(0,
                                       datetime.datetime.now() +
                                       datetime.timedelta(hours=4))
+                    say('L C D OFF')
                 else:
                     show_message('LCD ON')
                     say('L C D ON')
