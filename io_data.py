@@ -90,7 +90,7 @@ class Status:
                 'cooling' if self.heating_status == 'cooling' else\
                 'warming'
 
-            status = 'hompi - temperature {:.1f} degrees, {} mode'.\
+            status = 'temperature {:.1f} degrees, {} mode'.\
                      format(self.int_temp_c, stato) + \
                      (', {:.1f} degrees required, heating {}'.format(
                         self.req_temp_c, heating)
