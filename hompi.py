@@ -52,6 +52,7 @@ TEST_DELTA_THERMO_ON_TEMP_C = .03
 current_status = ''
 sig_command = False
 is_status_changed = True
+is_program_changed = False
 
 initial_time = datetime.datetime.now()
 sig_switch_timeout = [datetime.datetime.now()]*len(config.BUTTONS)
@@ -109,7 +110,7 @@ def main():
     # main loop
     log_data('start')
     show_message('HOMPI', 'HOMPI START')
-    say('START')
+    say('Start')
 
     while True:
         try:
@@ -209,12 +210,12 @@ def main():
             log_stderr(traceback.format_exc())
             log_data('EXC: {}'.format(traceback.format_exc()))
         finally:
-            # refresh message
-            #if refreshing:
-            #    say('', say_status=True)
+            # program change message
+            if is_program_changed:
+                say('', say_status=True)
 
-            # stop refreshing cycle, reset status change
-            refreshing = is_status_changed = False
+            # stop refreshing cycle, reset status and program change
+            refreshing = is_status_changed = is_program_changed = False
 
             # update scheduled tasks (skip any lost task)
             for task in task_every_secs.keys():
@@ -450,7 +451,7 @@ def sigterm_handler(signal, frame):
 
 
 def refresh_program(time_):
-    global current_status
+    global current_status, is_program_changed
 
     dbmgr = db.DatabaseManager()
 
@@ -474,13 +475,16 @@ def refresh_program(time_):
     else:
         # normal day
         day_type = row[datetime.datetime.today().weekday() + 3]
-    io_status.mode_id = row[0]
-    io_status.mode_desc = io_status.timetable_desc = row[1]
-    io_status.short_mode_desc = row[2].upper()[0:1]
-    print('Timetable: {} ({})'.format(io_status.mode_desc,
-                                      io_status.short_mode_desc))
-    sensor.hompi_slaves_forward_command(io_status.hompi_slaves,
-                                        'TT={}'.format(row[0]))
+
+    if io_status.mode_id != row[0]:
+        io_status.mode_id = row[0]
+        io_status.mode_desc = io_status.timetable_desc = row[1]
+        io_status.short_mode_desc = row[2].upper()[0:1]
+        is_program_changed = True
+        print('Timetable: {} ({})'.format(io_status.mode_desc,
+                                          io_status.short_mode_desc))
+        sensor.hompi_slaves_forward_command(io_status.hompi_slaves,
+                                            'TT={}'.format(row[0]))
 
     row = dbmgr.query(
         """SELECT
@@ -495,14 +499,20 @@ def refresh_program(time_):
         AND time_hhmm <= {:d}
         ORDER BY orderby DESC""".format(day_type, time_)
     ).fetchone()
-    orderby = row[0]
-    io_status.day_type_desc = row[1]
-    io_status.req_temp_c = row[5]
-    io_status.req_start_time = row[2]
-    io_status.req_temp_desc = row[4]
-    print('Day: {}({:02d}:{:02d}) - Temp({}): {:.2f}°'.format(
-        row[1], datetime.datetime.today().hour,
-        datetime.datetime.today().minute, row[4], row[5]))
+
+    if io_status.day_type_desc != row[1] or \
+            io_status.req_temp_c != row[5] or \
+            io_status.req_start_time != row[2] or \
+            io_status.req_temp_desc != row[4]:
+        orderby = row[0]
+        io_status.day_type_desc = row[1]
+        io_status.req_temp_c = row[5]
+        io_status.req_start_time = row[2]
+        io_status.req_temp_desc = row[4]
+        is_program_changed = True
+        print('Day: {}({:02d}:{:02d}) - Temp({}): {:.2f}°'.format(
+            row[1], datetime.datetime.today().hour,
+            datetime.datetime.today().minute, row[4], row[5]))
 
     # get next change
     row = dbmgr.query(
@@ -591,8 +601,8 @@ def process_input():
                         dbmgr.query('UPDATE gm_control SET timetable_id = ?',
                                     (parser[1]))
                         show_message('TT CHANGE', 'TT CHANGE: ' + parser[1])
+                        say('Timetable change')
                         sig_command = show_ack = True
-                        say('TIMETABLE CHANGE')
                 except Exception:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'TEMP':
@@ -604,7 +614,7 @@ def process_input():
                             (parser2[1], parser2[0]))
                         sig_command = show_ack = True
                         show_message('TP CHANGE', 'TP CHANGE: ' + parser2[1])
-                        say('TEMPERATURE CHANGE')
+                        say('Temperature change: ' + parser2[1] + ' degrees')
                 except Exception as e:
                     log_data('PARSERROR: {}'.format(_command))
             elif parser[0].upper() == 'LCD':
@@ -612,16 +622,16 @@ def process_input():
                     lcd.set_backlight(0,
                                       datetime.datetime.now() +
                                       datetime.timedelta(hours=4))
-                    say('L C D OFF')
+                    say('Display off')
                 else:
                     show_message('LCD ON')
-                    say('L C D ON')
+                    say('Display on')
                     lcd.set_backlight(1)
                 show_ack = True
             elif parser[0].upper() == 'MESSAGE':
                 io_status.send_message(parser[1])
                 show_message('', 'MESSAGE: ' + parser[1])
-                say('MESSAGE: ' + parser[1])
+                say('Message: ' + parser[1])
                 is_status_changed = True
                 show_ack = True
             elif parser[0].upper() == 'AMBIENT' or \
@@ -634,7 +644,7 @@ def process_input():
                                 datetime.datetime.now() +
                                 datetime.timedelta(hours=4))
                         show_message('COLOR', 'AMBIENT COLOR: #' + parser[1])
-                        say('AMBIENT COLOR' +
+                        say('Ambient color change' +
                             (' OFF' if parser[1] == '000000' else ''))
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
@@ -645,7 +655,7 @@ def process_input():
                     if config.MODULE_AMBIENT:
                         ambient.set_ambient_xmas_daisy(parser[1])
                         show_message('COLOR', 'AMBIENT XMAS')
-                        say('AMBIENT CHRISTMAS')
+                        say('Ambient christmas')
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
@@ -666,7 +676,7 @@ def process_input():
                         io_status.send_switch_command(gate_button_index)
                         show_ack = True
                         show_message('GATE', 'GATE OPEN')
-                        say('GATE OPEN')
+                        say('Gate open')
             elif parser[0].upper() == 'BUTTON':
                 try:
                     button_no = int(parser[1])
@@ -677,7 +687,7 @@ def process_input():
                         io_status.send_switch_command(button_no)
                         show_ack = True
                         show_message('BUTTON' + button_no)
-                        say('BUTTON ' + button_no)
+                        say('Function ' + button_no)
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                         _command,
