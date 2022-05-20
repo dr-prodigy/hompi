@@ -74,11 +74,11 @@ except Exception:
 task_every_secs = {
     'hompi_slaves_refresh': 31.0,
     'update_lcd_content': 21.0,
-    'get_temp': 4.0,
+    'get_temp': 20.0,
     'get_meteo': 300.0,  # 5 mins
     'get_aphorism': 241.0,  # 4 mins
     'refresh': 64.0,  # 1 min (multiple of get_temp)
-    'update_temp': 40.0,
+    'update_temp': 80.0,
     'update_io': 10.0,
 }
 
@@ -210,8 +210,8 @@ def main():
             log_data('EXC: {}'.format(traceback.format_exc()))
         finally:
             # refresh message
-            if refreshing:
-                say('', say_status=True)
+            #if refreshing:
+            #    say('', say_status=True)
 
             # stop refreshing cycle, reset status change
             refreshing = is_status_changed = False
