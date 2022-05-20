@@ -78,7 +78,7 @@ task_every_secs = {
     'get_temp': 20.0,
     'get_meteo': 300.0,  # 5 mins
     'get_aphorism': 241.0,  # 4 mins
-    'refresh': 64.0,  # 1 min (multiple of get_temp)
+    'refresh': 120.0,  # 2 min (multiple of get_temp)
     'update_temp': 80.0,
     'update_io': 10.0,
 }
@@ -94,7 +94,7 @@ refreshing = True
 
 
 def main():
-    global sig_command, refreshing, is_status_changed, lcd
+    global sig_command, refreshing, is_status_changed, is_program_changed, lcd
     global initial_time
     global temp, temp_avg_accu, temp_avg_counter, temp_avg_sum
     global log_temp_avg_accu, log_temp_avg_counter, log_temp_avg_sum
