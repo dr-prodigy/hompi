@@ -644,8 +644,8 @@ def process_input():
                                 datetime.datetime.now() +
                                 datetime.timedelta(hours=4))
                         show_message('COLOR', 'AMBIENT COLOR: #' + parser[1])
-                        say('Ambient color change' +
-                            (' OFF' if parser[1] == '000000' else ''))
+                        say('Ambient color ' +
+                            (' off' if parser[1] == '000000' else 'change'))
                 except Exception as e:
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
