@@ -176,7 +176,7 @@ async def main():
             if (secs_elapsed >= task_at_secs[
                     'get_temp'] or refreshing) and config.MODULE_TEMP:
                 get_temp_task = asyncio.create_task(get_temperature())
-                # when refreshing, run syncronized
+                # when refreshing, run synchronized
                 if refreshing:
                     await get_temp_task
                     get_temp_task = None
@@ -372,7 +372,7 @@ async def get_temperature():
                 io_status.heating_status == 'warming':
             temp += TEST_DELTA_THERMO_ON_TEMP_C
             # sensors delay test
-            await asyncio.sleep(random.uniform(.0, .2))
+            await asyncio.sleep(random.uniform(.0, 1.2))
     else:
         temp = await sensor.read_temp()
     # skip wrong reads (null or > 50°C)
