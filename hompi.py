@@ -95,11 +95,11 @@ task_every_mins = {
 task_at_secs = {}
 task_at_mins = {}
 
-refreshing = True
+sig_reset = True
 
 
 async def main():
-    global sig_command, refreshing, is_status_changed, is_program_changed, lcd
+    global sig_command, sig_reset, is_status_changed, is_program_changed, lcd
     global initial_time
     global temp, temp_avg_accu, temp_avg_counter, temp_avg_sum
     global log_temp_avg_accu, log_temp_avg_counter, log_temp_avg_sum
@@ -133,9 +133,9 @@ async def main():
             if (io_status.req_end_time == current_time and
                     last_update_min != datetime.datetime.today().minute):
                 last_update_min = datetime.datetime.today().minute
-                refreshing = True
+                sig_reset = True
 
-            # OPERATIONS NOT DONE ON REFRESH - START
+            # OPERATIONS NOT DONE ON SIG_RESET - START
             # update hompiS
             if secs_elapsed >= task_at_secs['hompi_slaves_refresh']:
                 sensor.hompi_slaves_refresh(io_status.hompi_slaves)
@@ -161,10 +161,10 @@ async def main():
                 if config.MODULE_TEMP and temp_avg_sum == 0:
                     temp_avg_accu = temp_avg_counter = 0.0
                     io_status.int_temp_c = 0.0
-            # OPERATIONS NOT DONE ON REFRESH - END
+            # OPERATIONS NOT DONE ON SIG_RESET - END
 
             # update I/O (ack occurring here gets ambient control)
-            if secs_elapsed >= task_at_secs['update_io'] or refreshing:
+            if secs_elapsed >= task_at_secs['update_io'] or sig_reset:
                 process_input()
 
             # complete running get temp task
@@ -174,16 +174,16 @@ async def main():
 
             # get temperature
             if (secs_elapsed >= task_at_secs[
-                    'get_temp'] or refreshing) and config.MODULE_TEMP:
+                    'get_temp'] or sig_reset) and config.MODULE_TEMP:
                 get_temp_task = asyncio.create_task(get_temperature())
-                # when refreshing, run synchronized
-                if refreshing:
+                # on sig_reset, run synchronized
+                if sig_reset:
                     await get_temp_task
                     get_temp_task = None
 
             # update temperature
             if (secs_elapsed >= task_at_secs[
-                    'update_temp'] or refreshing):
+                    'update_temp'] or sig_reset):
                 # save new temperature (if valid)
                 if temp_avg_sum != 0:
                     io_status.int_temp_c = \
@@ -192,7 +192,7 @@ async def main():
                 temp_avg_accu = temp_avg_counter = temp_avg_sum = 0
 
             # refresh program
-            if secs_elapsed >= task_at_secs['refresh'] or refreshing:
+            if secs_elapsed >= task_at_secs['refresh'] or sig_reset:
                 refresh_program(current_time)
 
             # compute status (heating, switches, ...)
@@ -200,19 +200,19 @@ async def main():
 
             # update I/O: output
             if secs_elapsed >= task_at_secs['update_io'] or \
-                    refreshing or is_status_changed:
+                    sig_reset or is_status_changed:
                 update_output()
 
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins[
-                'log'] or refreshing) \
+                'log'] or sig_reset) \
                     and log_temp_avg_sum > 0:
                 io_status.int_temp_c = round(
                     log_temp_avg_accu / log_temp_avg_sum, 2)
                 log_temp_avg_accu = log_temp_avg_counter = log_temp_avg_sum = 0
-                log_data('refreshing' if refreshing else '.')
+                log_data('sig_reset' if sig_reset else '.')
 
-            # update LCD message (NOT ON REFRESH)
+            # update LCD message (NOT ON SIG_RESET)
             if secs_elapsed >= task_at_secs['update_lcd_content']:
                 update_lcd_content(True)
 
@@ -230,8 +230,8 @@ async def main():
             if is_program_changed:
                 say('', say_status=True)
 
-            # stop refreshing cycle, reset status and program change
-            refreshing = is_status_changed = is_program_changed = False
+            # stop sig_reset cycle, reset status and program change
+            sig_reset = is_status_changed = is_program_changed = False
 
             # update scheduled tasks (skip any lost task)
             for task in task_every_secs.keys():
@@ -255,16 +255,16 @@ async def main():
                     # catch command "interrupt" (jump to new cycle)
                     if sig_command:
                         break
-                    frame_duration = lcd.update(io_status)
-                    cycle_duration += frame_duration
-                    if frame_duration < .25 and cycle_duration < 1:
-                        delay = .25 - frame_duration
+                    lcd_update_duration = lcd.update(io_status)
+                    cycle_duration += lcd_update_duration
+                    if lcd_update_duration < .25 and cycle_duration < 1:
+                        delay = .25 - lcd_update_duration
                         await asyncio.sleep(delay)
                         cycle_duration += delay
 
                 if sig_command:
                     sig_command = False
-                    refreshing = True
+                    sig_reset = True
 
             except (KeyboardInterrupt, SystemExit):
                 # cleanup sensors & LCD
