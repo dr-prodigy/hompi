@@ -31,6 +31,9 @@ import dateutil.parser
 
 from utils import log_stderr
 
+import asyncio
+import aiofiles
+
 # GPIO import
 try:
     import RPi.GPIO as GPIO
@@ -133,12 +136,15 @@ class Sensors():
             return aphorism
 
     # temperature sensor
-    def _read_temp_raw(self):
+    async def _read_temp_raw(self):
+        print('ci arrivooooooooooooooooooooooooooooooooooo')
+        #await asyncio.sleep(1.5)
+        #return [': crc=1e YES','t=27125']
+
         if self.device_file:
             try:
-                f = open(self.device_file, 'r')
-                lines = f.readlines()
-                f.close()
+                async with aiofiles.open(self.device_file, 'r') as f:
+                    lines = await f.readlines()
                 return lines
             except Exception:
                 # in case of a temp sensor issue, return None
@@ -146,14 +152,16 @@ class Sensors():
         else:
             return None
 
-    def read_temp(self):
-        lines = self._read_temp_raw()
+    async def read_temp(self):
+        lines = await self._read_temp_raw()
         if lines:
             retries = 0
             while (not lines or lines[0].strip()[-3:] != 'YES') \
                     and retries < 5:
-                time.sleep(0.2)
-                lines = self._read_temp_raw()
+                lines = await self._read_temp_raw()
+                if lines and lines[0].strip()[-3:] == 'YES':
+                    break
+                await asyncio.sleep(0.2)
                 retries += 1
             if lines and len(lines) > 1:
                 equals_pos = lines[1].find('t=')

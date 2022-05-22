@@ -41,10 +41,15 @@ import socket
 from tendo import singleton
 from utils import log_stderr, os_async_command
 
+import aiofiles
+import asyncio
+
 io_status = io_data.Status()
 sensor = sensors.Sensors()
 lcd = dashboard.Dashboard()
 ambient = ambient.Ambient()
+
+get_temp_task = None
 
 TEST_INIT_TEMP = 20.0
 TEST_DELTA_EXT_INT_COEFF = .001
@@ -75,7 +80,7 @@ except Exception:
 task_every_secs = {
     'hompi_slaves_refresh': 31.0,
     'update_lcd_content': 21.0,
-    'get_temp': 20.0,
+    'get_temp': 4.0,
     'get_meteo': 300.0,  # 5 mins
     'get_aphorism': 241.0,  # 4 mins
     'refresh': 120.0,  # 2 min (multiple of get_temp)
@@ -93,11 +98,13 @@ task_at_mins = {}
 refreshing = True
 
 
-def main():
+async def main():
     global sig_command, refreshing, is_status_changed, is_program_changed, lcd
     global initial_time
     global temp, temp_avg_accu, temp_avg_counter, temp_avg_sum
     global log_temp_avg_accu, log_temp_avg_counter, log_temp_avg_sum
+
+    global get_temp_task
 
     last_update_min = -1
 
@@ -160,10 +167,15 @@ def main():
             if secs_elapsed >= task_at_secs['update_io'] or refreshing:
                 process_input()
 
+            if get_temp_task != None:
+                print('\n\n\n\npure qui')
+                await get_temp_task
+                get_temp_task = None
+
             # get temperature
             if (secs_elapsed >= task_at_secs[
                     'get_temp'] or refreshing) and config.MODULE_TEMP:
-                get_temperature()
+                get_temp_task = asyncio.create_task(get_temperature())
 
             # update temperature
             if (secs_elapsed >= task_at_secs[
@@ -241,7 +253,7 @@ def main():
                         break
                     frame_duration = lcd.update(io_status)
                     if frame_duration < .25 and cycle_duration < 1:
-                        time.sleep(.25 - frame_duration)
+                        await asyncio.sleep(.25 - frame_duration)
                     cycle_duration += .25
 
                 if sig_command:
@@ -339,7 +351,7 @@ def aphorism():
         log_data('APHOEXC: {}'.format(traceback.format_exc()))
 
 
-def get_temperature():
+async def get_temperature():
     global temp
     global temp_avg_accu, temp_avg_counter, temp_avg_sum
     global log_temp_avg_accu, log_temp_avg_counter, log_temp_avg_sum
@@ -354,9 +366,9 @@ def get_temperature():
                 io_status.heating_status == 'warming':
             temp += TEST_DELTA_THERMO_ON_TEMP_C
             # sensors delay test
-            time.sleep(random.uniform(.0, .2))
+            await asyncio.sleep(random.uniform(.0, .2))
     else:
-        temp = sensor.read_temp()
+        temp = await sensor.read_temp()
     # skip wrong reads (null or > 50°C)
     if not temp or temp > 50.0:
         log_stderr('Temp sensor error: received {}'.format(temp))
@@ -767,5 +779,5 @@ def log_data(event):
         time.sleep(1)
 
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+asyncio.run(main())
