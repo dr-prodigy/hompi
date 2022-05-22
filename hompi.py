@@ -167,11 +167,10 @@ async def main():
             if secs_elapsed >= task_at_secs['update_io'] or refreshing:
                 process_input()
 
+            # complete running get temp task
             if get_temp_task != None:
-                print('\n\n\n\npure qui')
                 await get_temp_task
                 get_temp_task = None
-
             # get temperature
             if (secs_elapsed >= task_at_secs[
                     'get_temp'] or refreshing) and config.MODULE_TEMP:
@@ -247,14 +246,16 @@ async def main():
                 # update lcd screen to 1 sec approx.
                 cycle_duration = (datetime.datetime.now() - cycle_start_time)\
                     .total_seconds()
-                for loop in range(4):
+                while cycle_duration < 1:
                     # catch command "interrupt" (jump to new cycle)
                     if sig_command:
                         break
                     frame_duration = lcd.update(io_status)
+                    cycle_duration += frame_duration
                     if frame_duration < .25 and cycle_duration < 1:
-                        await asyncio.sleep(.25 - frame_duration)
-                    cycle_duration += .25
+                        delay = .25 - frame_duration
+                        await asyncio.sleep(delay)
+                        cycle_duration += delay
 
                 if sig_command:
                     sig_command = False

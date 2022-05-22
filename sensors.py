@@ -137,7 +137,7 @@ class Sensors():
 
     # temperature sensor
     async def _read_temp_raw(self):
-        print('ci arrivooooooooooooooooooooooooooooooooooo')
+        #print('ci arrivooooooooooooooooooooooooooooooooooo')
         #await asyncio.sleep(1.5)
         #return [': crc=1e YES','t=27125']
 
