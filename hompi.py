@@ -514,31 +514,31 @@ def refresh_program(time_):
             row[1], datetime.datetime.today().hour,
             datetime.datetime.today().minute, row[4], row[5]))
 
-    # get next change
-    row = dbmgr.query(
-        """SELECT
-            time_hhmm, delta_calc_mm
-        FROM gm_timetable_day_type AS tdtype
-        INNER JOIN gm_timetable_type_data AS tdata
-            ON tdata.day_type_id = tdtype.id
-        INNER JOIN gm_temp AS temp
-            ON temp.id = tdata.temp_id
-        WHERE tdtype.id = {:d}
-        AND tdata.orderby > {:d}
-        ORDER BY orderby""".format(day_type, orderby)
-    ).fetchone()
-    if row:
-        io_status.req_end_time = row[0]
-    else:
-        io_status.req_end_time = 0000
-    print('Time range: ({:02.0f}:{:02.0f}) - ({:02.0f}:{:02.0f})'.format(
-        math.floor(io_status.req_start_time // 100),
-        io_status.req_start_time - math.floor(
-            io_status.req_start_time // 100) * 100,
-        math.floor(io_status.req_end_time // 100),
-        io_status.req_end_time - math.floor(
-            io_status.req_end_time // 100) * 100
-    ))
+        # get next change
+        row = dbmgr.query(
+            """SELECT
+                time_hhmm, delta_calc_mm
+            FROM gm_timetable_day_type AS tdtype
+            INNER JOIN gm_timetable_type_data AS tdata
+                ON tdata.day_type_id = tdtype.id
+            INNER JOIN gm_temp AS temp
+                ON temp.id = tdata.temp_id
+            WHERE tdtype.id = {:d}
+            AND tdata.orderby > {:d}
+            ORDER BY orderby""".format(day_type, orderby)
+        ).fetchone()
+        if row:
+            io_status.req_end_time = row[0]
+        else:
+            io_status.req_end_time = 0000
+        print('Time range: ({:02.0f}:{:02.0f}) - ({:02.0f}:{:02.0f})'.format(
+            math.floor(io_status.req_start_time // 100),
+            io_status.req_start_time - math.floor(
+                io_status.req_start_time // 100) * 100,
+            math.floor(io_status.req_end_time // 100),
+            io_status.req_end_time - math.floor(
+                io_status.req_end_time // 100) * 100
+        ))
 
 
 def update_lcd_content(change=False):
