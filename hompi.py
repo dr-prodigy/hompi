@@ -171,10 +171,15 @@ async def main():
             if get_temp_task != None:
                 await get_temp_task
                 get_temp_task = None
+
             # get temperature
             if (secs_elapsed >= task_at_secs[
                     'get_temp'] or refreshing) and config.MODULE_TEMP:
                 get_temp_task = asyncio.create_task(get_temperature())
+                # when refreshing, run syncronized
+                if refreshing:
+                    await get_temp_task
+                    get_temp_task = None
 
             # update temperature
             if (secs_elapsed >= task_at_secs[
@@ -271,7 +276,7 @@ async def main():
                 # LCD I/O error: refresh LCD screen
                 log_stderr(traceback.format_exc())
                 log_stderr('LCD I/O error: trying to recover..')
-                time.sleep(1)
+                await asyncio.sleep(1)
                 lcd.refresh_display(io_status)
 
 # initialize DB, I/O, signal handlers, tasks, message
