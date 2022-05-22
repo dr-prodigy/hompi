@@ -137,9 +137,9 @@ class Sensors():
 
     # temperature sensor
     async def _read_temp_raw(self):
-        #print('ci arrivooooooooooooooooooooooooooooooooooo')
-        #await asyncio.sleep(1.5)
-        #return [': crc=1e YES','t=27125']
+        # Uncomment for async test
+        # await asyncio.sleep(1.5)
+        # return [': crc=1e YES','t=27125']
 
         if self.device_file:
             try:
@@ -158,10 +158,8 @@ class Sensors():
             retries = 0
             while (not lines or lines[0].strip()[-3:] != 'YES') \
                     and retries < 5:
-                lines = await self._read_temp_raw()
-                if lines and lines[0].strip()[-3:] == 'YES':
-                    break
                 await asyncio.sleep(0.2)
+                lines = await self._read_temp_raw()
                 retries += 1
             if lines and len(lines) > 1:
                 equals_pos = lines[1].find('t=')
