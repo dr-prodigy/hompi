@@ -154,19 +154,17 @@ class Sensors():
 
     async def read_temp(self):
         lines = await self._read_temp_raw()
-        if lines:
-            retries = 0
-            while (not lines or lines[0].strip()[-3:] != 'YES') \
-                    and retries < 5:
-                await asyncio.sleep(0.2)
-                lines = await self._read_temp_raw()
-                retries += 1
-            if lines and len(lines) > 1:
-                equals_pos = lines[1].find('t=')
-                if equals_pos != -1:
-                    temp_string = lines[1][equals_pos + 2:]
-                    temp_c = float(temp_string) / 1000.0
-                    return temp_c * config.TEMP_CORRECTION
+        retries = 0
+        while (not lines or lines[0].strip()[-3:] != 'YES') and retries < 5:
+            await asyncio.sleep(0.2)
+            lines = await self._read_temp_raw()
+            retries += 1
+        if lines and len(lines) > 1:
+            equals_pos = lines[1].find('t=')
+            if equals_pos != -1:
+                temp_string = lines[1][equals_pos + 2:]
+                temp_c = float(temp_string) / 1000.0
+                return temp_c * config.TEMP_CORRECTION
         return None
 
     # heating relay management
