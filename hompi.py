@@ -738,7 +738,8 @@ def show_message(lcd_message, telegram_message=""):
 
 def say(message, say_status = False):
     if config.MODULE_SPEECH:
-        message = 'HOMPI - ' + message \
+        message = 'HOMPI' \
+            + (' - ' + message if message != '' else '') \
             + (' - ' + io_status.get_status_text() if say_status else '')
         command = config.SPEECH_COMMAND.format(message) + ' &'
         print('SAYING: {}'.format(message))
