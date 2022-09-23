@@ -153,7 +153,7 @@ class Sensors():
             return None
 
     async def read_temp(self):
-        lines = await self._read_temp_raw()
+        lines = ""
         retries = 0
         while (not lines or lines[0].strip()[-3:] != 'YES') and retries < 5:
             await asyncio.sleep(0.2)
