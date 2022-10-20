@@ -333,7 +333,7 @@ class Dashboard:
                 if io_status.hompi_slaves:
                     line2options = ''
                     for server_id, server_data in \
-                            io_status.hompi_slaves.iteritems():
+                            io_status.hompi_slaves.items():
                         line2options += '{} {:.1f}\xDFC'.format(
                             server_id,
                             server_data['int_temp_c'])
@@ -411,7 +411,7 @@ class Dashboard:
         if LCD_ROWS == 2:
             if self._current_program % 2 == 0 and io_status.message == '':
                 # +----------------+
-                # |_ XXX XXX XXX ° |
+                # |_ XXX XXX XXX°  |
                 # |M XXX XXX.XXX   |
                 # +----------------+
                 self.set_charset(CHARSET_BIGNUM)
@@ -422,8 +422,8 @@ class Dashboard:
                     self.line[1] = '{} {}'.format(mode_icon,
                                                   main_temp2.center(14))
                 else:
-                    self.line[0] = main_temp1.center(17)[0:16]
-                    self.line[1] = main_temp2.center(17)[0:16]
+                    self.line[1] = main_temp1.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
+                    self.line[2] = main_temp2.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
             else:
                 # +----------------+
                 # |_ 11:41   22.3°C|
@@ -442,22 +442,23 @@ class Dashboard:
                     self.line[1] = line2options
         else:
             # +--------------------+
-            # |_ 12:09   19-01-2018|
-            # |    -=0 0-0 0-0 °   |
+            # | _ 12:09 19-01-2018 |
+            # |    -=0 0-0 0-0°    |
             # |    0__ 0_0.0_0     |
             # |A  17.0°C > 18:00   |
             # +--------------------+
-            self.line[0] = '{} {:02.0f}^{:02.0f}   {}'.format(
+            self.line[0] = '{} {:02.0f}^{:02.0f} {}'.format(
                 heating_icon,
                 datetime.datetime.now().hour, datetime.datetime.now().minute,
-                datetime.datetime.today().strftime('%d-%m-%Y'))
-            self.line[1] = '    {}'.format(main_temp1)
-            self.line[2] = '    {}'.format(main_temp2)
+                datetime.datetime.today().strftime('%d-%m-%Y')).center(LCD_COLUMNS)
+            self.line[1] = main_temp1.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
+            self.line[2] = main_temp2.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
             if io_status.message != '':
                 self.line[3] = ' \xA5 \xA5 \xA5 ' + \
                                io_status.message + ' \xA5 \xA5 \xA5'
             else:
                 self.line[3] = line2options
+            self.line[3] = self.line[3].center(LCD_COLUMNS)
 
         # if program is changed, reset positions
         if change:

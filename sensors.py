@@ -19,10 +19,11 @@
 
 import os
 import sys
+import ssl
 import glob
 import json
 import codecs
-import six.moves.urllib.request as request
+import urllib.request as request
 import hashlib
 import traceback
 import time
@@ -55,6 +56,9 @@ m.update(config.API_KEY.encode('utf-8'))
 API_KEY = m.hexdigest().upper()
 print('API_KEY: {}'.format(API_KEY))
 
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
 
 class Sensors():
     METEO_URL = 'http://api.openweathermap.org/data/2.5/weather?' +\
@@ -185,12 +189,10 @@ class Sensors():
     def hompi_slaves_refresh(self, hompi_slaves):
         hompi_slaves.clear()
         for server in config.HOMPI_SERVERS:
+            url = '{}/hompi/_get_status?api_key={}'.format(server, API_KEY)
             try:
                 status = json.load(
-                    reader(request.urlopen(
-                        '{}/hompi/_get_status?api_key={}'.format(server,
-                                                                 API_KEY),
-                        timeout=2)))
+                    reader(request.urlopen(url, timeout=2, context=ssl_context)))
                 # avoid nested slaves
                 del status['hompi_slaves']
                 status['address'] = server
@@ -201,7 +203,8 @@ class Sensors():
                     print('{} server replied with status: saved.'.format(
                         status['id']))
             except request.URLError:
-                print('WARNING: {} server not available.'.format(server))
+                print(traceback.format_exc())
+                print('WARNING: {} server not available.'.format(url))
             except Exception:
                 log_stderr.write(traceback.format_exc())
 
