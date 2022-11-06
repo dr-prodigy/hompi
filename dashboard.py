@@ -422,8 +422,8 @@ class Dashboard:
                     self.line[1] = '{} {}'.format(mode_icon,
                                                   main_temp2.center(14))
                 else:
-                    self.line[1] = main_temp1.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
-                    self.line[2] = main_temp2.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
+                    self.line[0] = main_temp1.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
+                    self.line[1] = main_temp2.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
             else:
                 # +----------------+
                 # |_ 11:41   22.3°C|
@@ -491,11 +491,7 @@ class Dashboard:
         for no in range(0, LCD_ROWS):
             if self._command:
                 if no == int(LCD_ROWS / 2):
-                    tmp_lines[no] = ' ' * \
-                                    int((LCD_COLUMNS -
-                                         len(self._command)) / 2 + 1) + \
-                                    self._command
-                    tmp_lines[no] += ' ' * (LCD_COLUMNS - len(self._command))
+                    tmp_lines[no] = self._command.center(LCD_COLUMNS)
                 else:
                     tmp_lines[no] = ' ' * LCD_COLUMNS
             else:
