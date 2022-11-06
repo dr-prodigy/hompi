@@ -25,10 +25,12 @@ DEBUG_LOG = config.VERBOSE_LOG
 
 
 class SpiDev:
-    def open(self, port, device):
+    @staticmethod
+    def open(port, device):
         if DEBUG_LOG:
             print('SpiDev.open ({},{})'.format(port, device))
 
-    def writebytes(self, data):
+    @staticmethod
+    def writebytes(data):
         if DEBUG_LOG:
             print('SpiDev.writebytes ({})'.format(data))

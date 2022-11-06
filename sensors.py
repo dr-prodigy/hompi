@@ -18,7 +18,6 @@
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import sys
 import ssl
 import glob
 import json
@@ -60,10 +59,11 @@ ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
-class Sensors():
-    METEO_URL = 'http://api.openweathermap.org/data/2.5/weather?' +\
+
+class Sensors:
+    METEO_URL = 'http://api.openweathermap.org/data/2.5/weather?' + \
                 'q=[place]&units=metric&appid=6913ade53fd71e3c428b17a11807a6bf'
-    APHORISM_URL = 'http://api.forismatic.com/api/1.0/?' +\
+    APHORISM_URL = 'http://api.forismatic.com/api/1.0/?' + \
                    'method=getQuote&lang=en&format=json'
     device_file = ''
 
@@ -104,13 +104,13 @@ class Sensors():
             meteo = json.load(reader(request.urlopen(
                 self.METEO_URL.replace('[place]', config.PLACE), timeout=5)))
             print(
-               ('{} - Weather: {} - Temp.: {}° - Humidity: {}% Pressure: {} ' +
-                'mbar - Wind: {} m/s').format(
-                meteo['name'], meteo['weather'][0]['main'],
-                meteo['main']['temp'],
-                meteo['main']['humidity'],
-                meteo['main']['pressure'],
-                meteo['wind']['speed']))
+                ('{} - Weather: {} - Temp.: {}° - Humidity: {}% Pressure: {} ' +
+                 'mbar - Wind: {} m/s').format(
+                    meteo['name'], meteo['weather'][0]['main'],
+                    meteo['main']['temp'],
+                    meteo['main']['humidity'],
+                    meteo['main']['pressure'],
+                    meteo['wind']['speed']))
         except request.URLError:
             print('WARNING: meteo not available.')
         except Exception:
@@ -168,7 +168,8 @@ class Sensors():
         return None
 
     # heating relay management
-    def set_heating(self, status):
+    @staticmethod
+    def set_heating(status):
         if config.MODULE_TEMP:
             print("*SENSOR* - HEATING={}".format(status))
             if config.RELAY_HILOW_MODE:
@@ -177,16 +178,18 @@ class Sensors():
                 GPIO.setup(HEATING_GPIO, GPIO.OUT if status else GPIO.IN)
 
     # switch relay management
-    def set_switch(self, gpio, status):
-            print("*SENSOR* - SWITCH({})={}".format(gpio, status))
-            if config.RELAY_HILOW_MODE:
-                GPIO.output(gpio, GPIO.LOW if status else GPIO.HIGH)
-            else:
-                GPIO.setup(gpio, GPIO.OUT if status else GPIO.IN)
+    @staticmethod
+    def set_switch(gpio, status):
+        print("*SENSOR* - SWITCH({})={}".format(gpio, status))
+        if config.RELAY_HILOW_MODE:
+            GPIO.output(gpio, GPIO.LOW if status else GPIO.HIGH)
+        else:
+            GPIO.setup(gpio, GPIO.OUT if status else GPIO.IN)
 
     # MULTI-hompi
     # refresh hompi slave servers status
-    def hompi_slaves_refresh(self, hompi_slaves):
+    @staticmethod
+    def hompi_slaves_refresh(hompi_slaves):
         hompi_slaves.clear()
         for server in config.HOMPI_SERVERS:
             url = '{}/hompi/_get_status?api_key={}'.format(server, API_KEY)
@@ -209,7 +212,8 @@ class Sensors():
                 log_stderr.write(traceback.format_exc())
 
     # forward command to hompi slaves
-    def hompi_slaves_forward_command(self, hompi_slaves, command):
+    @staticmethod
+    def hompi_slaves_forward_command(hompi_slaves, command):
         for slave_id, slave_data in hompi_slaves.items():
             if slave_id != config.HOMPI_ID:
                 try:
