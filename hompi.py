@@ -597,7 +597,7 @@ def process_input():
         if len(parser) > 1:
             if parser[0].upper() == 'TT':
                 try:
-                    if (int(parser[1])):
+                    if int(parser[1]):
                         dbmgr.query('UPDATE gm_control SET timetable_id = ?',
                                     (parser[1]))
                         show_message('TT CHANGE', 'TT CHANGE: ' + parser[1])
