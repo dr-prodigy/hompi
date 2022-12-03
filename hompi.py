@@ -73,7 +73,7 @@ except Exception:
     holiday_list = holidays.IT()
 
 task_every_secs = {
-    'hompi_slaves_refresh': 31.0,
+    'hompi_ext_refresh': 61.0,
     'update_lcd_content': 21.0,
     'get_temp': 20.0,
     'get_meteo': 300.0,  # 5 mins
@@ -129,9 +129,10 @@ def main():
                 refreshing = True
 
             # OPERATIONS NOT DONE ON REFRESH - START
-            # update hompiS
-            if secs_elapsed >= task_at_secs['hompi_slaves_refresh']:
+            # update external hompis / sensors
+            if secs_elapsed >= task_at_secs['hompi_ext_refresh']:
                 sensor.hompi_slaves_refresh(io_status.hompi_slaves)
+                sensor.hompi_ext_sensors_refresh(io_status.hompi_ext_sensors)
 
             # update I/O: meteo
             if secs_elapsed >= task_at_secs['get_meteo'] \

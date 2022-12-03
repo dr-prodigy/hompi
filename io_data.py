@@ -39,6 +39,7 @@ class Status:
         self.last_update = datetime.datetime.now().isoformat()
         self.last_change = datetime.datetime.now().isoformat()
         self.hompi_slaves = {}
+        self.hompi_ext_sensors = {}
         # heating
         if config.MODULE_TEMP:
             self.int_temp_c = 0.0

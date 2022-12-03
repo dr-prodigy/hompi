@@ -211,6 +211,20 @@ class Sensors:
             except Exception:
                 log_stderr.write(traceback.format_exc())
 
+    @staticmethod
+    def hompi_ext_sensors_refresh(hompi_ext_sensors):
+        hompi_ext_sensors.clear()
+        for sensor_url in config.HOMPI_EXT_SENSORS:
+            try:
+                ext_sensor_data = json.load(
+                    reader(request.urlopen(sensor_url, timeout=2, context=ssl_context)))
+                hompi_ext_sensors[ext_sensor_data['sensor']['name']] = ext_sensor_data['sensor']
+            except request.URLError:
+                print(traceback.format_exc())
+                print('WARNING: {} ext sensor not available.'.format(sensor_url))
+            except Exception:
+                log_stderr.write(traceback.format_exc())
+
     # forward command to hompi slaves
     @staticmethod
     def hompi_slaves_forward_command(hompi_slaves, command):
