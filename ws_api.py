@@ -26,7 +26,7 @@ import json
 import signal
 import hashlib
 import os
-import six.moves.urllib.request as urllib_request
+import urllib.request
 from PIL import Image
 
 import db
@@ -386,18 +386,18 @@ def get_list2(server, list, key=None):
         if server == "local":
             return get_list(list, key)
 
-        api_key = urllib_request.args.get('api_key', '').upper()
+        api_key = urllib.request.args.get('api_key', '').upper()
         address = _get_remote_address(server)
 
         if key:
-            return urllib_request.urlopen(
+            return urllib.request.urlopen(
                 "{}/hompi/_get_list/{}/{}?api_key={}".format(address,
                                                              list, key,
                                                              api_key),
                 timeout=2
             ).read()
         else:
-            return urllib_request.urlopen(
+            return urllib.request.urlopen(
                 "{}/hompi/_get_list/{}?api_key={}".format(address, list,
                                                           api_key),
                 timeout=2
@@ -418,10 +418,10 @@ def set_temp2(server, data_json):
         if server == "local":
             return set_temp(data_json)
 
-        api_key = urllib_request.args.get('api_key', '').upper()
+        api_key = urllib.request.args.get('api_key', '').upper()
         address = _get_remote_address(server)
 
-        return urllib_request.urlopen(
+        return urllib.request.urlopen(
             "{}/hompi/_set_temp/{}?api_key={}".format(address, data_json,
                                                       api_key), timeout=2
         ).read()
