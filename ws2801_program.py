@@ -57,8 +57,8 @@ SPI_PORT = 0
 SPI_DEVICE = 0
 
 # Kill currently running commands
-for line in os.popen("ps ax | grep '[" + __file__[0] + "]" + __file__[1:] +
-                     "' | grep -v '" + str(os.getpid()) + "'"):
+for line in os.popen("ps ax | grep " + sys.argv[0] +
+                     "| grep python | grep -v " + str(os.getpid())):
     fields = line.split()
     pid = fields[0]
     os.kill(int(pid), signal.SIGKILL)

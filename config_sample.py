@@ -23,6 +23,7 @@
 HOMPI_ID = 'Living'
 # HOMPI_SERVERS = ['http://hompi2_ip:5000','http://hompi3_ip:5000',]
 HOMPI_SERVERS = []
+HOMPI_EXT_SENSORS = []
 
 # ENABLED MODULES
 MODULE_TEMP = True

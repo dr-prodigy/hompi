@@ -330,13 +330,18 @@ class Dashboard:
         while True:
             # line2 additional modules
             if self._current_program in {3, 4, 7, 8, 11, 12}:
-                if io_status.hompi_slaves:
+                if io_status.hompi_slaves or io_status.hompi_ext_sensors:
                     line2options = ''
                     for server_id, server_data in \
                             io_status.hompi_slaves.items():
                         line2options += '{} {:.1f}\xDFC'.format(
                             server_id,
                             server_data['int_temp_c'])
+                    for sensor_id, sensor_data in \
+                            io_status.hompi_ext_sensors.items():
+                        line2options += '{} {:.1f}\xDFC'.format(
+                            sensor_data['desc'],
+                            sensor_data['temp'])
                     line2options = line2options.center(LCD_COLUMNS)
                     break
                 else:
