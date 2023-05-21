@@ -109,7 +109,7 @@ def send_command(command_json):
             INSERT INTO `gm_input`(`data`)
             SELECT ? WHERE NOT EXISTS
             (SELECT * FROM `gm_input` WHERE `data` = ?)
-            """, [_command['data']], [_command['data']])
+            """, (_command['data'], _command['data']))
         _signal_server()
     except Exception:
         print("send_command({}): error".format(command_json))
