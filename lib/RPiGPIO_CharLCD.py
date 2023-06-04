@@ -168,7 +168,8 @@ class RPiGPIO_CharLCD(object):
         self.write8(LCD_DISPLAYCONTROL | self.displaycontrol)
         self.write8(LCD_FUNCTIONSET | self.displayfunction)
         self.write8(LCD_ENTRYMODESET | self.displaymode)  # set the entry mode
-        self.clear()
+        # DON'T CLEAR (avoid flicker on refresh)
+        # self.clear()
 
     def home(self):
         """Move the cursor back to its home (first line and first column)."""
