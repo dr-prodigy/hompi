@@ -21,7 +21,7 @@
 run_flask_debugger=false
 
 # set HOMPI_HOME to default, if not yet set
-: "${HOMPI_HOME:=/home/pi/hompi}"
+export HOMPI_HOME=/home/pi/hompi
 
 # *** kill running daemons ***
 echo Killing hompi server..
