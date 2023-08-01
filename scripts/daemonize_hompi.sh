@@ -25,11 +25,11 @@ export HOMPI_HOME=/home/pi/hompi
 
 # *** kill running daemons ***
 echo Killing hompi server..
-kill $(ps aux |grep '[b]in/hompi' | awk '{print $2}')
+kill $(ps aux |grep '[b]in/hompi' | awk '{print $2}') 2>/dev/null
 
 if [ "$run_flask_debugger" = true ] ; then
   echo Killing flask debugger
-  kill $(ps aux |grep '[w]s_api' | awk '{print $2}')
+  kill $(ps aux |grep '[w]s_api' | awk '{print $2}') 2>/dev/null
 fi
 
 echo Moving to $HOMPI_HOME..
