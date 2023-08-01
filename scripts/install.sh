@@ -16,11 +16,15 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
+# install prerequisites
+sudo apt-get install python3-pip
+sudo pip3 install virtualenv
+
 # move to script directory
 cd $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # move up
 cd ..
 # create virtualenv, activate it, setup requirements
-virtualenv --system-site-packages venv
+python3 -m virtualenv --system-site-packages venv
 . venv/bin/activate
 pip install -r requirements/requirements.txt
