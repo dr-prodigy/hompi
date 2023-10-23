@@ -74,7 +74,7 @@ except Exception:
 
 task_every_secs = {
     'hompi_ext_refresh': 61.0,
-    'update_lcd_content': 21.0,
+    'update_lcd_content': 11.0,
     'get_temp': 20.0,
     'get_meteo': 300.0,  # 5 mins
     'get_aphorism': 241.0,  # 4 mins

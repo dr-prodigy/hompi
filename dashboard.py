@@ -349,7 +349,7 @@ class Dashboard:
                         else 1
                     continue
 
-            if self._current_program in {5, 6}:
+            if self._current_program in {5, 6} and not config.LCD_SKIP_EXTRA_INFO:
                 if config.MODULE_METEO:
                     line2options = ('Ext. {:.1f}\xDFC - {:.0f}% ' +
                                     '- {:.0f}mb - {:.1f}m/s - {}').format(
@@ -361,7 +361,7 @@ class Dashboard:
                     self._current_program += 4
                     continue
 
-            if self._current_program in {9, 10}:
+            if self._current_program in {9, 10} and not config.LCD_SKIP_EXTRA_INFO:
                 if config.MODULE_APHORISM:
                     line2options = '{} - {}'.format(
                         io_status.aphorism_text.encode('utf-8'),

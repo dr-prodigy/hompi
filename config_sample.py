@@ -69,6 +69,7 @@ PLACE = 'milan'
 IMAGE_PATH = './res/images/*.jpg'
 THUMB_SIZE = (800, 800)
 HOLIDAYS_COUNTRY = "IT"
+LCD_SKIP_EXTRA_INFO = True
 
 # SPEECH
 SPEECH_COMMAND = 'espeak -vit+m3 -s150 -k10 "{}"'
