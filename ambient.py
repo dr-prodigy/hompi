@@ -183,7 +183,7 @@ class Ambient():
         if not AMBIENT_ENABLED or not config.AMBIENT_CROSSFADE_COMMAND:
             return
 
-        if self._current_ambient_color != color:
+        if self._current_ambient_color != color or color == '000000':
             command = AMBIENT_MODULE_CMD
             command += config.AMBIENT_CROSSFADE_COMMAND.format(
                 color,
