@@ -299,6 +299,22 @@ def xmas_daisy(brightness='1', rgb=''):
                     time.sleep(delay)
 
 
+def tv_sim():
+    initial_time = datetime.datetime.now()
+    while (datetime.datetime.now() - initial_time).total_seconds() < 300:
+        delay = random.uniform(.2, 2)
+        r = random.randint(0x4F, 0xFF)
+        g = random.randint(0x4F, 0xFF)
+        b = random.randint(0x4F, 0xFF)
+        brightness = random.uniform(.02, 1)
+        color = Adafruit_WS2801.RGB_to_color(
+            int(r * brightness), int(g * brightness), int(b * brightness))
+        for i in range(0, pixels.count()):
+            pixels.set_pixel(i, color)
+        pixels.show()
+        time.sleep(delay)
+
+
 # Input a value 0 to 255 to get a color value.
 # The colours are a transition r - g - b - back to r.
 def _color_wheel(wheelPos):
@@ -333,6 +349,7 @@ if __name__ == "__main__":
         "wipe_in_out": wipe_in_out,
         "curtain_in_out": curtain_in_out,
         "xmas_daisy": xmas_daisy,
+        "tv_sim": tv_sim,
     }
     # Get the function from switcher dictionary
 

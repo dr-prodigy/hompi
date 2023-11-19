@@ -661,6 +661,16 @@ def process_input():
                     log_data('PARSERROR: {}\n{}'.format(
                             _command,
                             traceback.format_exc()))
+            elif parser[0].upper() == 'AMBIENT_TV_SIM':
+                try:
+                    if config.MODULE_AMBIENT:
+                        ambient.set_ambient_tv_sim()
+                        show_message('COLOR', 'AMBIENT TV SIM')
+                        say('Ambient TV sim')
+                except Exception as e:
+                    log_data('PARSERROR: {}\n{}'.format(
+                        _command,
+                        traceback.format_exc()))
             elif parser[0].upper() == 'GATE':
                 # execute gate only once per cycle, and not while another
                 # is running

@@ -211,6 +211,18 @@ class Ambient():
         self._set_current_ambient_color('000000')
         self._current_ambient_command = command
 
+    def set_ambient_tv_sim(self):
+        if not AMBIENT_ENABLED or not config.AMBIENT_TV_SIM_COMMAND:
+            return
+        command = AMBIENT_MODULE_CMD
+        command += config.AMBIENT_TV_SIM_COMMAND + ' &'
+        print('*AMBIENT tv_sim* - Executing: {}'.format(command))
+        os.system(command)
+
+        # refresh command (repeat)
+        self._set_current_ambient_color('000000')
+        self._current_ambient_command = command
+
     def ambient_ack(self):
         if not AMBIENT_ENABLED or not config.AMBIENT_ACK_COMMAND:
             return
