@@ -20,6 +20,7 @@
 from flask import Flask
 from flask import request
 from flask import send_file
+from werkzeug import exceptions
 
 import traceback
 import json
@@ -74,7 +75,8 @@ def _get_remote_address(server):
         return None
 
 
-@app.route('/hompi/_get_system_info')
+# READER METHODS (GET)
+@app.route('/hompi/_get_system_info', methods = ['GET'])
 def get_system_info():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -82,7 +84,7 @@ def get_system_info():
     return io_data.SystemInfo().get_output()
 
 
-@app.route('/hompi/_get_status')
+@app.route('/hompi/_get_status', methods = ['GET'])
 def get_status():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -96,44 +98,22 @@ def get_status():
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/hompi/_send_command/<command_json>')
-def send_command(command_json):
+@app.route('/hompi/_get_list/<data_list>', methods = ['GET'])
+@app.route('/hompi/_get_list/<data_list>/<key>', methods = ['GET'])
+def get_list(data_list, key=None):
     if not _check_sharedkey():
         return "Forbidden", 403
 
-    try:
-        _command = json.loads(command_json)
-        dbmgr = db.DatabaseManager()
-        # insert with de-bounce
-        dbmgr.query("""
-            INSERT INTO `gm_input`(`data`)
-            SELECT ? WHERE NOT EXISTS
-            (SELECT * FROM `gm_input` WHERE `data` = ?)
-            """, (_command['data'], _command['data']))
-        _signal_server()
-    except Exception:
-        print("send_command({}): error".format(command_json))
-        print(traceback.format_exc())
-        return "Error", 400  # BAD_REQUEST
-    return "Ok"
-
-
-@app.route('/hompi/_get_list/<list>')
-@app.route('/hompi/_get_list/<list>/<key>')
-def get_list(list, key=None):
-    if not _check_sharedkey():
-        return "Forbidden", 403
-
-    list_table = ('gm_timetable' if list == 'timetable' else
-                  ('gm_timetable_day_type' if list == 'daytype' else
-                   ('gm_temp' if list == 'temp' else
-                    ('gm_timetable_type_data' if list == 'typedata' else
+    list_table = ('gm_timetable' if data_list == 'timetable' else
+                  ('gm_timetable_day_type' if data_list == 'daytype' else
+                   ('gm_temp' if data_list == 'temp' else
+                    ('gm_timetable_type_data' if data_list == 'typedata' else
                     'gm_control'))))
 
     try:
 
         dbmgr = db.DatabaseManager()
-        if list == 'temp':
+        if data_list == 'temp':
             if key:
                 _key = int(key)
                 cur = dbmgr.query("""
@@ -142,7 +122,7 @@ def get_list(list, key=None):
                         `temp_id` = `gm_temp`.`id`
                     WHERE `gm_timetable_temp`.`timetable_id` = ?
                     ORDER BY `gm_temp`.`id`
-                """.format(list_table, list_table), (_key))
+                """.format(list_table, list_table), (_key,))
             else:
                 cur = dbmgr.query("""
                     SELECT `{}`.*, `timetable_id` FROM `{}`
@@ -152,7 +132,7 @@ def get_list(list, key=None):
         else:
             if key:
                 _key = int(key)
-                if list == 'typedata':
+                if data_list == 'typedata':
                     cur = dbmgr.query("""
                         SELECT * FROM {}
                         WHERE `day_type_id` = ?
@@ -173,12 +153,12 @@ def get_list(list, key=None):
         # return json.dumps((r[0] if r else None) if one else r)
         return json.dumps(r)
     except Exception:
-        print("get_list({},{}): error".format(list, key))
+        print("get_list({},{}): error".format(data_list, key))
         print(traceback.format_exc())
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/hompi/_get_temp_chart')
+@app.route('/hompi/_get_temp_chart', methods = ['GET'])
 def get_temp_chart():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -209,47 +189,207 @@ def get_temp_chart():
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/hompi/_set_control/<data_json>')
-def set_control(data_json):
+@app.route('/hompi/_get_server_list', methods = ['GET'])
+def get_server_list():
+    if not _check_sharedkey():
+        return "Forbidden", 403
+
+    dbmgr = db.DatabaseManager()
+    try:
+        status = json.loads(
+            dbmgr.query("SELECT data FROM gm_output").fetchone()[0])
+        return json.dumps(status["hompi_slaves"].keys())
+    except Exception:
+        print("get_server_list(): error")
+        print(traceback.format_exc())
+        return "Error", 500  # INTERNAL_SERVER_ERROR
+
+
+@app.route('/hompi/_get_list2/<server>/<list>', methods = ['GET'])
+@app.route('/hompi/_get_list2/<server>/<list>/<key>', methods = ['GET'])
+def get_list2(server, list, key=None):
     if not _check_sharedkey():
         return "Forbidden", 403
 
     try:
-        _data = json.loads(data_json)
+        # get local list
+        if server == "local":
+            return get_list(list, key)
+
+        api_key = urllib.request.args.get('api_key', '').upper()
+        address = _get_remote_address(server)
+
+        if key:
+            return urllib.request.urlopen(
+                "{}/hompi/_get_list/{}/{}?api_key={}".format(address,
+                                                             list, key,
+                                                             api_key),
+                timeout=2
+            ).read()
+        else:
+            return urllib.request.urlopen(
+                "{}/hompi/_get_list/{}?api_key={}".format(address, list,
+                                                          api_key),
+                timeout=2
+            ).read()
+    except Exception:
+        print("get_list2({},{},{}): error".format(server, list, key))
+        print(traceback.format_exc())
+        return "Error", 500  # INTERNAL_SERVER_ERROR
+
+@app.route('/hompi/_get_image/<image_name>', methods = ['GET'])
+def get_image(image_name):
+    if not _check_sharedkey():
+        return "Forbidden", 403
+
+    try:
+        filename = '{}/{}'.format(
+            os.path.dirname(os.path.abspath(config.IMAGE_PATH)), image_name)
+        thumb_filename = '{}/thumbs/{}'.format(
+            os.path.dirname(os.path.abspath(config.IMAGE_PATH)), image_name)
+        if not os.path.isfile(thumb_filename):
+            try:
+                image = Image.open(filename)
+                image.thumbnail(config.THUMB_SIZE, Image.ANTIALIAS)
+                image.save(thumb_filename, 'JPEG')
+            except Exception:
+                print("get_image({}): error".format(image_name))
+                print(traceback.format_exc())
+                return "Error", 500  # INTERNAL_SERVER_ERROR
+
+        return send_file(thumb_filename)
+    except Exception:
+        print("get_image({}): error".format(image_name))
+        print(traceback.format_exc())
+        return "Error", 500  # INTERNAL_SERVER_ERROR
+
+
+# UPDATE METHODS (GET/PUT)
+@app.route('/hompi/_send_command', methods = ['PUT'])
+@app.route('/hompi/_send_command/<command>', methods = ['GET'])
+def send_command(command = None):
+    _data = ''
+    if not _check_sharedkey():
+        return "Forbidden", 403
+
+    try:
+        _command = []
+        if request.method == 'PUT':
+            _command = request.get_json()
+        elif request.method == 'GET':
+            _command = json.loads(command)
+        else:
+            return "Method not allowed", 405
+        _data = _command['data']
+
+        dbmgr = db.DatabaseManager()
+        # insert with de-bounce
+        dbmgr.query("""
+            INSERT INTO `gm_input`(`data`)
+            SELECT ? WHERE NOT EXISTS
+            (SELECT * FROM `gm_input` WHERE `data` = ?)
+            """, (_data, _data))
+        _signal_server()
+        return "Ok", 200
+    except exceptions.UnsupportedMediaType:
+        return "Unsupported Media Type", 415
+    except Exception:
+        print("send_command({}): error".format(command))
+        print(traceback.format_exc())
+        return "Error", 400  # BAD_REQUEST
+
+@app.route('/hompi/_set_control', methods = ['PUT'])
+@app.route('/hompi/_set_control/<data>', methods = ['GET'])
+def set_control(data = None):
+    if not _check_sharedkey():
+        return "Forbidden", 403
+    try:
+        _data = []
+        if request.method == 'PUT':
+            _data = request.get_json()
+        elif request.method == 'GET':
+            _data = json.loads(data)
+        else:
+            return "Method not allowed", 405
         _id = int(_data['timetable_id'])
 
         dbmgr = db.DatabaseManager()
-        dbmgr.query('UPDATE gm_control SET timetable_id = ?',
-                    (_id,))
+        dbmgr.query('UPDATE gm_control SET timetable_id = ?', (_id,))
         _signal_server()
+        return "Ok", 200
+    except exceptions.UnsupportedMediaType:
+        return "Unsupported Media Type", 415
     except Exception:
-        print("set_control({}): error".format(data_json))
+        print("set_control({}): error".format(data))
         print(traceback.format_exc())
         return "Error", 400  # BAD_REQUEST
-    return "Ok"
 
 
-@app.route('/hompi/_set_temp/<data_json>')
-def set_temp(data_json):
+@app.route('/hompi/_set_temp/<data>', methods = ['PUT','GET'])
+def set_temp(data):
+    _id = _temp_c = 0
     if not _check_sharedkey():
         return "Forbidden", 403
-
     try:
-        _data = json.loads(data_json)
+        _data = []
+        if request.method == 'PUT':
+            _data = request.get_json()
+            _id = int(data)
+        elif request.method == 'GET':
+            _data = json.loads(data)
+            _id = int(_data['id'])
+        else:
+            return "Method not allowed", 405
         _temp_c = float(_data['temp_c'])
-        _id = int(_data['id'])
 
         dbmgr = db.DatabaseManager()
         dbmgr.query("""UPDATE gm_temp SET temp_c = ?
             WHERE id = ?""", (_temp_c, _id))
         _signal_server()
+        return "Ok", 200
+    except exceptions.UnsupportedMediaType:
+        return "Unsupported Media Type", 415
     except Exception:
-        print("set_temp({}): error".format(data_json))
+        print("set_temp({}): error".format(data))
         print(traceback.format_exc())
         return "Error", 400  # BAD_REQUEST
-    return "Ok"
 
 
+@app.route('/hompi/_set_temp2/<server>/<data>', methods = ['PUT','GET'])
+def set_temp2(server, data = None):
+    if not _check_sharedkey():
+        return "Forbidden", 403
+
+    try:
+        _data = []
+        if request.method == 'PUT':
+            _data = request.get_json()
+            _data['id'] = data
+        elif request.method == 'GET':
+            _data = data
+        else:
+            return "Method not allowed", 405
+
+        # set local temp
+        if server == "local":
+            return set_temp(data)
+
+        api_key = urllib.request.args.get('api_key', '').upper()
+        address = _get_remote_address(server)
+
+        return urllib.request.urlopen(
+            "{}/hompi/_set_temp/{}?api_key={}".format(address, data,
+                                                      api_key), timeout=2
+        ).read()
+        return "Ok", 200
+    except exceptions.UnsupportedMediaType:
+        return "Unsupported Media Type", 415
+    except Exception:
+        print("set_temp2({},{}): error".format(server, data))
+        print(traceback.format_exc())
+        return "Error", 400  # BAD_REQUEST
+
+# TO DO
 @app.route('/hompi/_set_timetable/<data_json>')
 def set_timetable(data_json):
     if not _check_sharedkey():
@@ -305,128 +445,6 @@ def set_timetable_data(data_json):
         _signal_server()
     except Exception:
         print("set_timetable_data({}): error".format(data_json))
-        print(traceback.format_exc())
-        return "Error", 400  # BAD_REQUEST
-    return "Ok"
-
-
-@app.route('/hompi/_get_image/<image_name>')
-def get_image(image_name):
-    if not _check_sharedkey():
-        return "Forbidden", 403
-
-    try:
-        filename = '{}/{}'.format(
-            os.path.dirname(os.path.abspath(config.IMAGE_PATH)), image_name)
-        thumb_filename = '{}/thumbs/{}'.format(
-            os.path.dirname(os.path.abspath(config.IMAGE_PATH)), image_name)
-        if not os.path.isfile(thumb_filename):
-            try:
-                image = Image.open(filename)
-                image.thumbnail(config.THUMB_SIZE, Image.ANTIALIAS)
-                image.save(thumb_filename, 'JPEG')
-            except Exception:
-                print("get_image({}): error".format(image_name))
-                print(traceback.format_exc())
-                return "Error", 500  # INTERNAL_SERVER_ERROR
-
-        return send_file(thumb_filename)
-    except Exception:
-        print("get_image({}): error".format(image_name))
-        print(traceback.format_exc())
-        return "Error", 500  # INTERNAL_SERVER_ERROR
-
-
-@app.route('/hompi/_send_message/<data_json>')
-def send(data_json):
-    if not _check_sharedkey():
-        return "Forbidden", 403
-
-    try:
-        _data = json.loads(data_json)
-
-        _temp_c = int(_data['temp_c'])
-        _id = int(_data['id'])
-
-        dbmgr = db.DatabaseManager()
-        dbmgr.query("""UPDATE gm_temp SET temp_c = ?
-            WHERE id = ?""", (_temp_c, _id))
-        _signal_server()
-    except Exception:
-        print("send({}): error".format(data_json))
-        print(traceback.format_exc())
-        return "Error", 400  # BAD_REQUEST
-    return "Ok"
-
-
-@app.route('/hompi/_get_server_list')
-def get_server_list():
-    if not _check_sharedkey():
-        return "Forbidden", 403
-
-    dbmgr = db.DatabaseManager()
-    try:
-        status = json.loads(
-            dbmgr.query("SELECT data FROM gm_output").fetchone()[0])
-        return json.dumps(status["hompi_slaves"].keys())
-    except Exception:
-        print("get_server_list(): error")
-        print(traceback.format_exc())
-        return "Error", 500  # INTERNAL_SERVER_ERROR
-
-
-@app.route('/hompi/_get_list2/<server>/<list>')
-@app.route('/hompi/_get_list2/<server>/<list>/<key>')
-def get_list2(server, list, key=None):
-    if not _check_sharedkey():
-        return "Forbidden", 403
-
-    try:
-        # get local list
-        if server == "local":
-            return get_list(list, key)
-
-        api_key = urllib.request.args.get('api_key', '').upper()
-        address = _get_remote_address(server)
-
-        if key:
-            return urllib.request.urlopen(
-                "{}/hompi/_get_list/{}/{}?api_key={}".format(address,
-                                                             list, key,
-                                                             api_key),
-                timeout=2
-            ).read()
-        else:
-            return urllib.request.urlopen(
-                "{}/hompi/_get_list/{}?api_key={}".format(address, list,
-                                                          api_key),
-                timeout=2
-            ).read()
-    except Exception:
-        print("get_list2({},{},{}): error".format(server, list, key))
-        print(traceback.format_exc())
-        return "Error", 500  # INTERNAL_SERVER_ERROR
-
-
-@app.route('/hompi/_set_temp2/<server>/<data_json>')
-def set_temp2(server, data_json):
-    if not _check_sharedkey():
-        return "Forbidden", 403
-
-    try:
-        # set local temp
-        if server == "local":
-            return set_temp(data_json)
-
-        api_key = urllib.request.args.get('api_key', '').upper()
-        address = _get_remote_address(server)
-
-        return urllib.request.urlopen(
-            "{}/hompi/_set_temp/{}?api_key={}".format(address, data_json,
-                                                      api_key), timeout=2
-        ).read()
-    except Exception:
-        print("set_temp2({},{}): error".format(server, data_json))
         print(traceback.format_exc())
         return "Error", 400  # BAD_REQUEST
     return "Ok"
