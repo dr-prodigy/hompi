@@ -276,7 +276,7 @@ def xmas_daisy(brightness='1', rgb=''):
             Adafruit_WS2801.RGB_to_color(
                 0, int(0xFF * brightness), 0),  # green
             Adafruit_WS2801.RGB_to_color(
-                0, int(0xFF * brightness), int(0xFF * brightness)),  # yellow
+                0, int(0xB3 * brightness), int(0xFF * brightness)),  # yellow
             Adafruit_WS2801.RGB_to_color(
                 int(0xFF * brightness), 0, 0),  # blue
         ]
