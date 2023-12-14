@@ -33,6 +33,13 @@ MODULE_DB_LOG = True
 MODULE_SPEECH = False
 MODULE_AMBIENT = False
 
+# TELEGRAM INTEGRATION
+ENABLE_TELEGRAM = False
+
+ENABLE_HASS_INTEGRATION = True
+HASS_SERVER = 'http://localhost:8123/'
+HASS_TOKEN = 'abc123'
+
 # LCD modes : NONE = 0, GPIO_CharLCD = 1, I2C = 2
 MODULE_LCD = 2
 I2C_BUS = 1  # i2c bus (0 -- original Pi, 1 -- Rev 2 Pi)
@@ -83,9 +90,6 @@ AMBIENT_ACK_COMMAND = 'curtain_in_out {} {}'
 AMBIENT_XMAS_DAISY_COMMAND = 'xmas_daisy {} {}'
 AMBIENT_TV_SIM_COMMAND = 'tv_sim'
 AMBIENT_TRANSITION_FRAMES = 100
-
-# TELEGRAM INTEGRATION
-ENABLE_TELEGRAM = False
 
 # API PRE-SHARED KEY
 API_KEY = 'change-me'

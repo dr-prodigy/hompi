@@ -79,6 +79,7 @@ class Status:
     def get_output(self):
         return json.dumps(self.__dict__, indent=0)
 
+
     def get_status_text(self):
         if self.message != '':
             status = '{}'.format(self.message)

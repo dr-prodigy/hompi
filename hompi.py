@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import json
 # Copyright (C)2018-19 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
@@ -29,6 +29,7 @@ import holidays
 
 import config
 import db
+import hass
 import io_data
 import sensors
 import dashboard
@@ -571,6 +572,7 @@ def update_output():
                 io_status.get_output().replace('\'', '\'\'')))
         current_status = io_status.get_output()
         print('OUTPUT: ' + current_status.replace('\n', ''))
+        hass.publish_status(io_status)
 
         update_lcd_content(change=False)
 
