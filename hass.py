@@ -47,14 +47,14 @@ def publish_status(io_status):
                   "attributes": {"friendly_name": "Forismatic", "icon": "mdi:card-text"}}}
         )
     if config.MODULE_AMBIENT:
-        status_entities.append(
+        status_entities.extend([
         {"entity_id": "hompi_ambient_color",
          "data": {"state": json_obj["current_ambient_color"], "attributes":
              {"friendly_name": "Hompi ambient color", "icon": "mdi:palette"}}},
         {"entity_id": "hompi_ambient_command",
          "data": {"state": json_obj["current_ambient_command"], "attributes":
              {"friendly_name": "Hompi ambient command", "icon": "mdi:palette"}}}
-        )
+        ])
 
     for entity in status_entities:
         try:
