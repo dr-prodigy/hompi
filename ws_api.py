@@ -304,29 +304,31 @@ def set_control(data = None):
     if not _check_sharedkey():
         return "Forbidden", 403
     try:
-        _data = []
+        _data = None
         if request.method == 'PUT':
             _data = request.get_json()
         elif request.method == 'GET':
             _data = json.loads(data)
         else:
             return "Method not allowed", 405
-        dbmgr = db.DatabaseManager()
 
+        dbmgr = db.DatabaseManager()
+        _id = None
         if 'timetable_id' in _data:
-            dbmgr.query('UPDATE gm_control SET timetable_id = ?',
-                        (int(_data['timetable_id'],)))
+            _id = int(_data['timetable_id'])
         elif 'timetable_desc' in _data:
-            dbmgr.query("""
-                UPDATE gm_control
-                SET timetable_id =
-                (SELECT id FROM gm_timetable WHERE description = ?)""",
-                        (_data['timetable_desc'],))
+            row = dbmgr.query("SELECT id FROM gm_timetable WHERE description = ?",
+                        (_data['timetable_desc'],)).fetchone()
+            if row and len(row) > 0:
+                _id = row[0]
+
+        if _id:
+            dbmgr.query("UPDATE gm_control SET timetable_id = ?", (_id,))
+            _signal_server()
+            return "Ok", 200
         else:
             return "Error", 400  # BAD_REQUEST
 
-        _signal_server()
-        return "Ok", 200
     except exceptions.UnsupportedMediaType:
         return "Unsupported Media Type", 415
     except Exception:
