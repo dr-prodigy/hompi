@@ -19,7 +19,7 @@ def publish_status(io_status):
          "data": {"state": json_obj["id"], "attributes":
             {"friendly_name": "Hompi id", "icon": "mdi:home"}}},
         {"entity_id": "hompi_mode",
-         "data": {"state": json_obj["id"], "attributes":
+         "data": {"state": json_obj["mode_desc"], "attributes":
             {"friendly_name": "Hompi mode", "icon": "mdi:table"}}},
         {"entity_id": "hompi_target",
          "data": {
