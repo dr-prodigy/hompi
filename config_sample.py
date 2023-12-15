@@ -38,6 +38,7 @@ ENABLE_TELEGRAM = False
 
 ENABLE_HASS_INTEGRATION = True
 HASS_SERVER = 'http://localhost:8123/'
+HASS_CHECK_SSL_CERT = False
 HASS_TOKEN = 'abc123'
 
 # LCD modes : NONE = 0, GPIO_CharLCD = 1, I2C = 2

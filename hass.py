@@ -1,22 +1,69 @@
 import config
 import json
+import traceback
+import urllib3
+from utils import log_stderr
 from requests import post
+
+if not config.HASS_CHECK_SSL_CERT:
+    urllib3.disable_warnings()
 
 STATUS_ENTITY_API_URL = "api/states/sensor."
 
-
 def publish_status(io_status):
-    entity_id = "hompi_{}_status".format(config.HOMPI_ID.lower())
-    entity_friendly_name = "Hompi {} status".format(config.HOMPI_ID)
-    url = config.HASS_SERVER + STATUS_ENTITY_API_URL + entity_id
     json_str = io_status.get_output()
-    json_attr = json.loads(json_str)
-    json_attr["friendly_name"] = entity_friendly_name
-    json_attr["icon"] = "mdi:home-automation"
-    data = {"state": io_status.last_update,
-            "attributes": json_attr}
+    json_obj = json.loads(json_str)
 
-    headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
-    response = post(url, headers=headers, json=data, verify=False)
-    print('HASS PUBLISH ({}): {}'.format(entity_id, json_str.replace('\n', ' ')))
-    print(response.text)
+    status_entities = [
+        {"entity_id": "hompi_id",
+         "data": {"state": json_obj["id"], "attributes":
+            {"friendly_name": "Hompi id", "icon": "mdi:home"}}},
+        {"entity_id": "hompi_mode",
+         "data": {"state": json_obj["id"], "attributes":
+            {"friendly_name": "Hompi mode", "icon": "mdi:table"}}},
+        {"entity_id": "hompi_target",
+         "data": {
+             "state": "{} ({} °C) until h. {:0>5.2f}".format(
+             json_obj["req_temp_desc"], json_obj["req_temp_c"], int(json_obj["req_end_time"]) / 100),
+             "attributes":
+            {"friendly_name": "Hompi target", "icon": "mdi:target"}}},
+        {"entity_id": "hompi_heating_status",
+         "data": {
+             "state": json_obj["heating_status"],
+             "attributes":
+                 {"friendly_name": "Hompi heating status", "icon": "mdi:heat-wave"}}},
+    ]
+    if config.MODULE_TEMP:
+        status_entities.append(
+        {"entity_id": "hompi_temperature",
+         "data": {"state": "{:.1f}".format(json_obj["int_temp_c"]), "attributes":
+            {"friendly_name": "Hompi temperature", "icon": "mdi:thermometer",
+             "device_class": "temperature", "unit_of_measurement": "°C"}}}
+        )
+    if config.MODULE_APHORISM:
+        status_entities.append(
+        {"entity_id": "forismatic",
+         "data": {"state": "{} ({})".format(json_obj["aphorism_text"].strip(), json_obj["aphorism_author"].strip()),
+                  "attributes": {"friendly_name": "Forismatic", "icon": "mdi:card-text"}}}
+        )
+    if config.MODULE_AMBIENT:
+        status_entities.append(
+        {"entity_id": "hompi_ambient_color",
+         "data": {"state": json_obj["current_ambient_color"], "attributes":
+             {"friendly_name": "Hompi ambient color", "icon": "mdi:palette"}}},
+        {"entity_id": "hompi_ambient_command",
+         "data": {"state": json_obj["current_ambient_command"], "attributes":
+             {"friendly_name": "Hompi ambient command", "icon": "mdi:palette"}}}
+        )
+
+    for entity in status_entities:
+        try:
+            entity_id = entity["entity_id"]
+            url = config.HASS_SERVER + STATUS_ENTITY_API_URL + entity_id
+            headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
+
+            response = post(url, headers=headers, json=entity["data"], verify=config.HASS_CHECK_SSL_CERT)
+            if config.VERBOSE_LOG:
+                print('HASS PUBLISH ({}): {}'.format(entity_id, response.text))
+        except Exception:
+            log_stderr('HASS PUBLISH ({}): {}'.format(entity_id, traceback.format_exc()))

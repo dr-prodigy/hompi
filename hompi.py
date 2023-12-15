@@ -315,8 +315,8 @@ def meteo():
             io_status.pressure = meteo['main']['pressure']
             io_status.wind = meteo['wind']['speed']
         else:
-            # occurs too often: just show a small mark on app
-            if (' (*)' not in io_status.place):
+            # occurs too often: just show a small mark on app (DISABLED!)
+            if False and ' (*)' not in io_status.place:
                 io_status.place += ' (*)'
     except (KeyError, ValueError):
         io_status.place = 'Error fetching meteo'
@@ -331,9 +331,9 @@ def aphorism():
             io_status.aphorism_text = aphorism['quoteText'].strip()
             io_status.aphorism_author = aphorism['quoteAuthor'].strip()
         else:
-            # just show a small mark on app
-            if (io_status.aphorism_text and
-                    ' (*)' not in io_status.aphorism_text):
+            # just show a small mark on app (DISABLED!)
+            if False and io_status.aphorism_text \
+                    and ' (*)' not in io_status.aphorism_text:
                 io_status.aphorism_text += ' (*)'
     except Exception:
         io_status.aphorism_text = 'Error fetching aphorism'
@@ -572,7 +572,8 @@ def update_output():
                 io_status.get_output().replace('\'', '\'\'')))
         current_status = io_status.get_output()
         print('OUTPUT: ' + current_status.replace('\n', ''))
-        hass.publish_status(io_status)
+        if config.ENABLE_HASS_INTEGRATION:
+            hass.publish_status(io_status)
 
         update_lcd_content(change=False)
 
