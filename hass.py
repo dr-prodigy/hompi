@@ -21,61 +21,75 @@ import config
 import json
 import traceback
 import urllib3
-from utils import log_stderr
+import db
+
 from requests import post
+from utils import log_stderr
 
 if not config.HASS_CHECK_SSL_CERT:
     urllib3.disable_warnings()
 
 STATUS_ENTITY_API_URL = "api/states/sensor."
 
-def publish_status(io_status):
+def publish_status(io_status, io_system):
     json_str = io_status.get_output()
     json_obj = json.loads(json_str)
 
-    status_entities = [
+    hass_entities = [
         {"entity_id": "hompi_id",
-         "data": {"state": json_obj["id"], "attributes":
+         "data": {"state": io_status.id, "attributes":
             {"friendly_name": "Hompi id", "icon": "mdi:home"}}},
         {"entity_id": "hompi_mode",
-         "data": {"state": json_obj["mode_desc"], "attributes":
+         "data": {"state": io_status.mode_desc, "attributes":
             {"friendly_name": "Hompi mode", "icon": "mdi:table"}}},
         {"entity_id": "hompi_target",
          "data": {
              "state": "{} ({} °C) until h. {:0>5.2f}".format(
-             json_obj["req_temp_desc"], json_obj["req_temp_c"], int(json_obj["req_end_time"]) / 100),
+             io_status.req_temp_desc, io_status.req_temp_c, io_status.req_end_time / 100),
              "attributes":
             {"friendly_name": "Hompi target", "icon": "mdi:target"}}},
         {"entity_id": "hompi_heating_status",
          "data": {
-             "state": json_obj["heating_status"],
+             "state": io_status.heating_status,
              "attributes":
                  {"friendly_name": "Hompi heating status", "icon": "mdi:heat-wave"}}},
     ]
+    # thermometer entities
     if config.MODULE_TEMP:
-        status_entities.append(
+        hass_entities.append(
         {"entity_id": "hompi_temperature",
-         "data": {"state": "{:.1f}".format(json_obj["int_temp_c"]), "attributes":
+         "data": {"state": "{:.1f}".format(io_status.int_temp_c), "attributes":
             {"friendly_name": "Hompi temperature", "icon": "mdi:thermometer",
              "device_class": "temperature", "unit_of_measurement": "°C"}}}
         )
+    # aphorism entities
     if config.MODULE_APHORISM:
-        status_entities.append(
+        hass_entities.append(
         {"entity_id": "forismatic",
-         "data": {"state": "{} ({})".format(json_obj["aphorism_text"].strip(), json_obj["aphorism_author"].strip()),
+         "data": {"state": "{} ({})".format(io_status.aphorism_text.strip(), io_status.aphorism_author.strip()),
                   "attributes": {"friendly_name": "Forismatic", "icon": "mdi:card-text"}}}
         )
+    # ambient light entities
     if config.MODULE_AMBIENT:
-        status_entities.extend([
+        hass_entities.extend([
         {"entity_id": "hompi_ambient_color",
-         "data": {"state": json_obj["current_ambient_color"], "attributes":
+         "data": {"state": io_status.current_ambient_color, "attributes":
              {"friendly_name": "Hompi ambient color", "icon": "mdi:palette"}}},
         {"entity_id": "hompi_ambient_command",
-         "data": {"state": json_obj["current_ambient_command"], "attributes":
+         "data": {"state": io_status.current_ambient_command, "attributes":
              {"friendly_name": "Hompi ambient command", "icon": "mdi:palette"}}}
         ])
+    # temperature entities
+    for temp in io_system.temperatures:
+        description = str(temp["description"])
+        hass_entities.append(
+        {"entity_id": "hompi_temp_{}".format(description.lower()) ,
+         "data": {"state": temp["temp_c"], "attributes":
+            {"friendly_name": "Hompi temp {}".format(description.upper()), "icon": "mdi:thermometer",
+             "device_class": "temperature", "unit_of_measurement": "°C", "id": temp["id"]}}}
+        )
 
-    for entity in status_entities:
+    for entity in hass_entities:
         try:
             entity_id = entity["entity_id"]
             url = config.HASS_SERVER + STATUS_ENTITY_API_URL + entity_id

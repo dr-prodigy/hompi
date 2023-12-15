@@ -30,7 +30,6 @@ class Input:
         self.last_update = datetime.datetime.now().isoformat()
         self.data = ''
 
-
 class Status:
     def __init__(self):
         global hide_message
@@ -127,6 +126,7 @@ class SystemInfo:
     def __init__(self):
         self.modules = []
         self.buttons = {}
+        self.temperatures = []
 
         if config.MODULE_AMBIENT:
             self.modules.append('ambient')

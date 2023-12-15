@@ -43,6 +43,7 @@ from tendo import singleton
 from utils import log_stderr, os_async_command
 
 io_status = io_data.Status()
+io_system = io_data.SystemInfo()
 sensor = sensors.Sensors()
 lcd = dashboard.Dashboard()
 ambient = ambient.Ambient()
@@ -542,6 +543,12 @@ def refresh_program(time_):
                 io_status.req_end_time // 100) * 100
         ))
 
+    # refresh temperatures
+    rows = dbmgr.query("SELECT id, description, temp_c FROM gm_temp")
+    if rows:
+        io_system.temperatures.clear()
+        for row in rows:
+            io_system.temperatures.append({"id": row[0], "description": row[1], "temp_c": row[2]})
 
 def update_lcd_content(change=False):
     if change:
@@ -573,7 +580,7 @@ def update_output():
         current_status = io_status.get_output()
         print('OUTPUT: ' + current_status.replace('\n', ''))
         if config.ENABLE_HASS_INTEGRATION:
-            hass.publish_status(io_status)
+            hass.publish_status(io_status, io_system)
 
         update_lcd_content(change=False)
 
