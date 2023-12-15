@@ -313,18 +313,18 @@ def set_control(data = None):
             return "Method not allowed", 405
         dbmgr = db.DatabaseManager()
 
-        if not _data['timetable_id'] and not _data['timetable_desc']:
-            return "Error", 400  # BAD_REQUEST
-
-        if _data['timetable_id']:
+        if 'timetable_id' in _data:
             dbmgr.query('UPDATE gm_control SET timetable_id = ?',
                         (int(_data['timetable_id'],)))
-        elif _data['timetable_desc']:
+        elif 'timetable_desc' in _data:
             dbmgr.query("""
                 UPDATE gm_control
                 SET timetable_id =
                 (SELECT id FROM gm_timetable WHERE description = ?)""",
                         (_data['timetable_desc'],))
+        else:
+            return "Error", 400  # BAD_REQUEST
+
         _signal_server()
         return "Ok", 200
     except exceptions.UnsupportedMediaType:
