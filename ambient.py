@@ -21,6 +21,7 @@ import os
 import sys
 import datetime
 import traceback
+import colorsys
 
 import config
 
@@ -208,6 +209,14 @@ class Ambient:
         self._status_effect = self._status_effect_params = None
         self._status_effect_repeated = False
         self.update()
+
+    def set_ambient_color_hsv(self, color,
+                              timeout=datetime.datetime(9999, 12, 31)):
+        print("*AMBIENT* color_hsv {}".format(color))
+        color_hsv = color[1:-1].split(",")
+        (r, g, b) = colorsys.hsv_to_rgb(
+            float(color_hsv[0]) / 360, float(color_hsv[1]) / 100, float(color_hsv[2]) / 255)
+        self.set_ambient_color("({:.0f},{:.0f},{:.0f})".format(r*255, g*255, b*255), timeout)
 
     def set_ambient_effect(self, effect, params,
                            timeout=datetime.datetime(9999, 12, 31)):
