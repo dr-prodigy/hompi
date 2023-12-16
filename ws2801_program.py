@@ -299,7 +299,7 @@ def xmas_daisy(brightness='1', rgb=''):
                     time.sleep(delay)
 
 
-def tv_sim():
+def tv_sim(brightness='1'):
     initial_time = datetime.datetime.now()
     while (datetime.datetime.now() - initial_time).total_seconds() < 300:
         delay = random.uniform(.1, 5)
