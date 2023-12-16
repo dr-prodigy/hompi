@@ -124,7 +124,7 @@ class Ambient:
     def _do_ambient_crossfade(previous_color, color):
         command = AMBIENT_MODULE_CMD + \
                   AMBIENT_CROSSFADE_COMMAND.format(
-                      previous_color, color) + ' &'
+                      color, previous_color) + ' &'
         print('*AMBIENT* crossfade - Executing: {}'.format(command))
         if AMBIENT_ENABLED:
             os.system(command)
