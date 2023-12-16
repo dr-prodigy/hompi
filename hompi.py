@@ -627,7 +627,7 @@ def process_input():
             parser = data.split('=')
             if len(parser) > 1:
                 command = parser[0].upper()
-                parser = parser[0].split(',')
+                parser = parser[1].split(',')
                 if len(parser) > 1:
                     arg = parser[0].upper()
                     value = parser[1].upper()
