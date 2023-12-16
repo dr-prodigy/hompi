@@ -63,7 +63,7 @@ class Status:
         # ambient
         self.ambient_color = '000000'
         self.ambient_color_dec = [0, 0, 0]
-        self.ambient_command = None
+        self.ambient_effect = None
         self.ambient_on = False
         # meteo
         if config.MODULE_METEO:
@@ -105,7 +105,7 @@ class Status:
         self.ambient_color = ambient_status["color"]
         self.ambient_color_dec = ambient_status["color_dec"]
         self.ambient_on = ambient_status["on"]
-        self.ambient_command = ambient_status["command"]
+        self.ambient_effect = ambient_status["command"]
 
     def update(self, current_time):
         if self.message != '' and hide_message_time <= current_time:

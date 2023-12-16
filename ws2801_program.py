@@ -157,7 +157,7 @@ def color_curtain(rgb='000000', wait=.05, reverse=False):
         time.sleep(wait)
 
 
-def going_to_sleep(rgb_in='ffffff'):
+def go_to_sleep(rgb_in='ffffff'):
     rgb = int(rgb_in, 16)
     b_in = rgb >> 16 & 0xFF
     g_in = rgb >> 8 & 0xFF
@@ -337,7 +337,7 @@ if __name__ == "__main__":
         "clear": clear,
         "set_color": set_color,
         "crossfade": crossfade,
-        "going_to_sleep": going_to_sleep,
+        "go_to_sleep": go_to_sleep,
         "test_loop": test_loop,
         "color_wipe": color_wipe,
         "color_curtain": color_curtain,
@@ -355,7 +355,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         print("Commands available: {}".format(switcher.keys()))
     else:
-        func = switcher.get(sys.argv[1])
+        func = switcher.get(sys.argv[1].lower())
 
         if func:
             # Initialize ledstrip
