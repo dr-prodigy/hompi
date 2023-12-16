@@ -190,6 +190,7 @@ class Ambient:
             self._power_off_time = datetime.datetime(9999, 12, 31)
             self._status_effect = self._status_effect_params = None
             self._status_effect_repeated = False
+        self.update()
 
     def set_ambient_color(self, color,
                           timeout=datetime.datetime(9999, 12, 31)):
@@ -206,6 +207,7 @@ class Ambient:
         # reset effect
         self._status_effect = self._status_effect_params = None
         self._status_effect_repeated = False
+        self.update()
 
     def set_ambient_effect(self, effect, params,
                            timeout=datetime.datetime(9999, 12, 31)):
@@ -224,6 +226,7 @@ class Ambient:
             self._set_color(AMBIENT_COLOR_OFF)
         else:
             log_stderr("*AMBIENT* ERR: effect {} not available".format(effect))
+        self.update()
 
     def ambient_ack(self):
         command = AMBIENT_MODULE_CMD + \
