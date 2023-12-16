@@ -237,6 +237,7 @@ def get_list2(server, list, key=None):
         print(traceback.format_exc())
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
+
 @app.route('/hompi/_get_image/<image_name>', methods = ['GET'])
 def get_image(image_name):
     if not _check_sharedkey():
@@ -265,8 +266,8 @@ def get_image(image_name):
 
 
 # UPDATE METHODS (GET/PUT)
-@app.route('/hompi/_send_command', methods = ['PUT'])
-@app.route('/hompi/_send_command/<command>', methods = ['GET'])
+@app.route('/hompi/_send_command', methods=['PUT'])
+@app.route('/hompi/_send_command/<command>', methods=['GET'])
 def send_command(command = None):
     _data = ''
     if not _check_sharedkey():
@@ -275,12 +276,12 @@ def send_command(command = None):
     try:
         _command = []
         if request.method == 'PUT':
-            _command = request.get_json()
+            _data = request.get_data()
         elif request.method == 'GET':
             _command = json.loads(command)
+            _data = _command['data']
         else:
             return "Method not allowed", 405
-        _data = _command['data']
 
         dbmgr = db.DatabaseManager()
         # insert with de-bounce
@@ -298,8 +299,9 @@ def send_command(command = None):
         print(traceback.format_exc())
         return "Error", 400  # BAD_REQUEST
 
-@app.route('/hompi/_set_control', methods = ['PUT'])
-@app.route('/hompi/_set_control/<data>', methods = ['GET'])
+
+@app.route('/hompi/_set_control', methods=['PUT'])
+@app.route('/hompi/_set_control/<data>', methods=['GET'])
 def set_control(data = None):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -337,7 +339,7 @@ def set_control(data = None):
         return "Error", 400  # BAD_REQUEST
 
 
-@app.route('/hompi/_set_temp/<data>', methods = ['PUT','GET'])
+@app.route('/hompi/_set_temp/<data>', methods=['PUT','GET'])
 def set_temp(data):
     _id = _temp_c = 0
     if not _check_sharedkey():
@@ -367,7 +369,7 @@ def set_temp(data):
         return "Error", 400  # BAD_REQUEST
 
 
-@app.route('/hompi/_set_temp2/<server>/<data>', methods = ['PUT','GET'])
+@app.route('/hompi/_set_temp2/<server>/<data>', methods=['PUT','GET'])
 def set_temp2(server, data = None):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -400,6 +402,7 @@ def set_temp2(server, data = None):
         print("set_temp2({},{}): error".format(server, data))
         print(traceback.format_exc())
         return "Error", 400  # BAD_REQUEST
+
 
 # TO DO
 @app.route('/hompi/_set_timetable/<data_json>')

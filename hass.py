@@ -18,10 +18,8 @@ import json
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
 import config
-import json
 import traceback
 import urllib3
-import db
 
 from requests import post
 from utils import log_stderr
@@ -31,10 +29,8 @@ if not config.HASS_CHECK_SSL_CERT:
 
 STATUS_ENTITY_API_URL = "api/states/sensor."
 
-def publish_status(io_status, io_system):
-    json_str = io_status.get_output()
-    json_obj = json.loads(json_str)
 
+def publish_status(io_status, io_system):
     hass_entities = [
         {"entity_id": "hompi_id",
          "data": {"state": io_status.id, "attributes":
@@ -57,10 +53,10 @@ def publish_status(io_status, io_system):
     # thermometer entities
     if config.MODULE_TEMP:
         hass_entities.append(
-        {"entity_id": "hompi_temperature",
-         "data": {"state": "{:.1f}".format(io_status.int_temp_c), "attributes":
-            {"friendly_name": "Hompi temperature", "icon": "mdi:thermometer",
-             "device_class": "temperature", "unit_of_measurement": "°C"}}}
+            {"entity_id": "hompi_temperature",
+             "data": {"state": "{:.1f}".format(io_status.int_temp_c), "attributes":
+                 {"friendly_name": "Hompi temperature", "icon": "mdi:thermometer",
+                  "device_class": "temperature", "unit_of_measurement": "°C"}}}
         )
     # aphorism entities
     if config.MODULE_APHORISM:
@@ -72,21 +68,21 @@ def publish_status(io_status, io_system):
     # ambient light entities
     if config.MODULE_AMBIENT:
         hass_entities.extend([
-        {"entity_id": "hompi_ambient_color",
-         "data": {"state": io_status.current_ambient_color, "attributes":
-             {"friendly_name": "Hompi ambient color", "icon": "mdi:palette"}}},
-        {"entity_id": "hompi_ambient_command",
-         "data": {"state": io_status.current_ambient_command, "attributes":
-             {"friendly_name": "Hompi ambient command", "icon": "mdi:palette"}}}
+            {"entity_id": "hompi_ambient_color",
+             "data": {"state": io_status.status_color, "attributes":
+                 {"friendly_name": "Hompi ambient color", "icon": "mdi:palette"}}},
+            {"entity_id": "hompi_ambient_command",
+             "data": {"state": io_status.status_command, "attributes":
+                 {"friendly_name": "Hompi ambient command", "icon": "mdi:palette"}}}
         ])
     # temperature entities
     for temp in io_system.temperatures:
         description = str(temp["description"])
         hass_entities.append(
-        {"entity_id": "hompi_temp_{}".format(description.lower()) ,
-         "data": {"state": temp["temp_c"], "attributes":
-            {"friendly_name": "Hompi temp {}".format(description.upper()), "icon": "mdi:thermometer",
-             "device_class": "temperature", "unit_of_measurement": "°C", "id": temp["id"]}}}
+            {"entity_id": "hompi_temp_{}".format(description.lower()) ,
+             "data": {"state": temp["temp_c"], "attributes":
+                {"friendly_name": "Hompi temp {}".format(description.upper()), "icon": "mdi:thermometer",
+                 "device_class": "temperature", "unit_of_measurement": "°C", "id": temp["id"]}}}
         )
 
     for entity in hass_entities:

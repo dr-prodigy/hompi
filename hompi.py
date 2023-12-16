@@ -152,7 +152,7 @@ def main():
                 lcd.refresh_display(io_status)
                 # ambient color
                 if config.MODULE_AMBIENT:
-                    io_status.current_ambient_color = ambient.ambient_refresh()
+                    ambient.ambient_refresh(io_status)
                 # temp sensor failure: reset temp sampling
                 if config.MODULE_TEMP and temp_avg_sum == 0:
                     temp_avg_accu = temp_avg_counter = 0.0
@@ -207,7 +207,7 @@ def main():
             # cleanup sensors & LCD
             sensor.cleanup()
             lcd.cleanup()
-            ambient.cleanup()
+            ambient.cleanup(io_status)
             raise
         except Exception:
             log_stderr(traceback.format_exc())
@@ -255,7 +255,7 @@ def main():
                 # cleanup sensors & LCD
                 sensor.cleanup()
                 lcd.cleanup()
-                ambient.cleanup()
+                ambient.cleanup(io_status)
                 raise
             except Exception:
                 # LCD I/O error: refresh LCD screen
@@ -587,10 +587,15 @@ def update_output():
 
 def process_input():
     global sig_command, is_status_changed
+    # OLD FORMAT:
     # TT=[timetable_id]    ### set current timetable
     # TEMP=[temp_id],[temp_c] ### set temperature
     # PROG_T=[timetable_id],[ [daytype_id],[daytype_id],[daytype_id],
     #        [daytype_id],[daytype_id],[daytype_id],[daytype_id] ]
+    # NEW FORMAT:
+    # { "command": "TT", "value": [temp_c] }
+    # { "command": "TEMP", "arg": [temp_id], "value": [temp_c] }
+    # { "command": "PROG_T", "arg": [timetable_id], "value": "......" }
 
     dbmgr = db.DatabaseManager()
     rows = dbmgr.query(
@@ -598,127 +603,142 @@ def process_input():
         ORDER BY last_update""").fetchall()
     show_ack = False
     for row in rows:
-        _command = row[2]
-
-        dbmgr = db.DatabaseManager()
+        data = row[2]
         dbmgr.query(
             "DELETE FROM gm_input WHERE id = {:d}".format(row[0]))
-        parser = _command.split('=')
-        log_data('command: {}'.format(_command))
-        if len(parser) > 1:
-            if parser[0].upper() == 'TT':
-                try:
-                    if int(parser[1]):
-                        dbmgr.query('UPDATE gm_control SET timetable_id = ?',
-                                    (parser[1]))
-                        show_message('TT CHANGE', 'TT CHANGE: ' + parser[1])
-                        say('Timetable change')
-                        sig_command = show_ack = True
-                except Exception:
-                    log_data('PARSERROR: {}'.format(_command))
-            elif parser[0].upper() == 'TEMP':
-                try:
-                    parser2 = parser[1].split(',')
-                    if int(parser2[0]) and float(parser2[1]):
-                        dbmgr.query(
-                            'UPDATE gm_temp SET temp_c = ? WHERE id = ?',
-                            (parser2[1], parser2[0]))
-                        sig_command = show_ack = True
-                        show_message('TP CHANGE', 'TP CHANGE: ' + parser2[1])
-                        say('Temperature change: ' + parser2[1] + ' degrees')
-                except Exception as e:
-                    log_data('PARSERROR: {}'.format(_command))
-            elif parser[0].upper() == 'LCD':
-                if parser[1] == '0':
-                    lcd.set_backlight(0,
-                                      datetime.datetime.now() +
-                                      datetime.timedelta(hours=4))
-                    say('Display off')
+        log_data('INPUT data: {}'.format(data))
+        command = arg = value = None
+        try:
+            json_command = json.loads(data)
+            command = str(json_command["command"]).upper()
+            if "arg" in json_command:
+                arg = str(json_command["arg"]).upper()
+            if "value" in json_command:
+                value = str(json_command["value"]).upper()
+        except:
+            command = arg = value = None
+            parser = data.split('=')
+            if len(parser) > 1:
+                command = parser[0].upper()
+                parser = parser[0].split(',')
+                if len(parser) > 1:
+                    arg = parser[0].upper()
+                    value = parser[1].upper()
                 else:
-                    show_message('LCD ON')
-                    say('Display on')
-                    lcd.set_backlight(1)
-                show_ack = True
-            elif parser[0].upper() == 'MESSAGE':
-                io_status.send_message(parser[1])
-                show_message('', 'MESSAGE: ' + parser[1])
-                say('Message: ' + parser[1])
-                is_status_changed = True
-                show_ack = True
-            elif parser[0].upper() == 'AMBIENT' or \
-                    parser[0].upper() == 'AMBIENT_COLOR':
-                try:
-                    if config.MODULE_AMBIENT:
-                        io_status.current_ambient_color = \
-                            ambient.set_ambient_crossfade(
-                                parser[1],
-                                datetime.datetime.now() +
-                                datetime.timedelta(hours=4))
-                        show_message('COLOR', 'AMBIENT COLOR: #' + parser[1])
-                        say('Ambient color ' +
-                            (' off' if parser[1] == '000000' else 'change'))
-                except Exception as e:
-                    log_data('PARSERROR: {}\n{}'.format(
-                            _command,
-                            traceback.format_exc()))
-            elif parser[0].upper() == 'AMBIENT_XMAS':
-                try:
-                    if config.MODULE_AMBIENT:
-                        ambient.set_ambient_xmas_daisy(parser[1])
-                        show_message('COLOR', 'AMBIENT XMAS')
-                        say('Ambient christmas')
-                except Exception as e:
-                    log_data('PARSERROR: {}\n{}'.format(
-                            _command,
-                            traceback.format_exc()))
-            elif parser[0].upper() == 'AMBIENT_TV_SIM':
-                try:
-                    if config.MODULE_AMBIENT:
-                        ambient.set_ambient_tv_sim()
-                        show_message('COLOR', 'AMBIENT TV SIM')
-                        say('Ambient TV sim')
-                except Exception as e:
-                    log_data('PARSERROR: {}\n{}'.format(
-                        _command,
-                        traceback.format_exc()))
-            elif parser[0].upper() == 'GATE':
-                # execute gate only once per cycle, and not while another
-                # is running
-                if len(config.BUTTONS):
-                    gate_button_index = -1
-                    index = 0
-                    for button in config.BUTTONS:
-                        if 'GATE' == button[1].upper():
-                            gate_button_index = index
-                            break
-                        index += 1
-                    if gate_button_index > -1 and \
-                            not io_status.sw_status[gate_button_index]:
-                        io_status.send_switch_command(gate_button_index)
-                        show_ack = True
-                        show_message('GATE', 'GATE OPEN')
-                        say('Gate open')
-            elif parser[0].upper() == 'BUTTON':
-                try:
-                    button_no = int(parser[1])
-                    # execute switch only once per cycle, and not while another
-                    # is running
-                    if button_no < len(config.BUTTONS)\
-                            and not io_status.sw_status[button_no]:
-                        io_status.send_switch_command(button_no)
-                        show_ack = True
-                        show_message('BUTTON' + button_no)
-                        say('Function ' + button_no)
-                except Exception as e:
-                    log_data('PARSERROR: {}\n{}'.format(
-                        _command,
-                        traceback.format_exc()))
-                    show_message('', 'PARSERROR: {}'.format(_command))
+                    value = parser[0].upper()
             else:
-                log_data('NOTIMPLEMENTED: {}'.format(_command))
+                log_data('PARSERROR: {}'.format(data))
+                show_message('PARSERROR: {}'.format(data))
+                continue
+        if command == 'TT':
+            try:
+                if int(value):
+                    dbmgr.query('UPDATE gm_control SET timetable_id = ?',
+                                (value,))
+                    show_message('TT CHANGE', 'TT CHANGE: {}'.format(value))
+                    say('Timetable change')
+                    sig_command = show_ack = True
+            except Exception:
+                log_data('PARSERROR: {}'.format(data))
+        elif command == 'TEMP':
+            try:
+                if int(arg) and float(value):
+                    dbmgr.query(
+                        'UPDATE gm_temp SET temp_c = ? WHERE id = ?',
+                        (value, arg))
+                    sig_command = show_ack = True
+                    show_message('TP CHANGE', 'TP CHANGE ({}): {}'.format(arg, value))
+                    say('Temperature change: ' + value + ' degrees')
+            except Exception as e:
+                log_data('PARSERROR: {}'.format(data))
+        elif command == 'LCD':
+            if value == '0':
+                lcd.set_backlight(0,
+                                  datetime.datetime.now() +
+                                  datetime.timedelta(hours=4))
+                say('Display off')
+            else:
+                show_message('LCD ON')
+                say('Display on')
+                lcd.set_backlight(1)
+            show_ack = True
+        elif command == 'MESSAGE':
+            io_status.send_message(value)
+            show_message('', 'MESSAGE: {}'.format(value))
+            say('Message: {}'.format(value))
+            is_status_changed = show_ack = True
+        elif command == 'AMBIENT':
+            if not arg:
+                arg = 'COLOR'
+                if value == '000000':
+                    arg = 'STATUS'
+                    value = 'OFF'
+            try:
+                if config.MODULE_AMBIENT:
+                    if arg == 'COLOR':
+                        ambient.set_ambient_crossfade(
+                            io_status,
+                            value,
+                            datetime.datetime.now() +
+                            datetime.timedelta(hours=4))
+                        show_message('AMBIENT', 'AMBIENT COLOR: #{}'.format(value))
+                        say('Ambient color')
+                    elif arg == 'STATUS':
+                        ambient.set_ambient_status(
+                            io_status,
+                            value,
+                            datetime.datetime.now() +
+                            datetime.timedelta(hours=4))
+                        show_message('AMBIENT', 'AMBIENT STATUS: {}'.format(value))
+                        say('Ambient status {}'.format(value))
+                    else:
+                        try:
+                            ambient.set_ambient_effect(value)
+                            show_message('AMBIENT', 'AMBIENT {}'.format(arg))
+                            say('Ambient effect')
+                        except Exception as e:
+                            log_data('PARSERROR: {}\n{}'.format(
+                                data,
+                                traceback.format_exc()))
+            except Exception as e:
+                log_data('PARSERROR: {}\n{}'.format(
+                        data,
+                        traceback.format_exc()))
+        elif command == 'GATE':
+            # execute gate only once per cycle, and not while another
+            # is running
+            if len(config.BUTTONS):
+                gate_button_index = -1
+                index = 0
+                for button in config.BUTTONS:
+                    if 'GATE' == button[1].upper():
+                        gate_button_index = index
+                        break
+                    index += 1
+                if gate_button_index > -1 and \
+                        not io_status.sw_status[gate_button_index]:
+                    io_status.send_switch_command(gate_button_index)
+                    show_ack = True
+                    show_message('GATE', 'GATE OPEN')
+                    say('Gate open')
+        elif command == 'BUTTON':
+            try:
+                button_no = int(value)
+                # execute switch only once per cycle, and not while another
+                # is running
+                if button_no < len(config.BUTTONS)\
+                        and not io_status.sw_status[button_no]:
+                    io_status.send_switch_command(button_no)
+                    show_ack = True
+                    show_message('BUTTON{}'.format(button_no))
+                    say('Function {}'.format(button_no))
+            except Exception as e:
+                log_data('PARSERROR: {}\n{}'.format(
+                    data,
+                    traceback.format_exc()))
+                show_message('', 'PARSERROR: {}'.format(data))
         else:
-            log_data('PARSERROR: {}'.format(_command))
-            show_message('PARSERROR: {}'.format(_command))
+            log_data('NOTIMPLEMENTED: {}'.format(data))
 
         # show ambient ack
         if config.MODULE_AMBIENT and show_ack:

@@ -350,8 +350,8 @@ if __name__ == "__main__":
         "xmas_daisy": xmas_daisy,
         "tv_sim": tv_sim,
     }
-    # Get the function from switcher dictionary
 
+    # Get the function from switcher dictionary
     if len(sys.argv) == 1:
         print("Commands available: {}".format(switcher.keys()))
     else:

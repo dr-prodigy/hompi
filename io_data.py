@@ -61,10 +61,12 @@ class Status:
         hide_message = datetime.datetime.now()
         # ambient
         self.current_ambient_color = '000000'
+        self.current_ambient_color_dec = [0, 0, 0]
         self.current_ambient_command = ''
-        self.ext_temp_c = 0.0
+        self.current_ambient_on = False
         # meteo
         if config.MODULE_METEO:
+            self.ext_temp_c = 0.0
             self.place = ''
             self.weather = ''
             self.humidity = 0
@@ -77,7 +79,6 @@ class Status:
 
     def get_output(self):
         return json.dumps(self.__dict__, indent=0)
-
 
     def get_status_text(self):
         if self.message != '':
