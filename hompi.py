@@ -49,7 +49,7 @@ lcd = dashboard.Dashboard()
 ambient = ambient.Ambient()
 
 TEST_INIT_TEMP = 20.0
-TEST_DELTA_EXT_INT_COEFF = .001
+TEST_DELTA_EXT_INT_FACTOR = .001
 TEST_DELTA_THERMO_ON_TEMP_C = .03
 current_status = ''
 sig_command = False
@@ -152,7 +152,8 @@ def main():
                 lcd.refresh_display(io_status)
                 # ambient color
                 if config.MODULE_AMBIENT:
-                    ambient.ambient_refresh(io_status)
+                    ambient.ambient_refresh()
+                    io_status.set_ambient(ambient.get_status())
                 # temp sensor failure: reset temp sampling
                 if config.MODULE_TEMP and temp_avg_sum == 0:
                     temp_avg_accu = temp_avg_counter = 0.0
@@ -207,7 +208,8 @@ def main():
             # cleanup sensors & LCD
             sensor.cleanup()
             lcd.cleanup()
-            ambient.cleanup(io_status)
+            ambient.cleanup()
+            io_status.set_ambient(ambient.get_status())
             raise
         except Exception:
             log_stderr(traceback.format_exc())
@@ -231,8 +233,9 @@ def main():
                     while task_at_mins[task] >= 60:
                         task_at_mins[task] -= 60
 
-            # sync ambient color
-            io_status.current_ambient_color = ambient.update()
+            # sync ambient
+            ambient.update()
+            io_status.set_ambient(ambient.get_status())
 
             try:
                 # update lcd screen to 1 sec approx.
@@ -255,7 +258,8 @@ def main():
                 # cleanup sensors & LCD
                 sensor.cleanup()
                 lcd.cleanup()
-                ambient.cleanup(io_status)
+                ambient.cleanup()
+                io_status.set_ambient(ambient.get_status())
                 raise
             except Exception:
                 # LCD I/O error: refresh LCD screen
@@ -263,6 +267,7 @@ def main():
                 log_stderr('LCD I/O error: trying to recover..')
                 time.sleep(1)
                 lcd.refresh_display(io_status)
+
 
 # initialize DB, I/O, signal handlers, tasks, message
 def init():
@@ -280,7 +285,10 @@ def init():
 
     # initialize test mode
     if config.TEST_MODE > 0:
-        io_data.init_test(io_status)
+        io_status.ext_temp_c = 6.0
+        io_status.req_temp_desc = 'Economy'
+        io_status.heating_status = 'off'
+        io_status.gate_status = False
         temp = TEST_INIT_TEMP
 
     initial_time = datetime.datetime.now()
@@ -301,20 +309,20 @@ def init():
 
 
 def meteo():
-    meteo = sensor.get_meteo()
+    meteo_data = sensor.get_meteo()
     try:
-        if meteo:
+        if meteo_data:
             io_status.place = io_status.weather = ''
             io_status.ext_temp_c = io_status.humidity = 0
             io_status.pressure = io_status.wind = 0.0
 
-            io_status.place = meteo['name']
-            if len(meteo['weather']) > 0:
-                io_status.weather = meteo['weather'][0]['main']
-            io_status.ext_temp_c = meteo['main']['temp']
-            io_status.humidity = meteo['main']['humidity']
-            io_status.pressure = meteo['main']['pressure']
-            io_status.wind = meteo['wind']['speed']
+            io_status.place = meteo_data['name']
+            if len(meteo_data['weather']) > 0:
+                io_status.weather = meteo_data['weather'][0]['main']
+            io_status.ext_temp_c = meteo_data['main']['temp']
+            io_status.humidity = meteo_data['main']['humidity']
+            io_status.pressure = meteo_data['main']['pressure']
+            io_status.wind = meteo_data['wind']['speed']
         else:
             # occurs too often: just show a small mark on app (DISABLED!)
             if False and ' (*)' not in io_status.place:
@@ -326,11 +334,11 @@ def meteo():
 
 
 def aphorism():
-    aphorism = sensor.get_aphorism()
+    aphorism_data = sensor.get_aphorism()
     try:
-        if aphorism:
-            io_status.aphorism_text = aphorism['quoteText'].strip()
-            io_status.aphorism_author = aphorism['quoteAuthor'].strip()
+        if aphorism_data:
+            io_status.aphorism_text = aphorism_data['quoteText'].strip()
+            io_status.aphorism_author = aphorism_data['quoteAuthor'].strip()
         else:
             # just show a small mark on app (DISABLED!)
             if False and io_status.aphorism_text \
@@ -352,7 +360,7 @@ def get_temperature():
     # so more recent reads have priority.
     # At 'update_io' average temp is logged.
     if config.TEST_MODE > 0:
-        temp += -10 * TEST_DELTA_EXT_INT_COEFF
+        temp += -10 * TEST_DELTA_EXT_INT_FACTOR
         if io_status.heating_status == 'on' or \
                 io_status.heating_status == 'warming':
             temp += TEST_DELTA_THERMO_ON_TEMP_C
@@ -382,7 +390,7 @@ def compute_status():
     current_time = datetime.datetime.now()
 
     slave_heating_on = False
-    for id, slave in io_status.hompi_slaves.items():
+    for slave_id, slave in io_status.hompi_slaves.items():
         slave_heating_on |= slave['heating_status'] == 'warming' or slave[
             'heating_status'] == 'on'
 
@@ -668,24 +676,22 @@ def process_input():
             say('Message: {}'.format(value))
             is_status_changed = show_ack = True
         elif command == 'AMBIENT':
-            if not arg:
-                arg = 'COLOR'
-                if value == '000000':
-                    arg = 'STATUS'
-                    value = 'OFF'
             try:
                 if config.MODULE_AMBIENT:
+                    if not arg:
+                        arg = 'COLOR'
+                        if value == '000000':
+                            arg = 'STATUS'
+                            value = 'OFF'
                     if arg == 'COLOR':
                         ambient.set_ambient_crossfade(
-                            io_status,
                             value,
                             datetime.datetime.now() +
                             datetime.timedelta(hours=4))
                         show_message('AMBIENT', 'AMBIENT COLOR: #{}'.format(value))
                         say('Ambient color')
                     elif arg == 'STATUS':
-                        ambient.set_ambient_status(
-                            io_status,
+                        ambient.set_ambient_on_off(
                             value,
                             datetime.datetime.now() +
                             datetime.timedelta(hours=4))
@@ -700,6 +706,7 @@ def process_input():
                             log_data('PARSERROR: {}\n{}'.format(
                                 data,
                                 traceback.format_exc()))
+                    io_status.set_ambient(ambient.get_status())
             except Exception as e:
                 log_data('PARSERROR: {}\n{}'.format(
                         data,

@@ -22,7 +22,7 @@ import datetime
 
 import config
 
-hide_message = None
+hide_message_time = None
 
 
 class Input:
@@ -30,9 +30,10 @@ class Input:
         self.last_update = datetime.datetime.now().isoformat()
         self.data = ''
 
+
 class Status:
     def __init__(self):
-        global hide_message
+        global hide_message_time
         # general
         self.id = config.HOMPI_ID
         self.last_update = datetime.datetime.now().isoformat()
@@ -58,12 +59,12 @@ class Status:
         # gui
         self.current_image = ''
         self.message = ''
-        hide_message = datetime.datetime.now()
+        hide_message_time = datetime.datetime.now()
         # ambient
-        self.current_ambient_color = '000000'
-        self.current_ambient_color_dec = [0, 0, 0]
-        self.current_ambient_command = ''
-        self.current_ambient_on = False
+        self.ambient_color = '000000'
+        self.ambient_color_dec = [0, 0, 0]
+        self.ambient_command = None
+        self.ambient_on = False
         # meteo
         if config.MODULE_METEO:
             self.ext_temp_c = 0.0
@@ -84,7 +85,7 @@ class Status:
         if self.message != '':
             status = '{}'.format(self.message)
         else:
-            stato = 'manual' if self.mode_desc == 'Manual' else\
+            state = 'manual' if self.mode_desc == 'Manual' else\
                 'automatic' if self.mode_desc == 'Automatic' else\
                 'off' if self.mode_desc == 'Off' else 'Winter safe'
             heating = 'off' if self.heating_status == 'off' else\
@@ -93,31 +94,37 @@ class Status:
                 'warming'
 
             status = 'temperature {:.1f} degrees, {} mode'.\
-                     format(self.int_temp_c, stato) + \
+                     format(self.int_temp_c, state) + \
                      (', {:.1f} degrees required, heating {}'.format(
                         self.req_temp_c, heating)
-                         if stato in ['automatic', 'manual'] else
+                         if state in ['automatic', 'manual'] else
                          '')
         return status
 
+    def set_ambient(self, ambient_status):
+        self.ambient_color = ambient_status["color"]
+        self.ambient_color_dec = ambient_status["color_dec"]
+        self.ambient_on = ambient_status["on"]
+        self.ambient_command = ambient_status["command"]
+
     def update(self, current_time):
-        if self.message != '' and hide_message <= current_time:
+        if self.message != '' and hide_message_time <= current_time:
             self.message = ''
             self.last_change == current_time.isoformat()
 
     def send_message(self, message):
-        global hide_message
+        global hide_message_time
 
         self.message = message.encode('utf-8')
         self.last_change = datetime.datetime.now().isoformat()
-        hide_message = datetime.datetime.now() + datetime.timedelta(seconds=40)
+        hide_message_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
 
     def reset_message(self):
-        global hide_message
+        global hide_message_time
 
         self.message = ''
         self.last_change = datetime.datetime.now().isoformat()
-        hide_message = datetime.datetime.now()
+        hide_message_time = datetime.datetime.now()
 
     def send_switch_command(self, switch):
         self.sw_sig[switch] = True
@@ -149,10 +156,3 @@ class SystemInfo:
 
     def get_output(self):
         return json.dumps(self.__dict__, indent=0)
-
-
-def init_test(io_status):
-    io_status.ext_temp_c = 6.0
-    io_status.req_temp_desc = 'Economy'
-    io_status.heating_status = 'off'
-    io_status.gate_status = False

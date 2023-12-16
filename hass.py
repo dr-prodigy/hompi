@@ -69,10 +69,10 @@ def publish_status(io_status, io_system):
     if config.MODULE_AMBIENT:
         hass_entities.extend([
             {"entity_id": "hompi_ambient_color",
-             "data": {"state": io_status.status_color, "attributes":
+             "data": {"state": io_status.ambient_color, "attributes":
                  {"friendly_name": "Hompi ambient color", "icon": "mdi:palette"}}},
             {"entity_id": "hompi_ambient_command",
-             "data": {"state": io_status.status_command, "attributes":
+             "data": {"state": io_status.ambient_command, "attributes":
                  {"friendly_name": "Hompi ambient command", "icon": "mdi:palette"}}}
         ])
     # temperature entities

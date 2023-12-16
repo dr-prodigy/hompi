@@ -51,13 +51,13 @@ rgb2ascii_ctrl = [
 class Ambient:
     def __init__(self):
         global AMBIENT_ENABLED
-        self.status_on = False
+        self.status_on_off = False
         self.status_color = None
         self.status_color_dec = None
         self.status_command = None
         self.status_screen_color_no = -1
         self.power_off_time = datetime.datetime(9999, 12, 31)
-        self._set_status_color('000000')
+        self._update_internal_state('000000')
 
         try:
             if AMBIENT_ENABLED:
@@ -69,17 +69,21 @@ class Ambient:
             log_stderr('*AMBIENT ERR* : init failed - disabling AMBIENT')
             AMBIENT_ENABLED = False
 
-    def _set_status_color(self, rgb_string):
+    def _do_ambient_color(self, color):
+        if self.status_on_off:
+            command = AMBIENT_MODULE_CMD
+            command += config.AMBIENT_SETCOLOR_COMMAND.format(color) + ' &'
+            print('*AMBIENT do color* - Executing: {}'.format(command))
+            os.system(command)
+
+    def _update_internal_state(self, rgb_string):
         color = rgb_string
         if rgb_string[0] == '(' and rgb_string[-1] == ')':
             rgb = rgb_string[1:-1].split(',')
             color = hex(rgb[0])[2:] + hex(rgb[1])[2:] + hex(rgb[2])[2:]
         self.status_color = color
-        self._decode_hex_color()
-        return rgb_string
 
-    def _decode_hex_color(self):
-        # decode color
+        # decode decimal color
         current_r = int(self.status_color, 16) >> 16 & 0xFF
         current_g = int(self.status_color, 16) >> 8 & 0xFF
         current_b = int(self.status_color, 16) & 0xFF
@@ -91,16 +95,35 @@ class Ambient:
         # locate nearest color for screen output
         min_color_diff = 0xff + 0xff + 0xff
         for color_no in range(0, len(rgb2ascii_ctrl)):
-            r = rgb2ascii_ctrl[color_no][1] >> 16 & 0xFF
-            g = rgb2ascii_ctrl[color_no][1] >> 8 & 0xFF
-            b = rgb2ascii_ctrl[color_no][1] & 0xFF
-            new_color_diff =\
+            r = rgb2ascii_ctrl[color_no][1] >> 16 & 0xff
+            g = rgb2ascii_ctrl[color_no][1] >> 8 & 0xff
+            b = rgb2ascii_ctrl[color_no][1] & 0xff
+            new_color_diff = \
                 abs(r - current_r * saturation) + \
                 abs(g - current_g * saturation) + \
                 abs(b - current_b * saturation)
             if new_color_diff < min_color_diff:
                 min_color_diff = new_color_diff
                 self.status_screen_color_no = color_no
+
+    def _do_go_to_sleep(self):
+        if AMBIENT_ENABLED:
+            # reset power off
+            self.power_off_time = datetime.datetime(9999, 12, 31)
+
+            command = AMBIENT_MODULE_CMD
+            if config.AMBIENT_GOING_TO_SLEEP_COMMAND:
+                command += config.AMBIENT_GOING_TO_SLEEP_COMMAND.format(
+                    self.status_color) + ' &'
+            else:
+                # going to sleep missing: default to INIT
+                command += config.AMBIENT_INIT_COMMAND + ' &'
+            print('*AMBIENT going_to_sleep* - Executing: {}'.format(command))
+            os.system(command)
+
+            # switch off
+            self._do_ambient_color('000000')
+            self.status_on_off = False
 
     def _echo_display(self):
         # move cursor home
@@ -112,162 +135,112 @@ class Ambient:
         # restore cursor pos and color
         sys.stdout.write("\033[0m\x1b8")
 
-    def _apply_ambient_color(self, color):
-        if self.status_on:
+    def cleanup(self):
+        if AMBIENT_ENABLED and config.AMBIENT_INIT_COMMAND:
+            # reset power off time
+            self.power_off_time = datetime.datetime(9999, 12, 31)
+
             command = AMBIENT_MODULE_CMD
-            command += config.AMBIENT_SETCOLOR_COMMAND.format(color) + ' &'
-            print('*AMBIENT apply color* - Executing: {}'.format(command))
+            command += config.AMBIENT_INIT_COMMAND + ' &'
+            print('*AMBIENT cleanup* - Executing: {}'.format(command))
             os.system(command)
-
-    def cleanup(self, io_status):
-        if not AMBIENT_ENABLED or not config.AMBIENT_INIT_COMMAND:
-            return
-
-        # reset power off time
-        self.power_off_time = datetime.datetime(9999, 12, 31)
-
-        command = AMBIENT_MODULE_CMD
-        command += config.AMBIENT_INIT_COMMAND + ' &'
-        print('*AMBIENT cleanup* - Executing: {}'.format(command))
-        os.system(command)
-        self._set_status_color('000000')
-        self.status_on = False
-        self.status_command = None
-
-        self._update_io_status(io_status)
+            self._update_internal_state('000000')
+            self.status_on_off = False
+            self.status_command = None
 
     def update(self):
-        if not AMBIENT_ENABLED:
-            return
         try:
-            # power off timeout expired: going to sleep
-            if datetime.datetime.now() > self.power_off_time:
-                self._going_to_sleep()
-            self._echo_display()
-            return self.status_color
+            if AMBIENT_ENABLED:
+                # power off timeout expired: going to sleep
+                if datetime.datetime.now() > self.power_off_time:
+                    self._do_go_to_sleep()
+                self._echo_display()
         except KeyboardInterrupt:
             raise
         except Exception:
             pass
 
-    def _going_to_sleep(self):
-        if not AMBIENT_ENABLED:
-            return
-
-        # reset power off
-        self.power_off_time = datetime.datetime(9999, 12, 31)
-
-        command = AMBIENT_MODULE_CMD
-        if config.AMBIENT_GOING_TO_SLEEP_COMMAND:
-            command += config.AMBIENT_GOING_TO_SLEEP_COMMAND.format(
-                self.status_color) + ' &'
-        else:
-            # going to sleep missing: default to INIT
-            command += config.AMBIENT_INIT_COMMAND + ' &'
-        print('*AMBIENT going_to_sleep* - Executing: {}'.format(command))
-        os.system(command)
-
-        # switch off
-        self._apply_ambient_color('000000')
-
-    def set_ambient_status(self, io_status, status,
+    def set_ambient_on_off(self, status,
                            timeout=datetime.datetime(9999, 12, 31)):
-        if not AMBIENT_ENABLED or not config.AMBIENT_SETCOLOR_COMMAND:
-            return
-        if status.upper() == "on":
-            # switch on
-            if self.status_color == '000000':
-                # if color not set, initialize to white
-                self._set_status_color('FFFFFF')
-            self._apply_ambient_color(self.status_color)
+        if AMBIENT_ENABLED and config.AMBIENT_SETCOLOR_COMMAND:
+            if status.upper() == "ON":
+                # switch on
+                if self.status_color == '000000':
+                    # if color not set, initialize to white
+                    self._update_internal_state('FFFFFF')
+                self.status_on_off = True
+                self._do_ambient_color(self.status_color)
 
-            # power off time
-            self.power_off_time = timeout
-        else:
-            # switch off
-            self._apply_ambient_color('000000')
+                # power off time
+                self.power_off_time = timeout
+            else:
+                # switch off
+                self.status_on_off = False
+                self._do_ambient_color('000000')
 
-        self._update_io_status(io_status)
-
-    def set_ambient_color(self, io_status, color,
+    def set_ambient_color(self, color,
                            timeout=datetime.datetime(9999, 12, 31)):
-        if not AMBIENT_ENABLED or not config.AMBIENT_SETCOLOR_COMMAND:
-            return
-
-        self._apply_ambient_color(color)
-
-        # power off time
-        self.power_off_time = timeout
-
-        # no refresh command (only ambient color)
-        self._set_status_color(color)
-        self.status_command = ''
-
-        self._update_io_status(io_status)
-
-    def set_ambient_crossfade(self, io_status, color,
-                              timeout=datetime.datetime(9999, 12, 31)):
-        if not AMBIENT_ENABLED or not config.AMBIENT_CROSSFADE_COMMAND:
-            return
-
-        if self.status_color != color or color == '000000':
-            command = AMBIENT_MODULE_CMD
-            command += config.AMBIENT_CROSSFADE_COMMAND.format(
-                color,
-                self.status_color) + ' &'
-            print('*AMBIENT crossfade* - Executing: {}'.format(command))
-            os.system(command)
+        if AMBIENT_ENABLED and config.AMBIENT_SETCOLOR_COMMAND:
+            self._do_ambient_color(color)
 
             # power off time
             self.power_off_time = timeout
 
             # no refresh command (only ambient color)
-            self._set_status_color(color)
-            self.status_command = ''
+            self._update_internal_state(color)
+            self.status_command = None
 
-        self._update_io_status(io_status)
+    def set_ambient_crossfade(self, color,
+                              timeout=datetime.datetime(9999, 12, 31)):
+        if AMBIENT_ENABLED and config.AMBIENT_CROSSFADE_COMMAND:
+            if self.status_color != color or color == '000000':
+                command = AMBIENT_MODULE_CMD
+                command += config.AMBIENT_CROSSFADE_COMMAND.format(
+                    color,
+                    self.status_color) + ' &'
+                print('*AMBIENT crossfade* - Executing: {}'.format(command))
+                os.system(command)
 
-    def set_ambient_effect(self, io_status, effect, brightness=1, rgb=''):
-        if not AMBIENT_ENABLED:
-            return
-        command = '{} {} {} {} &'.format(AMBIENT_MODULE_CMD, effect, brightness, rgb)
-        print('*AMBIENT {}* - Executing: {}'.format(effect, command))
-        os.system(command)
+                # power off time
+                self.power_off_time = timeout
 
-        # refresh command (repeat)
-        self._set_status_color('000000')
-        self.status_command = command
+                # no refresh command (only ambient color)
+                self._update_internal_state(color)
+                self.status_command = None
 
-        self._update_io_status(io_status)
+    def set_ambient_effect(self, effect, brightness=1, rgb=''):
+        if AMBIENT_ENABLED:
+            command = '{} {} {} {} &'.format(AMBIENT_MODULE_CMD, effect, brightness, rgb)
+            print('*AMBIENT {}* - Executing: {}'.format(effect, command))
+            os.system(command)
+
+            # refresh command (repeat)
+            self._update_internal_state('000000')
+            self.status_on_off = True
+            self.status_command = command
 
     def ambient_ack(self):
-        if not AMBIENT_ENABLED or not config.AMBIENT_ACK_COMMAND:
-            return
+        if AMBIENT_ENABLED and config.AMBIENT_ACK_COMMAND:
+            command = AMBIENT_MODULE_CMD
+            command += config.AMBIENT_ACK_COMMAND.format(
+                'ff0000',
+                self.status_color) + ' &'
+            print('*AMBIENT ack* - Executing: {}'.format(command))
+            os.system(command)
 
-        command = AMBIENT_MODULE_CMD
-        command += config.AMBIENT_ACK_COMMAND.format(
-            'ff0000',
-            self.status_color) + ' &'
-        print('*AMBIENT ack* - Executing: {}'.format(command))
-        os.system(command)
+    def ambient_refresh(self):
+        if AMBIENT_ENABLED:
+            if self.status_command:
+                print('*AMBIENT refresh* - Executing: {}'.format(
+                    self.status_command))
+                os.system(self.status_command)
+            else:
+                print('*AMBIENT refresh* - Resetting color to {}'
+                      .format(self.status_color))
+                self._do_ambient_color(self.status_color)
 
-    def ambient_refresh(self, io_status):
-        if not AMBIENT_ENABLED:
-            return
-
-        if self.status_command:
-            print('*AMBIENT refresh* - Executing: {}'.format(
-                self.status_command))
-            os.system(self.status_command)
-        else:
-            print('*AMBIENT refresh* - Resetting color to {}'
-                  .format(self.status_color))
-            self._apply_ambient_color(self.status_color)
-
-        self._update_io_status(io_status)
-
-    def _update_io_status(self, io_status):
-        io_status.current_ambient_color = self.status_color
-        io_status.current_ambient_color_dec = self.status_color_dec
-        io_status.current_ambient_on = self.status_on
-        io_status.current_ambient_command = self.status_command
+    def get_status(self):
+        status = dict(
+            color=self.status_color, color_dec=self.status_color_dec,
+            on=self.status_on_off, command=self.status_command)
+        return status
