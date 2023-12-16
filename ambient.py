@@ -216,9 +216,7 @@ class Ambient:
         color_hsv = color[1:-1].split(",")
         h = float(color_hsv[0]) / 360
         s = float(color_hsv[1]) / 100
-        v = 255
-        if len(color_hsv) > 2 and color_hsv[2]:
-            v = float(color_hsv[2]) / 255
+        v = float(color_hsv[2]) / 255
         (r, g, b) = colorsys.hsv_to_rgb(h, s, v)
         self.set_ambient_color("({:.0f},{:.0f},{:.0f})".format(r*255, g*255, b*255), timeout)
 
@@ -261,9 +259,10 @@ class Ambient:
                 self._status_effect = self._status_effect_params = None
         elif self._status_previous_on_off != self._status_on_off:
             # power on / off
+            old_color = self._status_previous_color if not self._status_on_off else AMBIENT_COLOR_OFF
             new_color = self._status_color if self._status_on_off else AMBIENT_COLOR_OFF
             # self._do_ambient_color(new_color)
-            self._do_ambient_crossfade(self._status_previous_color, new_color)
+            self._do_ambient_crossfade(old_color, new_color)
         elif self._status_color != self._status_previous_color:
             # color change
             # self._do_ambient_color(self._status_color)
