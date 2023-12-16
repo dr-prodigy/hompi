@@ -214,8 +214,12 @@ class Ambient:
                               timeout=datetime.datetime(9999, 12, 31)):
         print("*AMBIENT* color_hsv {}".format(color))
         color_hsv = color[1:-1].split(",")
-        (r, g, b) = colorsys.hsv_to_rgb(
-            float(color_hsv[0]) / 360, float(color_hsv[1]) / 100, float(color_hsv[2]) / 255)
+        h = float(color_hsv[0]) / 360
+        s = float(color_hsv[1]) / 100
+        v = 255
+        if len(color_hsv) > 2 and color_hsv[2]:
+            v = float(color_hsv[2]) / 255
+        (r, g, b) = colorsys.hsv_to_rgb(h, s, v)
         self.set_ambient_color("({:.0f},{:.0f},{:.0f})".format(r*255, g*255, b*255), timeout)
 
     def set_ambient_effect(self, effect, params,
