@@ -123,9 +123,9 @@ class Ambient:
         cur_brightness = max(r, g, b, 1)
 
         return "{:0>2}{:0>2}{:0>2}".format(
-            hex(int(r / cur_brightness * brightness)),
-            hex(int(g / cur_brightness * brightness)),
-            hex(int(b / cur_brightness * brightness)))
+            hex(int(r / cur_brightness * brightness))[2:],
+            hex(int(g / cur_brightness * brightness))[2:],
+            hex(int(b / cur_brightness * brightness))[2:])
 
     def _do_ambient_color(self, color, brightness):
         color = self._apply_brightness(color, brightness)
