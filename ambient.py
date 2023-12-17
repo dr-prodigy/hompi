@@ -117,9 +117,9 @@ class Ambient:
                 self._status_screen_ctrl_code = rgb2ctrl_code[color_no][0]
 
     def _apply_brightness(self, color, brightness):
-        r = int(color, 16) >> 16 & AMBIENT_MAX_BRIGHTNESS
-        g = int(color, 16) >> 8 & AMBIENT_MAX_BRIGHTNESS
-        b = int(color, 16) & AMBIENT_MAX_BRIGHTNESS
+        r = float(int(color, 16) >> 16 & AMBIENT_MAX_BRIGHTNESS)
+        g = float(int(color, 16) >> 8 & AMBIENT_MAX_BRIGHTNESS)
+        b = float(int(color, 16) & AMBIENT_MAX_BRIGHTNESS)
         cur_brightness = max(r, g, b, 1)
 
         return "{:0>2}{:0>2}{:0>2}".format(
