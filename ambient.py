@@ -187,6 +187,7 @@ class Ambient:
         # reset and power off
         self._status_on_off = False
         self._set_color(AMBIENT_COLOR_OFF)
+        self._status_brightness = 0
         self._power_off_time = datetime.datetime(9999, 12, 31)
         self._status_effect = self._status_effect_params = None
         self._status_effect_repeated = False
@@ -201,8 +202,7 @@ class Ambient:
                     or self._status_color == AMBIENT_COLOR_OFF:
                 self._set_color(AMBIENT_COLOR_ON)
             # if brightness not set, initialize to full light
-            if not self._status_brightness \
-                    or self._status_brightness == 0:
+            if not self._status_brightness:
                 self._status_brightness = AMBIENT_MAX_BRIGHTNESS
             self._status_on_off = True
             # power off time
@@ -226,8 +226,7 @@ class Ambient:
             self._status_brightness = 0
         else:
             self._status_on_off = True
-            if not self._status_brightness \
-                    or self._status_brightness == 0:
+            if not self._status_brightness:
                 self._status_brightness = AMBIENT_MAX_BRIGHTNESS
         # set color
         self._set_color(color)
@@ -326,7 +325,7 @@ class Ambient:
             self._do_effect(self._status_effect, self._status_effect_params)
         elif self._status_color and self._status_on_off:
             print('*AMBIENT* redo color {}'.format(self._status_color))
-            self._do_ambient_color(self._status_color)
+            self._do_ambient_color(self._status_color, self._status_brightness)
 
     def get_status(self):
         status = dict(
