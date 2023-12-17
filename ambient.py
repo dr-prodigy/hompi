@@ -63,8 +63,8 @@ class Ambient:
     def __init__(self):
         global AMBIENT_ENABLED
         self._status_on_off = self._status_previous_on_off = False
-        self._status_color = self._status_previous_color = self._status_color_dec = None
-        self._status_brightness = self._status_previous_brightness = None
+        self._status_color = self._status_previous_color = self._status_color_dec = 0
+        self._status_brightness = self._status_previous_brightness = 0
         self._status_effect = self._status_previous_effect = None
         self._status_effect_params = None
         self._status_effect_repeated = False
