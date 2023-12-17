@@ -120,7 +120,7 @@ class Ambient:
         r = int(color, 16) >> 16 & AMBIENT_MAX_BRIGHTNESS
         g = int(color, 16) >> 8 & AMBIENT_MAX_BRIGHTNESS
         b = int(color, 16) & AMBIENT_MAX_BRIGHTNESS
-        cur_brightness = max(r, g, b)
+        cur_brightness = max(r, g, b, 1)
 
         return "{:0>2}{:0>2}{:0>2}".format(
             hex(int(r / cur_brightness * brightness)),
