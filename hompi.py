@@ -207,7 +207,7 @@ def main():
             # cleanup sensors & LCD
             sensor.cleanup()
             lcd.cleanup()
-            ambient.cleanup()
+            ambient.reset()
             io_status.set_ambient(ambient.get_status())
             raise
         except Exception:
@@ -257,7 +257,7 @@ def main():
                 # cleanup sensors & LCD
                 sensor.cleanup()
                 lcd.cleanup()
-                ambient.cleanup()
+                ambient.reset()
                 io_status.set_ambient(ambient.get_status())
                 raise
             except Exception:
@@ -692,6 +692,10 @@ def process_input():
                         datetime.timedelta(hours=4))
                     show_message('AMBIENT', 'AMBIENT COLOR_HSV: #{}'.format(value))
                     say('Ambient color')
+                elif arg == 'BRIGHTNESS':
+                    ambient.set_ambient_brightness(value)
+                    show_message('AMBIENT', 'AMBIENT BRIGHTNESS: #{}'.format(value))
+                    say('Ambient brightness')
                 elif arg == 'STATUS':
                     ambient.set_ambient_on_off(
                         value,
