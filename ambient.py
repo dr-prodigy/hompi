@@ -244,7 +244,7 @@ class Ambient:
         s = float(color_hsv[1]) / 100
         v = float(color_hsv[2]) / 255
         (r, g, b) = colorsys.hsv_to_rgb(h, s, v)
-        self.set_ambient_color("({:.0f},{:.0f},{:.0f})".format(r*255, g*255, b*255), timeout)
+        self.set_ambient_color("({:.0f},{:.0f},{:.0f})".format(r*255.0, g*255.0, b*255.0), timeout)
 
     def set_ambient_brightness(self, brightness):
         print("*AMBIENT* brightness {}".format(brightness))
