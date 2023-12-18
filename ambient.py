@@ -73,7 +73,7 @@ class Ambient:
         self._power_off_time = datetime.datetime(9999, 12, 31)
         self._set_color(AMBIENT_COLOR_OFF)
         # effect list
-        self.effect_list = ['go_to_sleep', 'curtain_in_out', 'xmas_daisy', 'tv_sim']
+        self.effect_list = ['xmas_daisy', 'tv_sim', 'stop_effect', 'finish_effect']
         self.effect_list_repeated = [False, False, True, True]
 
         try:
@@ -290,23 +290,31 @@ class Ambient:
             # power off timeout expired: go to sleep
             self._do_go_to_sleep(self.status_color)
         elif self.status_effect and self._status_previous_effect != self.status_effect:
-            # run effect
-            self._do_effect(self.status_effect, self._status_effect_params)
+            if self.status_effect not in ('stop_effect', 'finish_effect'):
+                # reset changes
+                self._status_previous_on_off = self.status_on_off
+                self._status_previous_effect = self.status_effect
+                self._status_previous_color = self.status_color
+                self._status_previous_brightness = self.status_brightness
+                # run effect
+                self._do_effect(self.status_effect, self._status_effect_params)
+            else:
+                # if a color was there, return to it
+                if self._status_color:
+                    self._status_previous_on_off = False
             if not self._status_effect_repeated:
                 # reset after first run
                 self.status_effect = self._status_effect_params = None
-        elif self._status_previous_on_off != self.status_on_off:
+        if self._status_previous_on_off != self.status_on_off:
             # power on / off
             old_color = self._status_previous_color if not self.status_on_off else AMBIENT_COLOR_OFF
             old_brightness = self._status_previous_brightness if not self.status_on_off else 0
             new_color = self.status_color if self.status_on_off else AMBIENT_COLOR_OFF
             new_brightness = self.status_brightness if self.status_on_off else 0
-            # self._do_ambient_color(new_color, new_brightness)
             self._do_ambient_crossfade(old_color, old_brightness, new_color, new_brightness)
         elif self._status_previous_color != self.status_color \
                 or self._status_previous_brightness != self.status_brightness:
             # color change
-            # self._do_ambient_color(self._status_color)
             self._do_ambient_crossfade(self._status_previous_color, self._status_previous_brightness,
                                        self.status_color, self.status_brightness)
         # reset changes
