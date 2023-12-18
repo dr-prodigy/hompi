@@ -75,7 +75,7 @@ def publish_status(io_status, io_system, ambient):
                   "effect_list": ambient.effect_list,
                   }}}
         if ambient.status_on_off:
-            light_sensor["attributes"].extend(
+            light_sensor["data"]["attributes"].update(
                 {"brightness": ambient.status_brightness,
                 "rgb_color": ambient.status_color_dec,
                 "effect": ambient.status_effect})
