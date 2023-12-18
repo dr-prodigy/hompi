@@ -152,7 +152,7 @@ def main():
                 lcd.refresh_display(io_status)
                 # ambient color
                 ambient.ambient_redo()
-                io_status.set_ambient(ambient.get_status())
+                io_status.set_ambient(ambient)
                 # temp sensor failure: reset temp sampling
                 if config.MODULE_TEMP and temp_avg_sum == 0:
                     temp_avg_accu = temp_avg_counter = 0.0
@@ -208,7 +208,7 @@ def main():
             sensor.cleanup()
             lcd.cleanup()
             ambient.reset()
-            io_status.set_ambient(ambient.get_status())
+            io_status.set_ambient(ambient)
             raise
         except Exception:
             log_stderr(traceback.format_exc())
@@ -234,7 +234,7 @@ def main():
 
             # sync ambient
             ambient.update()
-            io_status.set_ambient(ambient.get_status())
+            io_status.set_ambient(ambient)
 
             try:
                 # update lcd screen to 1 sec approx.
@@ -258,7 +258,7 @@ def main():
                 sensor.cleanup()
                 lcd.cleanup()
                 ambient.reset()
-                io_status.set_ambient(ambient.get_status())
+                io_status.set_ambient(ambient)
                 raise
             except Exception:
                 # LCD I/O error: refresh LCD screen
@@ -587,7 +587,7 @@ def update_output():
         current_status = io_status.get_output()
         print('*HOMPI* output: ' + current_status.replace('\n', ''))
         if config.ENABLE_HASS_INTEGRATION:
-            hass.publish_status(io_status, io_system)
+            hass.publish_status(io_status, io_system, ambient)
 
         update_lcd_content(change=False)
 
@@ -712,7 +712,7 @@ def process_input():
                         log_data('PARSERROR: {}\n{}'.format(
                             data,
                             traceback.format_exc()))
-                io_status.set_ambient(ambient.get_status())
+                io_status.set_ambient(ambient)
             except Exception as e:
                 log_data('PARSERROR: {}\n{}'.format(
                         data,

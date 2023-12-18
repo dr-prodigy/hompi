@@ -62,7 +62,6 @@ class Status:
         hide_message_time = datetime.datetime.now()
         # ambient
         self.ambient_color = '000000'
-        self.ambient_color_dec = [0, 0, 0]
         self.ambient_effect = None
         self.ambient_on = False
         # meteo
@@ -99,11 +98,10 @@ class Status:
                          '')
         return status
 
-    def set_ambient(self, ambient_status):
-        self.ambient_color = ambient_status["color"]
-        self.ambient_color_dec = ambient_status["color_dec"]
-        self.ambient_on = ambient_status["on"]
-        self.ambient_effect = ambient_status["command"]
+    def set_ambient(self, ambient):
+        self.ambient_color = ambient.status_color
+        self.ambient_on = ambient.status_on_off
+        self.ambient_effect = ambient.status_effect
 
     def update(self, current_time):
         if self.message != '' and hide_message_time <= current_time:
