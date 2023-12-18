@@ -692,13 +692,6 @@ def process_input():
                         datetime.timedelta(hours=4))
                     show_message('AMBIENT', 'AMBIENT COLOR_HS: #{}'.format(value))
                     say('Ambient color')
-                elif arg == 'COLOR_HSV':
-                    ambient.set_ambient_color_hsv(
-                        value,
-                        datetime.datetime.now() +
-                        datetime.timedelta(hours=4))
-                    show_message('AMBIENT', 'AMBIENT COLOR_HSV: #{}'.format(value))
-                    say('Ambient color')
                 elif arg == 'BRIGHTNESS':
                     ambient.set_ambient_brightness(value)
                     show_message('AMBIENT', 'AMBIENT BRIGHTNESS: #{}'.format(value))
