@@ -79,7 +79,7 @@ def publish_status(io_status, io_system, ambient):
                 {"brightness": ambient.status_brightness,
                 "rgb_color": ambient.status_color_dec,
                 "effect": ambient.status_effect})
-        hass_entities.extend(light_sensor)
+        hass_entities.append(light_sensor)
 
     # temperature entities
     for temp in io_system.temperatures:
