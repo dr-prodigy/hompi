@@ -555,7 +555,7 @@ def refresh_program(time_):
     if rows:
         io_system.temperatures.clear()
         for row in rows:
-            io_system.temperatures.append({"id": row[0], "description": row[1], "temp_c": row[2]})
+            io_system.temperatures.append(dict(id=row[0], description=row[1], temp_c=row[2]))
 
 def update_lcd_content(change=False):
     if change:

@@ -129,7 +129,7 @@ class Status:
 class SystemInfo:
     def __init__(self):
         self.modules = []
-        self.buttons = {}
+        self.buttons = []
         self.temperatures = []
 
         if config.MODULE_AMBIENT:
@@ -145,10 +145,8 @@ class SystemInfo:
             self.modules.append('meteo')
         if config.MODULE_TEMP:
             self.modules.append('temp')
-        counter = 0
-        for sw in config.BUTTONS:
-            self.buttons.update({counter: sw[1]})
-            counter += 1
+        for button in config.BUTTONS:
+            self.buttons.append(button[1])
 
     def get_output(self):
         return json.dumps(self.__dict__, indent=0)

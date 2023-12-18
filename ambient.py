@@ -72,9 +72,9 @@ class Ambient:
         self._status_screen_ctrl_code = -1
         self._power_off_time = datetime.datetime(9999, 12, 31)
         self._set_color(AMBIENT_COLOR_OFF)
-        # effect: repeated
-        self.effect_list = {'go_to_sleep': False, 'curtain_in_out': False,
-                        'xmas_daisy': True, 'tv_sim': True}
+        # effect list
+        self.effect_list = ['go_to_sleep', 'curtain_in_out', 'xmas_daisy', 'tv_sim']
+        self.effect_list_repeated = [False, False, True, True]
 
         try:
             self.reset()
@@ -262,7 +262,7 @@ class Ambient:
     def set_ambient_effect(self, effect, params,
                            timeout=datetime.datetime(9999, 12, 31)):
         effect = effect.lower()
-        if effect in self.effect_list.keys():
+        if effect in self.effect_list():
             print('*AMBIENT* effect {} {}'.format(effect, params))
             # power off time
             self._power_off_time = timeout
@@ -271,7 +271,8 @@ class Ambient:
             self.status_effect = effect
             self._status_effect_params = params
             # set effect repetition
-            self._status_effect_repeated = self.effect_list[effect]
+            self._status_effect_repeated = \
+                self.effect_list_repeated[self.effect_list.index(effect)]
         else:
             log_stderr("*AMBIENT* ERR: effect {} not available".format(effect))
         self.update()
