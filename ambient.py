@@ -300,7 +300,7 @@ class Ambient:
                 self._do_effect(self.status_effect, self._status_effect_params)
             else:
                 # if a color was there, return to it
-                if self._status_color:
+                if self.status_color:
                     self._status_previous_on_off = False
             if not self._status_effect_repeated:
                 # reset after first run
