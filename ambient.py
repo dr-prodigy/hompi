@@ -246,6 +246,15 @@ class Ambient:
         (r, g, b) = colorsys.hsv_to_rgb(h, s, v)
         self.set_ambient_color("({:.0f},{:.0f},{:.0f})".format(r*255.0, g*255.0, b*255.0), timeout)
 
+    def set_ambient_color_hs(self, color,
+                              timeout=datetime.datetime(9999, 12, 31)):
+        print("*AMBIENT* color_hsv {}".format(color))
+        color_hsv = color[1:-1].split(",")
+        h = float(color_hsv[0])
+        s = float(color_hsv[1])
+        (r, g, b) = colorsys.hsv_to_rgb(h, 1, s)
+        self.set_ambient_color("({:.0f},{:.0f},{:.0f})".format(r*255.0, g*255.0, b*255.0), timeout)
+
     def set_ambient_brightness(self, brightness):
         print("*AMBIENT* brightness {}".format(brightness))
         if brightness == 0:
