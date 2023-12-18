@@ -262,7 +262,7 @@ class Ambient:
     def set_ambient_effect(self, effect, params,
                            timeout=datetime.datetime(9999, 12, 31)):
         effect = effect.lower()
-        if effect in self.effect_list():
+        if effect in self.effect_list:
             print('*AMBIENT* effect {} {}'.format(effect, params))
             # power off time
             self._power_off_time = timeout
