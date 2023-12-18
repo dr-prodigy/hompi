@@ -67,18 +67,20 @@ def publish_status(io_status, io_system, ambient):
         )
     # ambient light entities
     if config.MODULE_AMBIENT:
-        hass_entities.extend([
-            {"entity_id": "hompi_ambient_light",
+        light_sensor = {"entity_id": "hompi_ambient_light",
              "data": {"state": io_status.ambient_on, "attributes":
                  {"unique_id": "hompi_ambient_{}".format(io_status.id.lower()),
                   "friendly_name": "Hompi ambient light",
                   "icon": "mdi:television-ambient-light",
                   "effect_list": ambient.effect_list,
-                  "brightness": ambient.status_brightness,
-                  "rgb_color": ambient.status_color_dec,
-                  "effect": ambient.status_effect,
                   }}}
-        ])
+        if ambient.status_on_off:
+            light_sensor["attributes"].extend(
+                {"brightness": ambient.status_brightness,
+                "rgb_color": ambient.status_color_dec,
+                "effect": ambient.status_effect})
+        hass_entities.extend(light_sensor)
+
     # temperature entities
     for temp in io_system.temperatures:
         description = str(temp["description"])
