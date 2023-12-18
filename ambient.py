@@ -59,6 +59,47 @@ rgb2ctrl_code = [
 CTRL_CODE_OFF = rgb2ctrl_code[0][0]
 
 
+def _cleanup():
+    command = AMBIENT_MODULE_CMD + AMBIENT_CLEAR_COMMAND + ' &'
+    print('*AMBIENT* cleanup - Executing: {}'.format(command))
+    if AMBIENT_ENABLED:
+        os.system(command)
+
+
+def _apply_brightness(color, brightness):
+    r = float(int(color, 16) >> 16 & AMBIENT_MAX_BRIGHTNESS)
+    g = float(int(color, 16) >> 8 & AMBIENT_MAX_BRIGHTNESS)
+    b = float(int(color, 16) & AMBIENT_MAX_BRIGHTNESS)
+    cur_brightness = float(max(r, g, b, 1))
+    brightness = float(brightness)
+
+    return "{:0>2}{:0>2}{:0>2}".format(
+        hex(int(r / cur_brightness * brightness))[2:],
+        hex(int(g / cur_brightness * brightness))[2:],
+        hex(int(b / cur_brightness * brightness))[2:])
+
+
+def _do_ambient_color(color, brightness):
+    color = _apply_brightness(color, brightness)
+    command = AMBIENT_MODULE_CMD + \
+              AMBIENT_SET_COLOR_COMMAND.format(color) + ' &'
+    print('*AMBIENT* do color - Executing: {}'.format(command))
+    if AMBIENT_ENABLED:
+        os.system(command)
+
+
+def _do_ambient_crossfade(previous_color, previous_brightness, color, brightness):
+    previous_color = _apply_brightness(previous_color, previous_brightness)
+    color = _apply_brightness(color, brightness)
+
+    command = AMBIENT_MODULE_CMD + \
+              AMBIENT_CROSSFADE_COMMAND.format(
+                  color, previous_color) + ' &'
+    print('*AMBIENT* crossfade - Executing: {}'.format(command))
+    if AMBIENT_ENABLED:
+        os.system(command)
+
+
 class Ambient:
     def __init__(self):
         global AMBIENT_ENABLED
@@ -73,8 +114,8 @@ class Ambient:
         self._power_off_time = datetime.datetime(9999, 12, 31)
         self._set_color(AMBIENT_COLOR_OFF)
         # effect list
-        self.effect_list = ['xmas_daisy', 'tv_sim', 'stop_effect', 'finish_effect']
-        self.effect_list_repeated = [False, False, True, True]
+        self.effect_list = ['xmas_daisy', 'tv_sim', 'stop_effect', 'reset']
+        self.effect_list_repeated = [True, True, False, False]
 
         try:
             self.reset()
@@ -117,37 +158,6 @@ class Ambient:
                 min_color_diff = new_color_diff
                 self._status_screen_ctrl_code = rgb2ctrl_code[color_no][0]
 
-    def _apply_brightness(self, color, brightness):
-        r = float(int(color, 16) >> 16 & AMBIENT_MAX_BRIGHTNESS)
-        g = float(int(color, 16) >> 8 & AMBIENT_MAX_BRIGHTNESS)
-        b = float(int(color, 16) & AMBIENT_MAX_BRIGHTNESS)
-        cur_brightness = float(max(r, g, b, 1))
-        brightness = float(brightness)
-
-        return "{:0>2}{:0>2}{:0>2}".format(
-            hex(int(r / cur_brightness * brightness))[2:],
-            hex(int(g / cur_brightness * brightness))[2:],
-            hex(int(b / cur_brightness * brightness))[2:])
-
-    def _do_ambient_color(self, color, brightness):
-        color = self._apply_brightness(color, brightness)
-        command = AMBIENT_MODULE_CMD + \
-                  AMBIENT_SET_COLOR_COMMAND.format(color) + ' &'
-        print('*AMBIENT* do color - Executing: {}'.format(command))
-        if AMBIENT_ENABLED:
-            os.system(command)
-
-    def _do_ambient_crossfade(self, previous_color, previous_brightness, color, brightness):
-        previous_color = self._apply_brightness(previous_color, previous_brightness)
-        color = self._apply_brightness(color, brightness)
-
-        command = AMBIENT_MODULE_CMD + \
-                  AMBIENT_CROSSFADE_COMMAND.format(
-                      color, previous_color) + ' &'
-        print('*AMBIENT* crossfade - Executing: {}'.format(command))
-        if AMBIENT_ENABLED:
-            os.system(command)
-
     def _do_go_to_sleep(self, color):
         command = AMBIENT_MODULE_CMD + \
                   AMBIENT_GOING_TO_SLEEP_COMMAND.format(color) + ' &'
@@ -181,10 +191,7 @@ class Ambient:
         sys.stdout.write("\033[0m\x1b8")
 
     def reset(self):
-        command = AMBIENT_MODULE_CMD + AMBIENT_CLEAR_COMMAND + ' &'
-        print('*AMBIENT* cleanup - Executing: {}'.format(command))
-        if AMBIENT_ENABLED:
-            os.system(command)
+        _cleanup()
         # reset and power off
         self.status_on_off = False
         self._set_color(AMBIENT_COLOR_OFF)
@@ -289,7 +296,9 @@ class Ambient:
             # power off timeout expired: go to sleep
             self._do_go_to_sleep(self.status_color)
         elif self.status_effect and self._status_previous_effect != self.status_effect:
-            if self.status_effect not in ('stop_effect', 'finish_effect'):
+            if self.status_effect == 'reset':
+                self.reset()
+            elif self.status_effect != 'stop_effect':
                 # reset changes
                 self._status_previous_on_off = self.status_on_off
                 self._status_previous_effect = self.status_effect
@@ -310,11 +319,11 @@ class Ambient:
             old_brightness = self._status_previous_brightness if not self.status_on_off else 0
             new_color = self.status_color if self.status_on_off else AMBIENT_COLOR_OFF
             new_brightness = self.status_brightness if self.status_on_off else 0
-            self._do_ambient_crossfade(old_color, old_brightness, new_color, new_brightness)
+            _do_ambient_crossfade(old_color, old_brightness, new_color, new_brightness)
         elif self._status_previous_color != self.status_color \
                 or self._status_previous_brightness != self.status_brightness:
             # color change
-            self._do_ambient_crossfade(self._status_previous_color, self._status_previous_brightness,
+            _do_ambient_crossfade(self._status_previous_color, self._status_previous_brightness,
                                        self.status_color, self.status_brightness)
         # reset changes
         self._status_previous_on_off = self.status_on_off
@@ -328,10 +337,10 @@ class Ambient:
     def ambient_redo(self):
         if not self.status_on_off:
             print('*AMBIENT* redo CLEANUP')
-            self.reset()
-        if self.status_effect and self.status_effect:
+            _cleanup()
+        elif self.status_effect and self._status_effect_repeated:
             print('*AMBIENT* redo effect {}'.format(self.status_effect))
             self._do_effect(self.status_effect, self._status_effect_params)
         elif self.status_color and self.status_on_off:
             print('*AMBIENT* redo color {}'.format(self.status_color))
-            self._do_ambient_color(self.status_color, self.status_brightness)
+            _do_ambient_color(self.status_color, self.status_brightness)
