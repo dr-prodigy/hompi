@@ -77,9 +77,8 @@ def publish_status(io_status, io_system, ambient):
         if ambient.status_power_on:
             light_sensor["data"]["attributes"].update(
                 {"brightness": ambient.status_brightness,
-                "rgb_color": ambient.status_color_dec})
-            if ambient.status_color_hs != [0, 0]:
-                light_sensor["data"]["attributes"].update({"hs_color": ambient.status_color_hs})
+                "rgb_color": ambient.status_color_dec,
+                "hs_color": ambient.status_color_hs})
             if ambient.status_effect:
                 light_sensor["data"]["attributes"].update({"effect": ambient.status_effect})
         hass_entities.append(light_sensor)
