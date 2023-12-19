@@ -86,13 +86,12 @@ def _do_ambient_color(color, brightness):
     if AMBIENT_ENABLED:
         os.system(command)
 
-def _do_ambient_crossfade(previous_color, previous_brightness, color, brightness):
-    previous_color = _rgb_brightness2rgb(previous_color, previous_brightness)
-    color = _rgb_brightness2rgb(color, brightness)
+def _do_ambient_crossfade(start_color, start_brightness, end_color, end_brightness):
+    start_color = _rgb_brightness2rgb(start_color, start_brightness)
+    end_color = _rgb_brightness2rgb(end_color, end_brightness)
 
     command = AMBIENT_MODULE_CMD + \
-              AMBIENT_CROSSFADE_COMMAND.format(
-                  color, previous_color) + ' &'
+              AMBIENT_CROSSFADE_COMMAND.format(start_color, end_color) + ' &'
     print('*AMBIENT* crossfade - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)

@@ -78,7 +78,7 @@ def set_color(rgb='ffffff'):
     pixels.show()
 
 
-def crossfade(rgb_out='ffffff', rgb_in='000000'):
+def crossfade(rgb_in='000000', rgb_out='ffffff'):
     rgb = int(rgb_in, 16)
     b_in = rgb >> 16 & 0xFF
     g_in = rgb >> 8 & 0xFF
