@@ -120,6 +120,7 @@ class Ambient:
     def __init__(self):
         global AMBIENT_ENABLED
 
+        self.EFFECT_LIST = EFFECT_LIST
         self._newstatus_on_off = self.status_on_off = False
         self._newstatus_color = self.status_color = AMBIENT_COLOR_OFF
         self._newstatus_brightness = self.status_brightness = AMBIENT_MIN_BRIGHTNESS
