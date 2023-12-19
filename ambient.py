@@ -86,12 +86,12 @@ def _do_ambient_color(color, brightness):
     if AMBIENT_ENABLED:
         os.system(command)
 
-def _do_ambient_crossfade(start_color, start_brightness, end_color, end_brightness):
-    start_color = _rgb_brightness2rgb(start_color, start_brightness)
-    end_color = _rgb_brightness2rgb(end_color, end_brightness)
+def _do_ambient_crossfade(color_start, brightness_start, color_end, brightness_end):
+    color_start = _rgb_brightness2rgb(color_start, brightness_start)
+    color_end = _rgb_brightness2rgb(color_end, brightness_end)
 
     command = AMBIENT_MODULE_CMD + \
-              AMBIENT_CROSSFADE_COMMAND.format(start_color, end_color) + ' &'
+              AMBIENT_CROSSFADE_COMMAND.format(color_start, color_end) + ' &'
     print('*AMBIENT* crossfade - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
@@ -188,7 +188,7 @@ class Ambient:
         # restore cursor pos and color
         sys.stdout.write("\033[0m\x1b8")
 
-    def set_ambient_on_off(self, status, timeout=datetime.datetime(9999, 12, 31)):
+    def set_ambient_on_off(self, status, timeout=datetime.datetime(9999, 12, 31), do_update=True):
         print("*AMBIENT* on_off {}".format(status))
         if status:
             # switch on
@@ -206,50 +206,52 @@ class Ambient:
             self._newstatus_effect = self.newstatus_effect_params = None
 
         self._newstatus_on_off = status
-        self.update()
+        if do_update:
+            self.update()
 
-    def set_ambient_color(self, color, timeout=datetime.datetime(9999, 12, 31)):
+    def set_ambient_color(self, color, timeout=datetime.datetime(9999, 12, 31), do_update=True):
         print("*AMBIENT* color {}".format(color))
         # reset effect
         self._newstatus_effect = self._newstatus_effect_params = None
         # power on/off
-        self.set_ambient_on_off(color != AMBIENT_COLOR_OFF, timeout)
+        self.set_ambient_on_off(color != AMBIENT_COLOR_OFF, timeout, False)
         # set color
         self._set_newstatus_color(color)
-        self.update()
+        if do_update:
+            self.update()
 
-    def set_ambient_color_hs(self, color,
-                              timeout=datetime.datetime(9999, 12, 31)):
+    def set_ambient_color_hs(self, color, timeout=datetime.datetime(9999, 12, 31), do_update=True):
         print("*AMBIENT* color_hsv {}".format(color))
         color_hsv = color[1:-1].split(",")
         h = float(color_hsv[0]) / 360
         s = float(color_hsv[1]) / 100
         (r, g, b) = colorsys.hsv_to_rgb(h, 1.0, s)
-        self.set_ambient_color("({},{},{})".format(int(r*255), int(g*255), int(b*255)), timeout)
+        self.set_ambient_color("({},{},{})".format(int(r*255), int(g*255), int(b*255)), timeout, do_update)
 
-    def set_ambient_brightness(self, brightness):
+    def set_ambient_brightness(self, brightness, do_update=True):
         print("*AMBIENT* brightness {}".format(brightness))
         # reset effect
         self._newstatus_effect = self._newstatus_effect_params = None
         # power on/off
-        self.set_ambient_on_off(brightness != 0)
+        self.set_ambient_on_off(brightness != 0, do_update = False)
         # set brightness
         self._newstatus_brightness = brightness
-        self.update()
+        if do_update:
+            self.update()
 
-    def set_ambient_effect(self, effect, params,
-                           timeout=datetime.datetime(9999, 12, 31)):
+    def set_ambient_effect(self, effect, params, timeout=datetime.datetime(9999, 12, 31), do_update=True):
         effect = effect.lower()
         if effect in EFFECT_LIST:
             print('*AMBIENT* effect {} {}'.format(effect, params))
             # power on
-            self.set_ambient_on_off(True, timeout)
+            self.set_ambient_on_off(True, timeout, False)
             # set effect
             self._newstatus_effect = effect
             self._newstatus_effect_params = params
         else:
             log_stderr("*AMBIENT* ERR: effect {} not available".format(effect))
-        self.update()
+        if do_update:
+            self.update()
 
     def ambient_ack(self):
         command = AMBIENT_MODULE_CMD + \
