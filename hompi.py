@@ -207,7 +207,7 @@ def main():
             # cleanup sensors & LCD
             sensor.cleanup()
             lcd.cleanup()
-            ambient.reset()
+            ambient.reset_light()
             io_status.set_ambient(ambient)
             raise
         except Exception:
@@ -257,7 +257,7 @@ def main():
                 # cleanup sensors & LCD
                 sensor.cleanup()
                 lcd.cleanup()
-                ambient.reset()
+                ambient.reset_light()
                 io_status.set_ambient(ambient)
                 raise
             except Exception:

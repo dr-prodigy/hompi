@@ -100,6 +100,14 @@ def _do_ambient_crossfade(previous_color, previous_brightness, color, brightness
         os.system(command)
 
 
+def _do_go_to_sleep(color):
+    command = AMBIENT_MODULE_CMD + \
+              AMBIENT_GOING_TO_SLEEP_COMMAND.format(color) + ' &'
+    print('*AMBIENT* go_to_sleep - Executing: {}'.format(command))
+    if AMBIENT_ENABLED:
+        os.system(command)
+
+
 class Ambient:
     def __init__(self):
         global AMBIENT_ENABLED
@@ -118,7 +126,7 @@ class Ambient:
         self.effect_list_repeated = [True, True, False, False]
 
         try:
-            self.reset()
+            self.reset_light()
         except KeyboardInterrupt:
             raise
         except Exception:
@@ -158,28 +166,6 @@ class Ambient:
                 min_color_diff = new_color_diff
                 self._status_screen_ctrl_code = rgb2ctrl_code[color_no][0]
 
-    def _do_go_to_sleep(self, color):
-        command = AMBIENT_MODULE_CMD + \
-                  AMBIENT_GOING_TO_SLEEP_COMMAND.format(color) + ' &'
-        print('*AMBIENT* go_to_sleep - Executing: {}'.format(command))
-        if AMBIENT_ENABLED:
-            os.system(command)
-
-        # reset and power off
-        self._power_off_time = datetime.datetime(9999, 12, 31)
-        self._set_color(AMBIENT_COLOR_OFF)
-        self.status_on_off = False
-        self.status_effect = self._status_effect_params = None
-        self._status_effect_repeated = False
-
-    @staticmethod
-    def _do_effect(effect, params):
-        command = AMBIENT_MODULE_CMD + \
-                  '{} {} &'.format(effect, params)
-        print('*AMBIENT* effect {} - Executing: {}'.format(effect, command))
-        if AMBIENT_ENABLED:
-            os.system(command)
-
     def _echo_display(self):
         # move cursor home
         # set color and print led strip
@@ -190,7 +176,7 @@ class Ambient:
         # restore cursor pos and color
         sys.stdout.write("\033[0m\x1b8")
 
-    def reset(self):
+    def reset_light(self):
         _cleanup()
         # reset and power off
         self.status_on_off = False
@@ -226,21 +212,15 @@ class Ambient:
     def set_ambient_color(self, color,
                           timeout=datetime.datetime(9999, 12, 31)):
         print("*AMBIENT* color {}".format(color))
-        # power off time
-        self._power_off_time = timeout
-        # power on
-        if color == AMBIENT_COLOR_OFF:
-            self.status_on_off = False
-            self.status_brightness = 0
-        else:
-            self.status_on_off = True
-            if not self.status_brightness:
-                self.status_brightness = AMBIENT_MAX_BRIGHTNESS
-        # set color
-        self._set_color(color)
         # reset effect
         self.status_effect = self._status_effect_params = None
         self._status_effect_repeated = False
+        # power off time
+        self._power_off_time = timeout
+        # power on/off
+        self.set_ambient_on_off(color != AMBIENT_COLOR_OFF)
+        # set color
+        self._set_color(color)
         self.update()
 
     def set_ambient_color_hs(self, color,
@@ -254,15 +234,13 @@ class Ambient:
 
     def set_ambient_brightness(self, brightness):
         print("*AMBIENT* brightness {}".format(brightness))
-        if brightness == 0:
-            self.status_on_off = False
-        else:
-            self.status_on_off = True
-        # set brightness
-        self.status_brightness = brightness
         # reset effect
         self.status_effect = self._status_effect_params = None
         self._status_effect_repeated = False
+        # power on/off
+        self.set_ambient_on_off(brightness != 0)
+        # set brightness
+        self.status_brightness = brightness
         self.update()
 
     def set_ambient_effect(self, effect, params,
@@ -272,8 +250,9 @@ class Ambient:
             print('*AMBIENT* effect {} {}'.format(effect, params))
             # power off time
             self._power_off_time = timeout
+            # power on
+            self.set_ambient_on_off(True)
             # set effect
-            self.status_on_off = True
             self.status_effect = effect
             self._status_effect_params = params
             # set effect repetition
@@ -294,24 +273,23 @@ class Ambient:
     def update(self):
         if datetime.datetime.now() > self._power_off_time:
             # power off timeout expired: go to sleep
-            self._do_go_to_sleep(self.status_color)
+            _do_go_to_sleep(self.status_color)
+            # power off
+            self.set_ambient_on_off(False)
+            self.reset_changes()
         elif self.status_effect and self._status_previous_effect != self.status_effect:
             if self.status_effect == 'reset':
-                self.reset()
+                self.reset_light()
             elif self.status_effect != 'stop_effect':
-                # reset changes
-                self._status_previous_on_off = self.status_on_off
-                self._status_previous_effect = self.status_effect
-                self._status_previous_color = self.status_color
-                self._status_previous_brightness = self.status_brightness
+                self.reset_changes()
                 # run effect
-                self._do_effect(self.status_effect, self._status_effect_params)
+                _do_effect(self.status_effect, self._status_effect_params)
             else:
                 # if a color was there, return to it
                 if self.status_color:
                     self._status_previous_on_off = False
             if not self._status_effect_repeated:
-                # reset after first run
+                # stop after first run
                 self.status_effect = self._status_effect_params = None
         if self._status_previous_on_off != self.status_on_off:
             # power on / off
@@ -325,14 +303,16 @@ class Ambient:
             # color change
             _do_ambient_crossfade(self._status_previous_color, self._status_previous_brightness,
                                        self.status_color, self.status_brightness)
-        # reset changes
+        self.reset_changes()
+
+        # update screen
+        self._echo_display()
+
+    def reset_changes(self):
         self._status_previous_on_off = self.status_on_off
         self._status_previous_effect = self.status_effect
         self._status_previous_color = self.status_color
         self._status_previous_brightness = self.status_brightness
-
-        # update screen
-        self._echo_display()
 
     def ambient_redo(self):
         if not self.status_on_off:
@@ -340,7 +320,15 @@ class Ambient:
             _cleanup()
         elif self.status_effect and self._status_effect_repeated:
             print('*AMBIENT* redo effect {}'.format(self.status_effect))
-            self._do_effect(self.status_effect, self._status_effect_params)
+            _do_effect(self.status_effect, self._status_effect_params)
         elif self.status_color and self.status_on_off:
             print('*AMBIENT* redo color {}'.format(self.status_color))
             _do_ambient_color(self.status_color, self.status_brightness)
+
+
+def _do_effect(effect, params):
+    command = AMBIENT_MODULE_CMD + \
+              '{} {} &'.format(effect, params)
+    print('*AMBIENT* effect {} - Executing: {}'.format(effect, command))
+    if AMBIENT_ENABLED:
+        os.system(command)
