@@ -100,7 +100,7 @@ class Status:
 
     def set_ambient(self, ambient):
         self.ambient_color = ambient.status_color
-        self.ambient_on = ambient.status_on_off
+        self.ambient_on = ambient.status_power_on
         self.ambient_effect = ambient.status_effect
 
     def update(self, current_time):

@@ -120,7 +120,7 @@ class Ambient:
         global AMBIENT_ENABLED
 
         self.EFFECT_LIST = EFFECT_LIST
-        self._newstatus_on_off = self.status_on_off = False
+        self._newstatus_power_on = self.status_power_on = False
         self._newstatus_color = self.status_color = AMBIENT_COLOR_OFF
         self._newstatus_brightness = self.status_brightness = AMBIENT_MIN_BRIGHTNESS
         self._newstatus_effect = self.status_effect = self._newstatus_effect_params = self.status_effect_params = None
@@ -141,7 +141,7 @@ class Ambient:
     def reset(self):
         _do_cleanup()
         # reset and power off
-        self._newstatus_on_off = False
+        self._newstatus_power_on = False
         self._set_newstatus_color(AMBIENT_COLOR_OFF)
         self._newstatus_brightness = 0
         self._newstatus_effect = self._newstatus_effect_params = None
@@ -182,7 +182,7 @@ class Ambient:
         # move cursor home
         # set color and print led strip
         sys.stdout.write("\x1b7\x1b[H\033[1;{};40m {} ".format(
-            self._status_screen_ctrl_code if self._newstatus_on_off else CTRL_CODE_OFF,
+            self._status_screen_ctrl_code if self._newstatus_power_on else CTRL_CODE_OFF,
             "*" * LED_STRIP_ELEMENTS))
 
         # restore cursor pos and color
@@ -205,7 +205,7 @@ class Ambient:
             self._newstatus_power_off_time = datetime.datetime(9999, 12, 31)
             self._newstatus_effect = self.newstatus_effect_params = None
 
-        self._newstatus_on_off = status
+        self._newstatus_power_on = status
         if do_update:
             self.update()
 
@@ -276,7 +276,7 @@ class Ambient:
                 # self.program_change_completed()  # IMPLICIT
             elif self._newstatus_effect == 'stop_effect':
                 # force program change (=> return to previous state)
-                self.status_on_off = not self._newstatus_on_off
+                self.status_power_on = not self._newstatus_power_on
                 # PROGRAM CHANGE NOT COMPLETED!
             elif self._newstatus_effect:
                 # run effect
@@ -287,19 +287,19 @@ class Ambient:
                 self.program_change_completed()
 
         # LIGHT & COLORS
-        if self.status_on_off != self._newstatus_on_off:
+        if self.status_power_on != self._newstatus_power_on:
             color_start = self.status_color
             brightness_start = self.status_brightness
             color_end = self._newstatus_color
             brightness_end = self._newstatus_brightness
-            if self._newstatus_on_off:
+            if self._newstatus_power_on:
                 # power off
-                color_end = AMBIENT_COLOR_OFF
-                brightness_end = AMBIENT_MIN_BRIGHTNESS
-            else:
-                # power on
                 color_start = AMBIENT_COLOR_OFF
                 brightness_start = AMBIENT_MIN_BRIGHTNESS
+            else:
+                # power on
+                color_end = AMBIENT_COLOR_OFF
+                brightness_end = AMBIENT_MIN_BRIGHTNESS
             _do_ambient_crossfade(color_start, brightness_start, color_end, brightness_end)
         elif self.status_color != self._newstatus_color \
              or self.status_brightness != self._newstatus_brightness:
@@ -313,7 +313,7 @@ class Ambient:
         self._echo_display()
 
     def program_change_completed(self):
-        self.status_on_off = self._newstatus_on_off
+        self.status_power_on = self._newstatus_power_on
         self.status_effect = self._newstatus_effect
         self.status_color = self._newstatus_color
         self.status_brightness = self._newstatus_brightness
@@ -321,12 +321,12 @@ class Ambient:
         self._update_color_values()
 
     def ambient_redo(self):
-        if not self.status_on_off:
+        if not self.status_power_on:
             print('*AMBIENT* redo CLEANUP')
             _do_cleanup()
         elif self.status_effect:
             print('*AMBIENT* redo effect {}'.format(self.status_effect))
             _do_effect(self.status_effect, self.status_effect_params)
-        elif self.status_color and self.status_on_off:
+        elif self.status_color and self.status_power_on:
             print('*AMBIENT* redo color {}'.format(self._newstatus_color))
             _do_ambient_color(self._newstatus_color, self._newstatus_brightness)

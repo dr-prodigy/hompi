@@ -74,7 +74,7 @@ def publish_status(io_status, io_system, ambient):
                   "icon": "mdi:television-ambient-light",
                   "effect_list": ambient.EFFECT_LIST,
                   }}}
-        if ambient._newstatus_on_off:
+        if ambient._newstatus_power_on:
             light_sensor["data"]["attributes"].update(
                 {"brightness": ambient._newstatus_brightness,
                 "rgb_color": ambient.status_color_dec,
