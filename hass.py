@@ -72,13 +72,13 @@ def publish_status(io_status, io_system, ambient):
                  {"unique_id": "hompi_ambient_{}".format(io_status.id.lower()),
                   "friendly_name": "Hompi ambient light",
                   "icon": "mdi:television-ambient-light",
-                  "effect_list": ambient.effect_list,
+                  "effect_list": ambient.EFFECT_LIST,
                   }}}
-        if ambient.status_on_off:
+        if ambient._newstatus_on_off:
             light_sensor["data"]["attributes"].update(
-                {"brightness": ambient.status_brightness,
+                {"brightness": ambient._newstatus_brightness,
                 "rgb_color": ambient.status_color_dec,
-                "effect": ambient.status_effect})
+                "effect": ambient._newstatus_effect})
         hass_entities.append(light_sensor)
 
     # temperature entities
