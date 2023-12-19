@@ -38,6 +38,8 @@ AMBIENT_ACK_COMMAND = 'curtain_in_out {} {}'
 
 AMBIENT_COLOR_OFF = '000000'
 AMBIENT_COLOR_ON = 'FFFFFF'
+AMBIENT_COLOR_OFF_HS = [0, 0]
+AMBIENT_COLOR_ON_HS = [0, 1]
 AMBIENT_MIN_BRIGHTNESS = 0x00
 AMBIENT_MAX_BRIGHTNESS = 0xFF
 
@@ -122,6 +124,7 @@ class Ambient:
         self.EFFECT_LIST = EFFECT_LIST
         self._newstatus_power_on = self.status_power_on = False
         self._newstatus_color = self.status_color = AMBIENT_COLOR_OFF
+        self._newstatus_color_hs = self.status_color_hs = AMBIENT_COLOR_OFF_HS
         self._newstatus_brightness = self.status_brightness = AMBIENT_MIN_BRIGHTNESS
         self._newstatus_effect = self.status_effect = self._newstatus_effect_params = self.status_effect_params = None
         self._newstatus_power_off_time = self.status_power_off_time = datetime.datetime(9999, 12, 31)
@@ -143,6 +146,7 @@ class Ambient:
         # reset and power off
         self._newstatus_power_on = False
         self._set_newstatus_color(AMBIENT_COLOR_OFF)
+        self._newstatus_color_hs = AMBIENT_COLOR_OFF_HS
         self._newstatus_brightness = 0
         self._newstatus_effect = self._newstatus_effect_params = None
         self._newstatus_power_off_time = datetime.datetime(9999, 12, 31)
@@ -193,8 +197,11 @@ class Ambient:
         if status:
             # switch on
             # if no color is set, switch on to full light
-            if not self.status_color or self.status_color == AMBIENT_COLOR_OFF:
+            if not self.status_color \
+                    or self.status_color == AMBIENT_COLOR_OFF \
+                    or self.status_color_hs == AMBIENT_COLOR_OFF_HS:
                 self._set_newstatus_color(AMBIENT_COLOR_ON)
+                self._newstatus_color_hs = AMBIENT_COLOR_ON_HS
             # if brightness is 0, initialize to full light
             if not self._newstatus_brightness:
                 self._newstatus_brightness = AMBIENT_MAX_BRIGHTNESS
@@ -223,9 +230,10 @@ class Ambient:
     def set_ambient_color_hs(self, color, timeout=datetime.datetime(9999, 12, 31), do_update=True):
         print("*AMBIENT* color_hsv {}".format(color))
         color_hsv = color[1:-1].split(",")
-        h = float(color_hsv[0]) / 360
-        s = float(color_hsv[1]) / 100
-        (r, g, b) = colorsys.hsv_to_rgb(h, 1.0, s)
+        h = float(color_hsv[0])
+        s = float(color_hsv[1])
+        self._newstatus_color_hs = [h, s]
+        (r, g, b) = colorsys.hsv_to_rgb(h / 360, 1.0, s / 100)
         self.set_ambient_color("({},{},{})".format(int(r*255), int(g*255), int(b*255)), timeout, do_update)
 
     def set_ambient_brightness(self, brightness, do_update=True):
@@ -319,6 +327,7 @@ class Ambient:
         self.status_effect = self._newstatus_effect
         self.status_effect_params = self._newstatus_effect_params
         self.status_color = self._newstatus_color
+        self.status_color_hs = self._newstatus_color_hs
         self.status_brightness = self._newstatus_brightness
         self.status_power_off_time = self._newstatus_power_off_time
         self._update_color_values()
