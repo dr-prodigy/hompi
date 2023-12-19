@@ -74,11 +74,14 @@ def publish_status(io_status, io_system, ambient):
                   "icon": "mdi:television-ambient-light",
                   "effect_list": ambient.EFFECT_LIST,
                   }}}
-        if ambient._newstatus_power_on:
+        if ambient.status_power_on:
             light_sensor["data"]["attributes"].update(
-                {"brightness": ambient._newstatus_brightness,
+                {"brightness": ambient.status_brightness,
                 "rgb_color": ambient.status_color_dec,
-                "effect": ambient._newstatus_effect})
+                "effect": ambient.status_effect})
+            if ambient.status_effect:
+                light_sensor["data"]["attributes"].update(
+                    {"effect": ambient.status_effect})
         hass_entities.append(light_sensor)
 
     # temperature entities
