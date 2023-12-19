@@ -275,6 +275,8 @@ class Ambient:
                 self.reset()
                 # self.program_change_completed()  # IMPLICIT
             elif self._newstatus_effect == 'stop_effect':
+                # stop effect
+                self._newstatus_effect = self._newstatus_effect_params = None
                 # force program change (=> return to previous state)
                 self.status_power_on = not self._newstatus_power_on
                 # PROGRAM CHANGE NOT COMPLETED!
@@ -315,6 +317,7 @@ class Ambient:
     def program_change_completed(self):
         self.status_power_on = self._newstatus_power_on
         self.status_effect = self._newstatus_effect
+        self.status_effect_params = self._newstatus_effect_params
         self.status_color = self._newstatus_color
         self.status_brightness = self._newstatus_brightness
         self.status_power_off_time = self._newstatus_power_off_time
