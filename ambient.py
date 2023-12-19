@@ -185,6 +185,7 @@ class Ambient:
         self._power_off_time = datetime.datetime(9999, 12, 31)
         self.status_effect = self._status_effect_params = None
         self._status_effect_repeated = False
+        self.reset_changes()
 
     def set_ambient_on_off(self, status,
                            timeout=datetime.datetime(9999, 12, 31)):
@@ -214,10 +215,8 @@ class Ambient:
         # reset effect
         self.status_effect = self._status_effect_params = None
         self._status_effect_repeated = False
-        # power off time
-        self._power_off_time = timeout
         # power on/off
-        self.set_ambient_on_off(color != AMBIENT_COLOR_OFF)
+        self.set_ambient_on_off(color != AMBIENT_COLOR_OFF, timeout)
         # set color
         self._set_color(color)
         self.update()
@@ -247,10 +246,8 @@ class Ambient:
         effect = effect.lower()
         if effect in self.effect_list:
             print('*AMBIENT* effect {} {}'.format(effect, params))
-            # power off time
-            self._power_off_time = timeout
             # power on
-            self.set_ambient_on_off(True)
+            self.set_ambient_on_off(True, timeout)
             # set effect
             self.status_effect = effect
             self._status_effect_params = params
@@ -279,14 +276,13 @@ class Ambient:
         elif self.status_effect and self._status_previous_effect != self.status_effect:
             if self.status_effect == 'reset':
                 self.reset()
-            elif self.status_effect != 'stop_effect':
-                self.reset_changes()
+            elif self.status_effect == 'stop_effect':
+                # force light to previous state
+                self._status_previous_on_off = False
+            else:
                 # run effect
                 _do_effect(self.status_effect, self._status_effect_params)
-            else:
-                # if a color was there, return to it
-                if self.status_color:
-                    self._status_previous_on_off = False
+                self.reset_changes()
             if not self._status_effect_repeated:
                 # stop after first run
                 self.status_effect = self._status_effect_params = None
