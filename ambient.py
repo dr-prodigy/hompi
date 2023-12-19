@@ -59,24 +59,11 @@ rgb2ctrl_code = [
 CTRL_CODE_OFF = rgb2ctrl_code[0][0]
 
 
-def _cleanup():
+def _do_cleanup():
     command = AMBIENT_MODULE_CMD + AMBIENT_CLEAR_COMMAND + ' &'
     print('*AMBIENT* cleanup - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
-
-
-def _apply_brightness(color, brightness):
-    r = float(int(color, 16) >> 16 & AMBIENT_MAX_BRIGHTNESS)
-    g = float(int(color, 16) >> 8 & AMBIENT_MAX_BRIGHTNESS)
-    b = float(int(color, 16) & AMBIENT_MAX_BRIGHTNESS)
-    cur_brightness = float(max(r, g, b, 1))
-    brightness = float(brightness)
-
-    return "{:0>2}{:0>2}{:0>2}".format(
-        hex(int(r / cur_brightness * brightness))[2:],
-        hex(int(g / cur_brightness * brightness))[2:],
-        hex(int(b / cur_brightness * brightness))[2:])
 
 
 def _do_ambient_color(color, brightness):
@@ -108,6 +95,19 @@ def _do_go_to_sleep(color):
         os.system(command)
 
 
+def _apply_brightness(color, brightness):
+    r = float(int(color, 16) >> 16 & AMBIENT_MAX_BRIGHTNESS)
+    g = float(int(color, 16) >> 8 & AMBIENT_MAX_BRIGHTNESS)
+    b = float(int(color, 16) & AMBIENT_MAX_BRIGHTNESS)
+    cur_brightness = float(max(r, g, b, 1))
+    brightness = float(brightness)
+
+    return "{:0>2}{:0>2}{:0>2}".format(
+        hex(int(r / cur_brightness * brightness))[2:],
+        hex(int(g / cur_brightness * brightness))[2:],
+        hex(int(b / cur_brightness * brightness))[2:])
+
+
 class Ambient:
     def __init__(self):
         global AMBIENT_ENABLED
@@ -126,7 +126,7 @@ class Ambient:
         self.effect_list_repeated = [True, True, False, False]
 
         try:
-            self.reset_light()
+            self.reset()
         except KeyboardInterrupt:
             raise
         except Exception:
@@ -176,8 +176,8 @@ class Ambient:
         # restore cursor pos and color
         sys.stdout.write("\033[0m\x1b8")
 
-    def reset_light(self):
-        _cleanup()
+    def reset(self):
+        _do_cleanup()
         # reset and power off
         self.status_on_off = False
         self._set_color(AMBIENT_COLOR_OFF)
@@ -189,7 +189,8 @@ class Ambient:
     def set_ambient_on_off(self, status,
                            timeout=datetime.datetime(9999, 12, 31)):
         print("*AMBIENT* on_off {}".format(status))
-        if status.upper() == "ON":
+        self.status_on_off = status
+        if status:
             # switch on
             # if color not set, initialize to full light
             if not self.status_color \
@@ -198,12 +199,10 @@ class Ambient:
             # if brightness not set, initialize to full light
             if not self.status_brightness:
                 self.status_brightness = AMBIENT_MAX_BRIGHTNESS
-            self.status_on_off = True
             # power off time
             self._power_off_time = timeout
         else:
             # reset and power off
-            self.status_on_off = False
             self._power_off_time = datetime.datetime(9999, 12, 31)
             self.status_effect = self._status_effect_params = None
             self._status_effect_repeated = False
@@ -279,7 +278,7 @@ class Ambient:
             self.reset_changes()
         elif self.status_effect and self._status_previous_effect != self.status_effect:
             if self.status_effect == 'reset':
-                self.reset_light()
+                self.reset()
             elif self.status_effect != 'stop_effect':
                 self.reset_changes()
                 # run effect
@@ -317,7 +316,7 @@ class Ambient:
     def ambient_redo(self):
         if not self.status_on_off:
             print('*AMBIENT* redo CLEANUP')
-            _cleanup()
+            _do_cleanup()
         elif self.status_effect and self._status_effect_repeated:
             print('*AMBIENT* redo effect {}'.format(self.status_effect))
             _do_effect(self.status_effect, self._status_effect_params)
