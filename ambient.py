@@ -199,7 +199,8 @@ class Ambient:
             # if no color is set, switch on to full light
             if not self.status_color \
                     or self.status_color == AMBIENT_COLOR_OFF \
-                    or self.status_color_hs == AMBIENT_COLOR_OFF_HS:
+                    or (self.status_color_hs == AMBIENT_COLOR_OFF_HS \
+                and self.status_brightness == AMBIENT_MIN_BRIGHTNESS):
                 self._set_newstatus_color(AMBIENT_COLOR_ON)
                 self._newstatus_color_hs = AMBIENT_COLOR_ON_HS
             # if brightness is 0, initialize to full light
@@ -217,7 +218,7 @@ class Ambient:
             self.update()
 
     def set_ambient_color(self, color, timeout=datetime.datetime(9999, 12, 31), do_update=True):
-        print("*AMBIENT* color {}".format(color))
+        print("*AMBIENT* set_ambient_color {}".format(color))
         # reset effect
         self._newstatus_effect = self._newstatus_effect_params = None
         # power on/off
@@ -228,7 +229,7 @@ class Ambient:
             self.update()
 
     def set_ambient_color_hs(self, color, timeout=datetime.datetime(9999, 12, 31), do_update=True):
-        print("*AMBIENT* color_hsv {}".format(color))
+        print("*AMBIENT* set_ambient_color_hs {}".format(color))
         color_hsv = color[1:-1].split(",")
         h = float(color_hsv[0])
         s = float(color_hsv[1])
@@ -272,7 +273,7 @@ class Ambient:
     def update(self):
         if datetime.datetime.now() > self.status_power_off_time:
             # GO TO SLEEP
-            _do_go_to_sleep(self._newstatus_color)
+            _do_go_to_sleep(self.status_color)
             # power off
             self.set_ambient_on_off(False)
             self.program_change_completed()
