@@ -232,10 +232,9 @@ class Ambient:
         print("*AMBIENT* set_ambient_color_hs {}".format(color))
         color_hs = color[1:-1].split(",")
         h = float(color_hs[0])
-        l = float(self.status_brightness) / AMBIENT_MAX_BRIGHTNESS  if self.status_brightness else 1.0
         s = float(color_hs[1])
         self._newstatus_color_hs = [h, s]
-        (r, g, b) = colorsys.hls_to_rgb(h / 360, l, s / 100)
+        (r, g, b) = colorsys.hsv_to_rgb(h / 360, 1.0, s / 100)
         self.set_ambient_color("({},{},{})".format(int(r*255), int(g*255), int(b*255)), timeout, do_update)
 
     def set_ambient_brightness(self, brightness, do_update=True):
