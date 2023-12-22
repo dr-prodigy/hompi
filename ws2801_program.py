@@ -173,22 +173,22 @@ def go_to_sleep(brightness=None, rgb='ffffff', rgb_foo=None, wait=None, reverse=
         pixels.show()
         time.sleep(.5)
     # fade to black ;-)
-    crossfade('000000', rgb_in)
+    crossfade('000000', rgb)
 
 
 def test_loop(brightness=1, rgb1=None, rgb2=None, wait=None, reverse=None):
     # Some example procedures showing how to display to the pixels:
-    color_wipe(brightness, rgb1='ff0000', rgb2=None, wait=.05, reverse=None)  # Red
-    color_wipe(brightness, rgb1='00ff00', rgb2=None, wait=.05, reverse=None)  # Green
-    color_wipe(brightness, rgb1='0000ff', rgb2=None, wait=.05, reverse=None)  # Blue
+    color_wipe(brightness, 'ff0000', wait=.05)  # Red
+    color_wipe(brightness, '00ff00', wait=.05)  # Green
+    color_wipe(brightness, '0000ff', wait=.05)  # Blue
     # Send a theater pixel chase in...
-    theater_chase(brightness, rgb1='7f7f7f', rgb2='', wait=.05, reverse=None)  # White
-    theater_chase(brightness, rgb1='7f0000', rgb2='', wait=.05, reverse=None)  # Red
-    theater_chase(brightness, rgb1='00007f', rgb2='', wait=.05, reverse=None)  # Blue
+    theater_chase(brightness, '7f7f7f', wait=.05)  # White
+    theater_chase(brightness, '7f0000', wait=.05)  # Red
+    theater_chase(brightness, '00007f', wait=.05)  # Blue
 
-    rainbow(brightness, rgb1=None, rgb2=None, wait=.02, reverse=None)
-    rainbow_cycle(brightness, rgb1=None, rgb2=None, wait=.02, reverse=None)
-    theater_chase_rainbow(brightness, rgb1='00007f', rgb2=None, wait=.05, reverse=None)
+    rainbow(brightness, wait=.02)
+    rainbow_cycle(brightness, wait=.02)
+    theater_chase_rainbow(brightness, '00007f', wait=.05)
 
 
 def rainbow(brightness=1, rgb_foo1='', rgb_foo2='', wait=.02, reverse=False):
