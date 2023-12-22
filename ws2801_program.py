@@ -69,7 +69,7 @@ def clear():
     pixels.show()
 
 
-def set_color(rgb='ffffff'):
+def set_color(brightness=None, rgb='ffffff', rgb_foo=None, wait=None, reverse=None):
     b = int(rgb, 16) >> 16 & 0xFF
     g = int(rgb, 16) >> 8 & 0xFF
     r = int(rgb, 16) & 0xFF
@@ -78,7 +78,7 @@ def set_color(rgb='ffffff'):
     pixels.show()
 
 
-def crossfade(rgb_in='000000', rgb_out='ffffff'):
+def crossfade(brightness=None, rgb_in='000000', rgb_out='ffffff', wait=None, reverse=None):
     rgb = int(rgb_in, 16)
     b_in = rgb >> 16 & 0xFF
     g_in = rgb >> 8 & 0xFF
@@ -110,7 +110,7 @@ def crossfade(rgb_in='000000', rgb_out='ffffff'):
         time.sleep(AMBIENT_FRAME_DURATION)
 
 
-def wipe_in_out(rgb_in='ffffff', rgb_out='000000', wait=.005):
+def wipe_in_out(brightness=None, rgb_in='ffffff', rgb_out='000000', wait=.005, reverse=None):
     # re-init to rgb_out
     set_color(rgb_out)
     # run animation
@@ -118,7 +118,7 @@ def wipe_in_out(rgb_in='ffffff', rgb_out='000000', wait=.005):
     color_wipe(rgb_out, wait, config.LED_RIGHT_TO_LEFT)
 
 
-def curtain_in_out(rgb_in='ffffff', rgb_out='000000', wait=.01):
+def curtain_in_out(brightness=None, rgb_in='ffffff', rgb_out='000000', wait=.01, reverse=None):
     # re-init to rgb_out
     set_color(rgb_out)
     # run animation
@@ -127,7 +127,7 @@ def curtain_in_out(rgb_in='ffffff', rgb_out='000000', wait=.01):
 
 
 # Fill the dots one after the other with a color
-def color_wipe(rgb='000000', wait=.05, reverse=False):
+def color_wipe(brightness=None, rgb='000000', rgb2=None, wait=.05, reverse=False):
     rgb = int(rgb, 16)
     b = rgb >> 16 & 0xFF
     g = rgb >> 8 & 0xFF
@@ -141,7 +141,7 @@ def color_wipe(rgb='000000', wait=.05, reverse=False):
 
 
 # Fill the dots one after the other with a color
-def color_curtain(rgb='000000', wait=.05, reverse=False):
+def color_curtain(brightness=None, rgb='000000', rgb_foo=None, wait=.05, reverse=False):
     rgb = int(rgb, 16)
     b = rgb >> 16 & 0xFF
     g = rgb >> 8 & 0xFF
@@ -157,8 +157,8 @@ def color_curtain(rgb='000000', wait=.05, reverse=False):
         time.sleep(wait)
 
 
-def go_to_sleep(rgb_in='ffffff'):
-    rgb = int(rgb_in, 16)
+def go_to_sleep(brightness=None, rgb='ffffff', rgb_foo=None, wait=None, reverse=None):
+    rgb = int(rgb, 16)
     b_in = rgb >> 16 & 0xFF
     g_in = rgb >> 8 & 0xFF
     r_in = rgb & 0xFF
@@ -176,22 +176,22 @@ def go_to_sleep(rgb_in='ffffff'):
     crossfade('000000', rgb_in)
 
 
-def test_loop():
+def test_loop(brightness=1, rgb1=None, rgb2=None, wait=None, reverse=None):
     # Some example procedures showing how to display to the pixels:
-    color_wipe('ff0000', .05)  # Red
-    color_wipe('00ff00', .05)  # Green
-    color_wipe('0000ff', .05)  # Blue
+    color_wipe(brightness, rgb1='ff0000', rgb2=None, wait=.05, reverse=None)  # Red
+    color_wipe(brightness, rgb1='00ff00', rgb2=None, wait=.05, reverse=None)  # Green
+    color_wipe(brightness, rgb1='0000ff', rgb2=None, wait=.05, reverse=None)  # Blue
     # Send a theater pixel chase in...
-    theater_chase('7f7f7f', .05)  # White
-    theater_chase('7f0000', .05)  # Red
-    theater_chase('00007f', .05)  # Blue
+    theater_chase(brightness, rgb1='7f7f7f', rgb2='', wait=.05, reverse=None)  # White
+    theater_chase(brightness, rgb1='7f0000', rgb2='', wait=.05, reverse=None)  # Red
+    theater_chase(brightness, rgb1='00007f', rgb2='', wait=.05, reverse=None)  # Blue
 
-    rainbow(.02)
-    rainbow_cycle(.02)
-    theater_chase_rainbow(.05)
+    rainbow(brightness, rgb1=None, rgb2=None, wait=.02, reverse=None)
+    rainbow_cycle(brightness, rgb1=None, rgb2=None, wait=.02, reverse=None)
+    theater_chase_rainbow(brightness, rgb1='00007f', rgb2=None, wait=.05, reverse=None)
 
 
-def rainbow(wait=.02):
+def rainbow(brightness=1, rgb_foo1='', rgb_foo2='', wait=.02, reverse=False):
     wait = float(wait)
     for j in range(256):
         for i in range(pixels.count()):
@@ -202,7 +202,7 @@ def rainbow(wait=.02):
 
 
 # Slightly different, this makes the rainbow equally distributed throughout
-def rainbow_cycle(wait=.02):
+def rainbow_cycle(brightness=1, rgb_foo1='', rgb_foo2='', wait=.02, reverse=False):
     wait = float(wait)
     for j in range(256 * 5):  # 5 cycles of all colors on wheel
         for i in range(pixels.count()):
@@ -215,7 +215,7 @@ def rainbow_cycle(wait=.02):
 
 
 # Theatre-style crawling lights.
-def theater_chase(rgb='ffffff', wait=.05):
+def theater_chase(brightness=1, rgb='ffffff', rgb_foo='', wait=.05, reverse=False):
     wait = float(wait)
     rgb = int(rgb, 16)
     b = rgb >> 16 & 0xFF
@@ -238,7 +238,7 @@ def theater_chase(rgb='ffffff', wait=.05):
 
 
 # Theatre-style crawling lights with rainbow effect
-def theater_chase_rainbow(wait=.05):
+def theater_chase_rainbow(brightness=1, rgb_foo1='', rgb_foo2='', wait=.05, reverse=False):
     wait = float(wait)
     for j in range(256):  # cycle all 256 colors in the wheel
         for q in range(3):
@@ -256,7 +256,7 @@ def theater_chase_rainbow(wait=.05):
                     pixels.set_pixel(i+q, 0)  # turn every third pixel off
 
 
-def xmas_daisy(brightness='1', rgb=''):
+def xmas_daisy(brightness=1, rgb='', rgb_foo='', wait=.05, reverse=False):
     brightness = float(brightness)
     if rgb:
         rgb = int(rgb, 16)
@@ -299,7 +299,7 @@ def xmas_daisy(brightness='1', rgb=''):
                     time.sleep(delay)
 
 
-def tv_sim(brightness='1'):
+def tv_sim(brightness='1', rgb_foo1='', rgb_foo2='', wait=.05, reverse=False):
     initial_time = datetime.datetime.now()
     while (datetime.datetime.now() - initial_time).total_seconds() < 300:
         delay = random.uniform(.1, 5)
@@ -363,7 +363,11 @@ if __name__ == "__main__":
                 PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
 
             # Execute the function
-            if len(sys.argv) > 4:
+            if len(sys.argv) > 6:
+                func(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+            elif len(sys.argv) > 5:
+                    func(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+            elif len(sys.argv) > 4:
                 func(sys.argv[2], sys.argv[3], sys.argv[4])
             elif len(sys.argv) > 3:
                 func(sys.argv[2], sys.argv[3])
@@ -373,3 +377,4 @@ if __name__ == "__main__":
                 func()
         else:
             print("Commands available: {}".format(switcher.keys()))
+            print("params: (brightness=0..1, rgb1='xxxxxx', rgb2='xxxxxx', wait=.05, reverse=False)")

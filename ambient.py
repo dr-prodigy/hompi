@@ -44,8 +44,9 @@ AMBIENT_MIN_BRIGHTNESS = 0x00
 AMBIENT_MAX_BRIGHTNESS = 0xFF
 
 # effect list
-EFFECT_LIST = ['xmas_daisy', 'tv_sim', 'stop_effect', 'reset']
-EFFECT_LIST_REPEATED = [True, True, False, False]
+EFFECT_LIST = ['xmas_daisy', 'tv_sim', 'test_loop', 'rainbow', 'rainbow_cycle', 'theater_chase_rainbow',
+               'stop_effect', 'reset']
+EFFECT_LIST_REPEATED = [True, True, True, True, True, True, False, False]
 
 AMBIENT_ENABLED = False
 try:
@@ -83,7 +84,7 @@ def _do_effect(effect, params):
 def _do_ambient_color(color, brightness):
     color = _rgb_brightness2rgb(color, brightness)
     command = AMBIENT_MODULE_CMD + \
-              AMBIENT_SET_COLOR_COMMAND.format(color) + ' &'
+              AMBIENT_SET_COLOR_COMMAND.format(0, color) + ' &'
     print('*AMBIENT* do color - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
@@ -93,14 +94,14 @@ def _do_ambient_crossfade(color_start, brightness_start, color_end, brightness_e
     color_end = _rgb_brightness2rgb(color_end, brightness_end)
 
     command = AMBIENT_MODULE_CMD + \
-              AMBIENT_CROSSFADE_COMMAND.format(color_start, color_end) + ' &'
+              AMBIENT_CROSSFADE_COMMAND.format(0, color_start, color_end) + ' &'
     print('*AMBIENT* crossfade - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
 
 def _do_go_to_sleep(color):
     command = AMBIENT_MODULE_CMD + \
-              AMBIENT_GOING_TO_SLEEP_COMMAND.format(color) + ' &'
+              AMBIENT_GOING_TO_SLEEP_COMMAND.format(0, color) + ' &'
     print('*AMBIENT* go_to_sleep - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
@@ -265,7 +266,7 @@ class Ambient:
     def ambient_ack(self):
         command = AMBIENT_MODULE_CMD + \
                   AMBIENT_ACK_COMMAND.format(
-                      'ff0000', self._newstatus_color) + ' &'
+                      1, 'ff0000', self._newstatus_color, 0, False) + ' &'
         print('*AMBIENT* ack - Executing: {}'.format(command))
         if AMBIENT_ENABLED:
             os.system(command)
