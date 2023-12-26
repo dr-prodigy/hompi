@@ -73,6 +73,7 @@ def _do_cleanup():
     if AMBIENT_ENABLED:
         os.system(command)
 
+
 def _do_effect(effect, params):
     command = AMBIENT_MODULE_CMD + \
               '{} {} &'.format(effect, params)
@@ -80,23 +81,24 @@ def _do_effect(effect, params):
     if AMBIENT_ENABLED:
         os.system(command)
 
+
 def _do_ambient_color(color, brightness):
     color = _rgb_brightness2rgb(color, brightness)
-    command = AMBIENT_MODULE_CMD + \
-              AMBIENT_SET_COLOR_COMMAND.format(color) + ' &'
+    command = AMBIENT_MODULE_CMD + AMBIENT_SET_COLOR_COMMAND.format(color) + ' &'
     print('*AMBIENT* do color - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
+
 
 def _do_ambient_crossfade(color_start, brightness_start, color_end, brightness_end):
     color_start = _rgb_brightness2rgb(color_start, brightness_start)
     color_end = _rgb_brightness2rgb(color_end, brightness_end)
 
-    command = AMBIENT_MODULE_CMD + \
-              AMBIENT_CROSSFADE_COMMAND.format(color_start, color_end) + ' &'
+    command = AMBIENT_MODULE_CMD + AMBIENT_CROSSFADE_COMMAND.format(color_start, color_end) + ' &'
     print('*AMBIENT* crossfade - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
+
 
 def _do_go_to_sleep(color):
     command = AMBIENT_MODULE_CMD + \
@@ -104,6 +106,7 @@ def _do_go_to_sleep(color):
     print('*AMBIENT* go_to_sleep - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
+
 
 def _rgb_brightness2rgb(color, brightness):
     r = float(int(color, 16) >> 16 & AMBIENT_MAX_BRIGHTNESS)
@@ -116,6 +119,7 @@ def _rgb_brightness2rgb(color, brightness):
         hex(int(r / cur_brightness * brightness))[2:],
         hex(int(g / cur_brightness * brightness))[2:],
         hex(int(b / cur_brightness * brightness))[2:])
+
 
 class Ambient:
     def __init__(self):
@@ -142,8 +146,9 @@ class Ambient:
             AMBIENT_ENABLED = False
 
     def reset(self):
-        _do_cleanup()
+        print("*AMBIENT* reset")
         # reset and power off
+        _do_cleanup()
         self._newstatus_power_on = False
         self._set_newstatus_color(AMBIENT_COLOR_OFF)
         self._newstatus_color_hs = AMBIENT_COLOR_OFF_HS
@@ -210,7 +215,7 @@ class Ambient:
         else:
             # reset effect and power off time
             self._newstatus_power_off_time = datetime.datetime(9999, 12, 31)
-            self._newstatus_effect = self.newstatus_effect_params = None
+            self._newstatus_effect = self._newstatus_effect_params = None
 
         self._newstatus_power_on = status
         if do_update:
@@ -303,11 +308,11 @@ class Ambient:
             color_end = self._newstatus_color
             brightness_end = self._newstatus_brightness
             if self._newstatus_power_on:
-                # power off
+                # power on
                 color_start = AMBIENT_COLOR_OFF
                 brightness_start = AMBIENT_MIN_BRIGHTNESS
             else:
-                # power on
+                # power off
                 color_end = AMBIENT_COLOR_OFF
                 brightness_end = AMBIENT_MIN_BRIGHTNESS
             _do_ambient_crossfade(color_start, brightness_start, color_end, brightness_end)
