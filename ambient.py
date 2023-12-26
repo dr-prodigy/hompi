@@ -31,10 +31,10 @@ LED_STRIP_ELEMENTS = 32
 
 AMBIENT_MODULE_CMD = 'python ws2801_program.py '
 AMBIENT_CLEAR_COMMAND = 'clear'
-AMBIENT_SET_COLOR_COMMAND = 'set_color {}'
-AMBIENT_CROSSFADE_COMMAND = 'crossfade {} {}'
-AMBIENT_GOING_TO_SLEEP_COMMAND = 'going_to_sleep {}'
-AMBIENT_ACK_COMMAND = 'curtain_in_out {} {}'
+AMBIENT_SET_COLOR_COMMAND = 'set_color {} {}'
+AMBIENT_CROSSFADE_COMMAND = 'crossfade {} {} {}'
+AMBIENT_GOING_TO_SLEEP_COMMAND = 'going_to_sleep {} {}'
+AMBIENT_ACK_COMMAND = 'curtain_in_out {} {} {} {} {}'
 
 AMBIENT_COLOR_OFF = '000000'
 AMBIENT_COLOR_ON = 'FFFFFF'
@@ -85,7 +85,8 @@ def _do_effect(effect, params):
 
 def _do_ambient_color(color, brightness):
     color = _rgb_brightness2rgb(color, brightness)
-    command = AMBIENT_MODULE_CMD + AMBIENT_SET_COLOR_COMMAND.format(color) + ' &'
+    command = AMBIENT_MODULE_CMD + AMBIENT_SET_COLOR_COMMAND.format(
+        AMBIENT_MIN_BRIGHTNESS, color) + ' &'
     print('*AMBIENT* do color - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
@@ -95,14 +96,16 @@ def _do_ambient_crossfade(color_start, brightness_start, color_end, brightness_e
     color_start = _rgb_brightness2rgb(color_start, brightness_start)
     color_end = _rgb_brightness2rgb(color_end, brightness_end)
 
-    command = AMBIENT_MODULE_CMD + AMBIENT_CROSSFADE_COMMAND.format(color_start, color_end) + ' &'
+    command = AMBIENT_MODULE_CMD + AMBIENT_CROSSFADE_COMMAND.format(
+        AMBIENT_MIN_BRIGHTNESS, color_start, color_end) + ' &'
     print('*AMBIENT* crossfade - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
 
 
 def _do_go_to_sleep(color):
-    command = AMBIENT_MODULE_CMD + AMBIENT_GOING_TO_SLEEP_COMMAND.format(0, color) + ' &'
+    command = AMBIENT_MODULE_CMD + AMBIENT_GOING_TO_SLEEP_COMMAND.format(
+        AMBIENT_MIN_BRIGHTNESS, color) + ' &'
     print('*AMBIENT* go_to_sleep - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
@@ -268,9 +271,8 @@ class Ambient:
             self.update()
 
     def ambient_ack(self):
-        command = AMBIENT_MODULE_CMD + \
-                  AMBIENT_ACK_COMMAND.format(
-                      1, 'ff0000', self._newstatus_color, 0, False) + ' &'
+        command = AMBIENT_MODULE_CMD + AMBIENT_ACK_COMMAND.format(
+                      AMBIENT_MAX_BRIGHTNESS, 'ff0000', self._newstatus_color, 0, False) + ' &'
         print('*AMBIENT* ack - Executing: {}'.format(command))
         if AMBIENT_ENABLED:
             os.system(command)

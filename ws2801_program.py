@@ -112,18 +112,18 @@ def crossfade(brightness=None, rgb_in='000000', rgb_out='ffffff', wait=None, rev
 
 def wipe_in_out(brightness=None, rgb_in='ffffff', rgb_out='000000', wait=.005, reverse=None):
     # re-init to rgb_out
-    set_color(rgb_out)
+    set_color(brightness, rgb_out)
     # run animation
-    color_wipe(rgb_in, wait, config.LED_RIGHT_TO_LEFT)
-    color_wipe(rgb_out, wait, config.LED_RIGHT_TO_LEFT)
+    color_wipe(brightness, rgb_in, wait, config.LED_RIGHT_TO_LEFT)
+    color_wipe(brightness, rgb_out, wait, config.LED_RIGHT_TO_LEFT)
 
 
 def curtain_in_out(brightness=None, rgb_in='ffffff', rgb_out='000000', wait=.01, reverse=None):
     # re-init to rgb_out
-    set_color(rgb_out)
+    set_color(brightness, rgb_out)
     # run animation
-    color_curtain(rgb_in, wait, True)
-    color_curtain(rgb_out, wait, True)
+    color_curtain(brightness, rgb_in, wait, True)
+    color_curtain(brightness, rgb_out, wait, True)
 
 
 # Fill the dots one after the other with a color
@@ -173,7 +173,7 @@ def go_to_sleep(brightness=None, rgb='ffffff', rgb_foo=None, wait=None, reverse=
         pixels.show()
         time.sleep(.5)
     # fade to black ;-)
-    crossfade('000000', rgb)
+    crossfade(brightness, '000000', rgb)
 
 
 def test_loop(brightness=1, rgb1=None, rgb2=None, wait=None, reverse=None):
@@ -243,7 +243,7 @@ def theater_chase_rainbow(brightness=1, rgb_foo1='', rgb_foo2='', wait=.05, reve
     for j in range(256):  # cycle all 256 colors in the wheel
         for q in range(3):
             for i in range(0, pixels.count(), 3):
-                if (i + q < pixels.count()):
+                if i + q < pixels.count():
                     pixels.set_pixel(i + q, _color_wheel(
                         (i + j) % 255))  # turn every third pixel on
 
@@ -252,7 +252,7 @@ def theater_chase_rainbow(brightness=1, rgb_foo1='', rgb_foo2='', wait=.05, reve
             time.sleep(wait)
 
             for i in range(0, pixels.count(), 3):
-                if (i + q < pixels.count()):
+                if i + q < pixels.count():
                     pixels.set_pixel(i+q, 0)  # turn every third pixel off
 
 
@@ -316,20 +316,20 @@ def tv_sim(brightness='1', rgb_foo1='', rgb_foo2='', wait=.05, reverse=False):
 
 # Input a value 0 to 255 to get a color value.
 # The colours are a transition r - g - b - back to r.
-def _color_wheel(wheelPos):
-    wheelPos = 255 - wheelPos
-    if (wheelPos < 85):
-        return Adafruit_WS2801.RGB_to_color(255 - wheelPos * 3, 0,
-                                            wheelPos * 3)
+def _color_wheel(wheel_pos):
+    wheel_pos = 255 - wheel_pos
+    if wheel_pos < 85:
+        return Adafruit_WS2801.RGB_to_color(255 - wheel_pos * 3, 0,
+                                            wheel_pos * 3)
 
-    if (wheelPos < 170):
-        wheelPos -= 85
-        return Adafruit_WS2801.RGB_to_color(0, wheelPos * 3,
-                                            255 - wheelPos * 3)
+    if wheel_pos < 170:
+        wheel_pos -= 85
+        return Adafruit_WS2801.RGB_to_color(0, wheel_pos * 3,
+                                            255 - wheel_pos * 3)
 
-    wheelPos -= 170
-    return Adafruit_WS2801.RGB_to_color(wheelPos * 3,
-                                        255 - wheelPos * 3, 0)
+    wheel_pos -= 170
+    return Adafruit_WS2801.RGB_to_color(wheel_pos * 3,
+                                        255 - wheel_pos * 3, 0)
 
 
 if __name__ == "__main__":
@@ -358,7 +358,7 @@ if __name__ == "__main__":
         func = switcher.get(sys.argv[1].lower())
 
         if func:
-            # Initialize ledstrip
+            # Initialize led strip
             pixels = Adafruit_WS2801.WS2801Pixels(
                 PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
 
@@ -366,7 +366,7 @@ if __name__ == "__main__":
             if len(sys.argv) > 6:
                 func(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
             elif len(sys.argv) > 5:
-                    func(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+                func(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
             elif len(sys.argv) > 4:
                 func(sys.argv[2], sys.argv[3], sys.argv[4])
             elif len(sys.argv) > 3:
