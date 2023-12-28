@@ -33,9 +33,9 @@ HOMPI_MODE_ICON = "mdi:table"
 HOMPI_TARGET_ICON = "mdi:target"
 HOMPI_HEATING_ICON = "mdi:heat-wave"
 HOMPI_TEMP_ICON = "mdi:thermometer"
-HOMPI_APHORISM_ICON = "mdi:card-text"
+HOMPI_APHORISM_ICON = "mdi:comment-quote"
 HOMPI_AMBIENT_ICON = "mdi:television-ambient-light"
-HOMPI_AMBIENT_EFFECT_ICON = "mdi:string-lights"
+HOMPI_AMBIENT_EFFECT_ICON = "mdi:palette"
 
 def publish_status(io_status, io_system, ambient):
     hass_entities = [
