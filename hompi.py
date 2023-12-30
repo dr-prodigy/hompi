@@ -782,6 +782,9 @@ def say(message, say_status = False):
 
 
 def log_data(event):
+    if not config.MODULE_DB_LOG:
+        return
+
     try:
         description = ''
         if not event:
@@ -802,9 +805,6 @@ def log_data(event):
         else:
             # remove last ; and add quotes
             description = "'{}'".format(description[:-1])
-
-        if not config.MODULE_DB_LOG:
-            return
 
         dbmgr = db.DatabaseManager()
         dbmgr.query("""
