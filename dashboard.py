@@ -306,6 +306,9 @@ class Dashboard:
     def change_dashboard_program(self, io_status):
         self._current_program = self._current_program + 1\
             if self._current_program < 12 else 0
+        if self._current_program == 0:
+            # restart LCD
+            self.refresh_display(io_status)
         self.update(io_status)
 
     def update_content(self, io_status, change=True):
