@@ -148,6 +148,8 @@ def main():
 
             # re-sync things
             if secs_elapsed >= task_at_secs['refresh']:
+                # restart LCD
+                lcd.refresh_display(io_status)
                 # ambient color
                 ambient.ambient_redo()
                 io_status.set_ambient(ambient)

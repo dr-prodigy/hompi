@@ -37,7 +37,6 @@ HOMPI_APHORISM_ICON = "mdi:comment-quote"
 HOMPI_AMBIENT_ICON = "mdi:television-ambient-light"
 HOMPI_AMBIENT_EFFECT_ICON = "mdi:palette"
 
-
 def publish_status(io_status, io_system, ambient):
     hass_entities = [
         {"entity_id": "hompi_id",
