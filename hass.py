@@ -28,34 +28,40 @@ if not config.HASS_CHECK_SSL_CERT:
     urllib3.disable_warnings()
 
 STATUS_ENTITY_API_URL = "api/states/sensor."
-
+HOMPI_ID_ICON = "mdi:home"
+HOMPI_MODE_ICON = "mdi:table"
+HOMPI_TARGET_ICON = "mdi:target"
+HOMPI_HEATING_ICON = "mdi:heat-wave"
+HOMPI_TEMP_ICON = "mdi:thermometer"
+HOMPI_APHORISM_ICON = "mdi:comment-quote"
+HOMPI_AMBIENT_ICON = "mdi:television-ambient-light"
+HOMPI_AMBIENT_EFFECT_ICON = "mdi:palette"
 
 def publish_status(io_status, io_system, ambient):
     hass_entities = [
         {"entity_id": "hompi_id",
          "data": {"state": io_status.id, "attributes":
-             {"friendly_name": "Hompi id", "icon": "mdi:home"}}},
+             {"friendly_name": "Hompi id", "icon": HOMPI_ID_ICON}}},
         {"entity_id": "hompi_mode",
          "data": {"state": io_status.mode_desc, "attributes":
-             {"friendly_name": "Hompi mode", "icon": "mdi:table"}}},
+             {"friendly_name": "Hompi mode", "icon": HOMPI_MODE_ICON}}},
         {"entity_id": "hompi_target",
          "data": {
              "state": "{} ({} °C) until h. {:0>5.2f}".format
              (io_status.req_temp_desc, io_status.req_temp_c, io_status.req_end_time / 100),
              "attributes":
-                 {"friendly_name": "Hompi target", "icon": "mdi:target"}}},
+                 {"friendly_name": "Hompi target", "icon": HOMPI_TARGET_ICON}}},
         {"entity_id": "hompi_heating_status",
          "data": {
              "state": io_status.heating_status,
-             "attributes":
-                 {"friendly_name": "Hompi heating status", "icon": "mdi:heat-wave"}}},
+             "attributes": {"friendly_name": "Hompi heating status", "icon": HOMPI_HEATING_ICON}}},
     ]
     # thermometer entities
     if config.MODULE_TEMP:
         hass_entities.append(
             {"entity_id": "hompi_temperature",
              "data": {"state": "{:.1f}".format(io_status.int_temp_c), "attributes":
-                 {"friendly_name": "Hompi temperature", "icon": "mdi:thermometer",
+                 {"friendly_name": "Hompi temperature", "icon": HOMPI_TEMP_ICON,
                   "device_class": "temperature", "unit_of_measurement": "°C"}}}
         )
     # aphorism entities
@@ -63,7 +69,7 @@ def publish_status(io_status, io_system, ambient):
         hass_entities.append(
             {"entity_id": "forismatic",
              "data": {"state": "{} ({})".format(io_status.aphorism_text.strip(), io_status.aphorism_author.strip()),
-                      "attributes": {"friendly_name": "Forismatic", "icon": "mdi:card-text"}}}
+                      "attributes": {"friendly_name": "Forismatic", "icon": HOMPI_APHORISM_ICON}}}
         )
     # ambient light entities
     if config.MODULE_AMBIENT:
@@ -71,7 +77,7 @@ def publish_status(io_status, io_system, ambient):
              "data": {"state": io_status.ambient_on, "attributes":
                  {"unique_id": "hompi_ambient_{}".format(io_status.id.lower()),
                   "friendly_name": "Hompi ambient light",
-                  "icon": "mdi:television-ambient-light",
+                  "icon": HOMPI_AMBIENT_ICON,
                   "effect_list": ambient.EFFECT_LIST,
                   }}}
         if ambient.status_power_on:
@@ -80,7 +86,8 @@ def publish_status(io_status, io_system, ambient):
                 "rgb_color": ambient.status_color_dec,
                 "hs_color": ambient.status_color_hs})
             if ambient.status_effect:
-                light_sensor["data"]["attributes"].update({"effect": ambient.status_effect})
+                light_sensor["data"]["attributes"].update(
+                    {"effect": ambient.status_effect, "icon": HOMPI_AMBIENT_EFFECT_ICON})
         hass_entities.append(light_sensor)
 
     # temperature entities
@@ -89,7 +96,7 @@ def publish_status(io_status, io_system, ambient):
         hass_entities.append(
             {"entity_id": "hompi_temp_{}".format(description.lower()),
              "data": {"state": temp["temp_c"], "attributes":
-                 {"friendly_name": "Hompi temp {}".format(description.upper()), "icon": "mdi:thermometer",
+                 {"friendly_name": "Hompi temp {}".format(description.upper()), "icon": HOMPI_TEMP_ICON,
                   "device_class": "temperature", "unit_of_measurement": "°C", "id": temp["id"]}}}
         )
 
