@@ -23,9 +23,12 @@ import urllib3
 
 from requests import post
 from utils import log_stderr
+from datetime import datetime, timedelta
 
 if not config.HASS_CHECK_SSL_CERT:
     urllib3.disable_warnings()
+
+next_publish = datetime.now()
 
 STATUS_ENTITY_API_URL = "api/states/sensor."
 HOMPI_ID_ICON = "mdi:home"
@@ -38,6 +41,7 @@ HOMPI_AMBIENT_ICON = "mdi:television-ambient-light"
 HOMPI_AMBIENT_EFFECT_ICON = "mdi:palette"
 
 def publish_status(io_status, io_system, ambient):
+    global next_publish
     hass_entities = [
         {"entity_id": "hompi_id",
          "data": {"state": io_status.id, "attributes":
@@ -100,14 +104,17 @@ def publish_status(io_status, io_system, ambient):
                   "device_class": "temperature", "unit_of_measurement": "°C", "id": temp["id"]}}}
         )
 
-    for entity in hass_entities:
-        try:
+    try:
+        for entity in hass_entities:
             entity_id = entity["entity_id"]
             url = config.HASS_SERVER + STATUS_ENTITY_API_URL + entity_id
             headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
 
-            response = post(url, headers=headers, json=entity["data"], verify=config.HASS_CHECK_SSL_CERT)
-            if config.VERBOSE_LOG:
-                print('HASS PUBLISH ({}): {}'.format(entity_id, response.text))
-        except Exception:
-            log_stderr('HASS PUBLISH ({}): {}'.format(entity_id, traceback.format_exc()))
+            if datetime.now() >= next_publish:
+                response = post(url, headers=headers, json=entity["data"], verify=config.HASS_CHECK_SSL_CERT)
+                if config.VERBOSE_LOG:
+                    print('*HASS* PUBLISH ({}): {}'.format(entity_id, response.text))
+    except Exception:
+        log_stderr('*HASS* ERR: PUBLISH ({}): {}'.format(entity_id, traceback.format_exc()))
+        # exit and delay next publish for 60 secs
+        next_publish = datetime.now() + timedelta(seconds=60)
