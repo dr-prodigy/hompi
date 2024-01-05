@@ -34,31 +34,39 @@ STATUS_ENTITY_API_URL = "api/states/sensor."
 HOMPI_ID_ICON = "mdi:home"
 HOMPI_MODE_ICON = "mdi:table"
 HOMPI_TARGET_ICON = "mdi:target"
-HOMPI_HEATING_ICON = "mdi:heat-wave"
+# HOMPI_HEATING_OFF_ICON = "mdi:power-off"
+# HOMPI_HEATING_OFF_ICON = "mdi:minus"
+HOMPI_HEATING_OFF_ICON = "mdi:color-helper"
+HOMPI_HEATING_WARMING_ICON = "mdi:radiator-disabled"
+HOMPI_HEATING_ON_ICON = "mdi:fire"
+HOMPI_HEATING_COOLING_ICON = "mdi:radiator"
 HOMPI_TEMP_ICON = "mdi:thermometer"
 HOMPI_APHORISM_ICON = "mdi:comment-quote"
 HOMPI_AMBIENT_ICON = "mdi:television-ambient-light"
 HOMPI_AMBIENT_EFFECT_ICON = "mdi:palette"
 
+
 def publish_status(io_status, io_system, ambient):
     global next_publish
     hass_entities = [
         {"entity_id": "hompi_id",
-         "data": {"state": io_status.id, "attributes":
-             {"friendly_name": "Hompi id", "icon": HOMPI_ID_ICON}}},
+         "data": {"state": io_status.id, "attributes": {"friendly_name": "Id", "icon": HOMPI_ID_ICON}}},
         {"entity_id": "hompi_mode",
-         "data": {"state": io_status.mode_desc, "attributes":
-             {"friendly_name": "Hompi mode", "icon": HOMPI_MODE_ICON}}},
+         "data": {"state": io_status.mode_desc, "attributes": {"friendly_name": "Mode", "icon": HOMPI_MODE_ICON}}},
         {"entity_id": "hompi_target",
          "data": {
              "state": "{} ({} °C) until h. {:0>5.2f}".format
              (io_status.req_temp_desc, io_status.req_temp_c, io_status.req_end_time / 100),
              "attributes":
-                 {"friendly_name": "Hompi target", "icon": HOMPI_TARGET_ICON}}},
+                 {"friendly_name": "Target", "icon": HOMPI_TARGET_ICON}}},
         {"entity_id": "hompi_heating_status",
          "data": {
              "state": io_status.heating_status,
-             "attributes": {"friendly_name": "Hompi heating status", "icon": HOMPI_HEATING_ICON}}},
+             "attributes": {"friendly_name": "Heating", "icon":
+                 HOMPI_HEATING_WARMING_ICON if io_status.heating_status == "warming" else
+                 HOMPI_HEATING_ON_ICON if io_status.heating_status == "on" else
+                 HOMPI_HEATING_COOLING_ICON if io_status.heating_status == "cooling" else
+                 HOMPI_HEATING_OFF_ICON }}},
     ]
     # thermometer entities
     if config.MODULE_TEMP:
@@ -78,17 +86,17 @@ def publish_status(io_status, io_system, ambient):
     # ambient light entities
     if config.MODULE_AMBIENT:
         light_sensor = {"entity_id": "hompi_ambient_light",
-             "data": {"state": io_status.ambient_on, "attributes":
-                 {"unique_id": "hompi_ambient_{}".format(io_status.id.lower()),
-                  "friendly_name": "Hompi ambient light",
-                  "icon": HOMPI_AMBIENT_ICON,
-                  "effect_list": ambient.EFFECT_LIST,
-                  }}}
+                        "data": {"state": io_status.ambient_on, "attributes":
+                            {"unique_id": "hompi_ambient_{}".format(io_status.id.lower()),
+                             "friendly_name": "Hompi ambient light",
+                             "icon": HOMPI_AMBIENT_ICON,
+                             "effect_list": ambient.EFFECT_LIST,
+                             }}}
         if ambient.status_power_on:
             light_sensor["data"]["attributes"].update(
                 {"brightness": ambient.status_brightness,
-                "rgb_color": ambient.status_color_dec,
-                "hs_color": ambient.status_color_hs})
+                 "rgb_color": ambient.status_color_dec,
+                 "hs_color": ambient.status_color_hs})
             if ambient.status_effect:
                 light_sensor["data"]["attributes"].update(
                     {"effect": ambient.status_effect, "icon": HOMPI_AMBIENT_EFFECT_ICON})
