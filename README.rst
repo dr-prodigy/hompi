@@ -19,7 +19,7 @@ are made available through an LCD display (Hitachi 16x2 or 20x4 supported)
 or can be retrieved via webservices, or integrated in Home Assistant.
 
 It is suitable for any RPi version and has a very low CPU consumption
-(avg 5-10% on a Pi1/2), so your Pi can still do lots of things :)
+(avg 5-10% on a Pi1), so your Pi can still do lots of things :)
 
 Everything is implemented in code and local libs (ie: no cloud services
 required to work) and access to peripherals is made via native Pi's GPIO or
