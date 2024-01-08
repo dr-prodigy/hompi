@@ -9,13 +9,14 @@ Description
 -----------
 
 **hompi** (*'hom-pee'*) is a lightweight Python 2 / 3 software developed
-for Raspberry Pi to provide a complete and reliable home automation system
-to control heating, gates, ambient lights, etc. (more to come!).
+for Raspberry Pi to provide a native reliable home automation engine
+to control heating, gates, ambient LED lights, etc...
 
-The system is designed to be boxed and headless, interfacing all needed
-peripherals (thermometre, relays, LED strips, ...) directly.
+The system is designed to be headless, interfacing all needed
+peripherals (thermometre, relays, LED strips, ...) in hw via GPIO.
 All information (temperature, time, heating program, weather, aphorisms..)
-are accessible through an LCD display (Hitachi 16x2 or 20x4 both supported).
+are made available through an LCD display (Hitachi 16x2 or 20x4 supported)
+or can be retrieved via webservices, or integrated in Home Assistant.
 
 It is suitable for any RPi version and has a very low CPU consumption
 (avg 5-10% on a Pi1/2), so your Pi can still do lots of things :)
@@ -29,21 +30,18 @@ developed with Flask (can be accessed on local subnet and/or internet through
 public IP), designed to run through web/WSGI server.
 
 **hompi** server module is freeware and opensource, and can be controlled with
-no limitations using your own client (web, mobile app).
-
-**hompi** mobile app, specifically designed for it, will soon be available for
-Android and iOS.
-
+no limitations using your own client (web, mobile app, HA).
 
 Main features
 -------------
 
+- Support for Home Assistant https://www.home-assistant.io/
 - Heating management (manual and automatic customizable modes and programmes, data logging, reports)
 - Interface to W1 thermometer sensors (DS18B20)
 - LCD dashboard with graphic chars controlled via I2C (HD44780 16x2 or 20x4) displaying all running information
 - LED strip support (eg: WS2801) for ambient light, Xmas lights, sequences...
 - Support for GPIO relays (boiler control, home gate, home illumination, etc.)
-- (Optional) integration with various external API (weather, aphorisms, etc.)
+- Integration with various external API (weather, aphorisms, etc.)
 - Multiple **hompi** servers can interoperate and share data
 - More..
 
@@ -60,7 +58,7 @@ Prerequisites
 - Python and relevant tools:
     - *virtualenv*
     - *pip*
-- (Optional) - espeak__ application is required to enable speech synthesis ..
+- (Optional) - espeak__ is required to enable internal speech synthesis ..
 
 
 Wiring
