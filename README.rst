@@ -114,7 +114,7 @@ or, for automatic daemon operation, schedule
 
 .. code-block:: bash
 
-    $ ./scripts/hompid.sh
+    $ ./scripts/daemonize_hompi.sh
 
 at boot time.
 
