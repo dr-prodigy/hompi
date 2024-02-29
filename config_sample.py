@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C)2018-23 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
+# Copyright (C)2018-24 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
 # hompi is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@ HOMPI_EXT_SENSORS = []
 MODULE_TEMP = True
 MODULE_METEO = True
 MODULE_APHORISM = True
-MODULE_DB_LOG = True
+MODULE_DB_LOG = False
 MODULE_SPEECH = False
 MODULE_AMBIENT = False
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C)2018-23 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
+# Copyright (C)2018-24 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
 # hompi is free software: you can redistribute it and/or modify
@@ -70,7 +70,8 @@ CTRL_CODE_OFF = rgb2ctrl_code[0][0]
 
 def _do_cleanup():
     command = AMBIENT_MODULE_CMD + AMBIENT_CLEAR_COMMAND + ' &'
-    print('*AMBIENT* cleanup - Executing: {}'.format(command))
+    if config.VERBOSE_LOG:
+        print('*AMBIENT* cleanup - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
 
@@ -78,7 +79,8 @@ def _do_cleanup():
 def _do_effect(effect, params):
     command = AMBIENT_MODULE_CMD + \
               '{} {} &'.format(effect, params)
-    print('*AMBIENT* effect {} - Executing: {}'.format(effect, command))
+    if config.VERBOSE_LOG:
+        print('*AMBIENT* effect {} - Executing: {}'.format(effect, command))
     if AMBIENT_ENABLED:
         os.system(command)
 
@@ -87,7 +89,8 @@ def _do_ambient_color(color, brightness):
     color = _rgb_brightness2rgb(color, brightness)
     command = AMBIENT_MODULE_CMD + AMBIENT_SET_COLOR_COMMAND.format(
         AMBIENT_MIN_BRIGHTNESS, color) + ' &'
-    print('*AMBIENT* do color - Executing: {}'.format(command))
+    if config.VERBOSE_LOG:
+        print('*AMBIENT* do color - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
 
@@ -98,7 +101,8 @@ def _do_ambient_crossfade(color_start, brightness_start, color_end, brightness_e
 
     command = AMBIENT_MODULE_CMD + AMBIENT_CROSSFADE_COMMAND.format(
         AMBIENT_MIN_BRIGHTNESS, color_start, color_end) + ' &'
-    print('*AMBIENT* crossfade - Executing: {}'.format(command))
+    if config.VERBOSE_LOG:
+        print('*AMBIENT* crossfade - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
 
@@ -106,7 +110,8 @@ def _do_ambient_crossfade(color_start, brightness_start, color_end, brightness_e
 def _do_go_to_sleep(color):
     command = AMBIENT_MODULE_CMD + AMBIENT_GOING_TO_SLEEP_COMMAND.format(
         AMBIENT_MIN_BRIGHTNESS, color) + ' &'
-    print('*AMBIENT* go_to_sleep - Executing: {}'.format(command))
+    if config.VERBOSE_LOG:
+        print('*AMBIENT* go_to_sleep - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
 
@@ -149,7 +154,8 @@ class Ambient:
             AMBIENT_ENABLED = False
 
     def reset(self):
-        print("*AMBIENT* reset")
+        if config.VERBOSE_LOG:
+            print("*AMBIENT* reset")
         # reset and power off
         _do_cleanup()
         self._newstatus_power_on = False
@@ -342,11 +348,14 @@ class Ambient:
 
     def ambient_redo(self):
         if not self.status_power_on:
-            print('*AMBIENT* redo CLEANUP')
+            if config.VERBOSE_LOG:
+                print('*AMBIENT* redo CLEANUP')
             _do_cleanup()
         elif self.status_effect:
-            print('*AMBIENT* redo effect {}'.format(self.status_effect))
+            if config.VERBOSE_LOG:
+                print('*AMBIENT* redo effect {}'.format(self.status_effect))
             _do_effect(self.status_effect, self.status_effect_params)
         elif self.status_color and self.status_power_on:
-            print('*AMBIENT* redo color {}'.format(self._newstatus_color))
+            if config.VERBOSE_LOG:
+                print('*AMBIENT* redo color {}'.format(self._newstatus_color))
             _do_ambient_color(self._newstatus_color, self._newstatus_brightness)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
-# Copyright (C)2018-23 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
+# Copyright (C)2018-24 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
 # hompi is free software: you can redistribute it and/or modify
@@ -782,6 +782,9 @@ def say(message, say_status = False):
 
 
 def log_data(event):
+    if not config.MODULE_DB_LOG:
+        return
+
     try:
         description = ''
         if not event:
@@ -802,9 +805,6 @@ def log_data(event):
         else:
             # remove last ; and add quotes
             description = "'{}'".format(description[:-1])
-
-        if not config.MODULE_DB_LOG:
-            return
 
         dbmgr = db.DatabaseManager()
         dbmgr.query("""
