@@ -645,8 +645,8 @@ def process_input():
                     show_message('TT CHANGE', 'TT CHANGE: {}'.format(value))
                     say('Timetable change')
                     sig_command = show_ack = True
-            except Exception:
-                log_data('PARSERROR: {}'.format(data))
+            except Exception as e:
+                log_data('PARSERROR ({}): {}'.format(data), e)
         elif command == 'TEMP':
             try:
                 if int(arg) and float(value):
@@ -657,7 +657,7 @@ def process_input():
                     show_message('TP CHANGE', 'TP CHANGE ({}): {}'.format(arg, value))
                     say('Temperature change: ' + value + ' degrees')
             except Exception as e:
-                log_data('PARSERROR: {}'.format(data))
+                log_data('PARSERROR ({}): {}'.format(data), e)
         elif command == 'LCD':
             if value == '0':
                 lcd.set_backlight(0,
@@ -709,14 +709,10 @@ def process_input():
                         show_message('AMBIENT', 'AMBIENT {}'.format(arg))
                         say('Ambient effect')
                     except Exception as e:
-                        log_data('PARSERROR: {}\n{}'.format(
-                            data,
-                            traceback.format_exc()))
+                        log_data('PARSERROR ({}): {}'.format(data), e)
                 io_status.set_ambient(ambient)
             except Exception as e:
-                log_data('PARSERROR: {}\n{}'.format(
-                        data,
-                        traceback.format_exc()))
+                log_data('PARSERROR ({}): {}'.format(data), e)
         elif command == 'GATE':
             # execute gate only once per cycle, and not while another
             # is running
@@ -746,9 +742,7 @@ def process_input():
                     show_message('BUTTON{}'.format(button_no))
                     say('Function {}'.format(button_no))
             except Exception as e:
-                log_data('PARSERROR: {}\n{}'.format(
-                    data,
-                    traceback.format_exc()))
+                log_data('PARSERROR ({}): {}'.format(data), e)
                 show_message('', 'PARSERROR: {}'.format(data))
         else:
             log_data('NOTIMPLEMENTED: {}'.format(data))
@@ -816,8 +810,8 @@ def log_data(event):
         print('*HOMPI* gm_log: {}'.format(event))
     except (KeyboardInterrupt, SystemExit):
         raise
-    except Exception:
-        log_stderr('log_data error: {}'.format(traceback.format_exc()))
+    except Exception as e:
+        log_stderr('log_data error: {}'.format(e))
         time.sleep(1)
 
 

@@ -112,6 +112,7 @@ def publish_status(io_status, io_system, ambient):
                   "device_class": "temperature", "unit_of_measurement": "°C", "id": temp["id"]}}}
         )
 
+    entity_id = None
     try:
         for entity in hass_entities:
             entity_id = entity["entity_id"]
@@ -122,7 +123,7 @@ def publish_status(io_status, io_system, ambient):
                 response = post(url, headers=headers, json=entity["data"], verify=config.HASS_CHECK_SSL_CERT)
                 if config.VERBOSE_LOG:
                     print('*HASS* PUBLISH ({}): {}'.format(entity_id, response.text))
-    except Exception:
-        log_stderr('*HASS* ERR: PUBLISH ({}): {}'.format(entity_id, traceback.format_exc()))
+    except Exception as e:
+        log_stderr('*HASS* ERR: PUBLISH ({}): {}'.format(entity_id, e))
         # exit and delay next publish for 60 secs
         next_publish = datetime.now() + timedelta(seconds=60)
