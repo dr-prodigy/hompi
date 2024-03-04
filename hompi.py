@@ -646,7 +646,7 @@ def process_input():
                     say('Timetable change')
                     sig_command = show_ack = True
             except Exception as e:
-                log_data('PARSERROR ({}): {}'.format(data), e)
+                log_data('PARSERROR ({}): {}'.format(data, e))
         elif command == 'TEMP':
             try:
                 if int(arg) and float(value):
@@ -657,7 +657,7 @@ def process_input():
                     show_message('TP CHANGE', 'TP CHANGE ({}): {}'.format(arg, value))
                     say('Temperature change: ' + value + ' degrees')
             except Exception as e:
-                log_data('PARSERROR ({}): {}'.format(data), e)
+                log_data('PARSERROR ({}): {}'.format(data, e))
         elif command == 'LCD':
             if value == '0':
                 lcd.set_backlight(0,
@@ -709,10 +709,10 @@ def process_input():
                         show_message('AMBIENT', 'AMBIENT {}'.format(arg))
                         say('Ambient effect')
                     except Exception as e:
-                        log_data('PARSERROR ({}): {}'.format(data), e)
+                        log_data('PARSERROR ({}): {}'.format(data, e))
                 io_status.set_ambient(ambient)
             except Exception as e:
-                log_data('PARSERROR ({}): {}'.format(data), e)
+                log_data('PARSERROR ({}): {}'.format(data, e))
         elif command == 'GATE':
             # execute gate only once per cycle, and not while another
             # is running
@@ -742,7 +742,7 @@ def process_input():
                     show_message('BUTTON{}'.format(button_no))
                     say('Function {}'.format(button_no))
             except Exception as e:
-                log_data('PARSERROR ({}): {}'.format(data), e)
+                log_data('PARSERROR ({}): {}'.format(data, e))
                 show_message('', 'PARSERROR: {}'.format(data))
         else:
             log_data('NOTIMPLEMENTED: {}'.format(data))
