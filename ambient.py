@@ -256,7 +256,7 @@ class Ambient:
         # reset effect
         self._newstatus_effect = self._newstatus_effect_params = None
         # power on/off
-        self.set_ambient_on_off(brightness != 0, do_update = False)
+        self.set_ambient_on_off(brightness != 0, do_update=False)
         # set brightness
         self._newstatus_brightness = brightness
         if do_update:
@@ -288,7 +288,7 @@ class Ambient:
             # GO TO SLEEP
             _do_go_to_sleep(self.status_color)
             # power off
-            self.set_ambient_on_off(False)
+            self.set_ambient_on_off(False, do_update=False)
             self.program_change_completed()
         elif self.status_effect != self._newstatus_effect:
             # EFFECTS
