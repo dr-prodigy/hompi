@@ -252,7 +252,7 @@ class Dashboard:
         self.line = [''] * LCD_ROWS
         self.old_line = [''] * LCD_ROWS
         self.position = [-LCD_LINE_DELAY] * LCD_ROWS
-
+        self.lcd = None
         self.refresh_display()
 
     def _load_charset(self):
@@ -278,10 +278,11 @@ class Dashboard:
             PAUSED = False
             if DISPLAY_TYPE == GPIO_CharLCD:
                 # initialize display
-                self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5,
-                                           LCD_D6, LCD_D7,
-                                           LCD_COLUMNS, LCD_ROWS,
-                                           LCD_BACKLIGHT)
+                if self.lcd is None:
+                    self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5,
+                                               LCD_D6, LCD_D7,
+                                               LCD_COLUMNS, LCD_ROWS,
+                                               LCD_BACKLIGHT)
             elif DISPLAY_TYPE == I2C_LCD:
                 # initialize display
                 self.lcd = I2C_LCD_driver.lcd(I2C_ADDRESS, I2C_BUS)
