@@ -705,7 +705,9 @@ def process_input():
                     say('Ambient status {}'.format(value))
                 else:
                     try:
-                        ambient.set_ambient_effect(arg, value)
+                        ambient.set_ambient_effect(arg, value,
+                        datetime.datetime.now() +
+                        datetime.timedelta(hours=4))
                         show_message('AMBIENT', 'AMBIENT {}'.format(arg))
                         say('Ambient effect')
                     except Exception as e:

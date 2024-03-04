@@ -285,10 +285,12 @@ class Ambient:
 
     def update(self):
         if datetime.datetime.now() > self.status_power_off_time:
+            # reset power off time (avoid infinite recursion)
+            self.status_power_off_time = datetime.datetime(9999, 12, 31)
             # GO TO SLEEP
             _do_go_to_sleep(self.status_color)
             # power off
-            self.set_ambient_on_off(False, do_update=False)
+            self.set_ambient_on_off(False)
             self.program_change_completed()
         elif self.status_effect != self._newstatus_effect:
             # EFFECTS
