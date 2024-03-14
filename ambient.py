@@ -278,7 +278,7 @@ class Ambient:
 
     def ambient_ack(self):
         command = AMBIENT_MODULE_CMD + AMBIENT_ACK_COMMAND.format(
-                      AMBIENT_MAX_BRIGHTNESS, 'ff0000', self._newstatus_color, 0, False) + ' &'
+                      AMBIENT_MAX_BRIGHTNESS, 'ff0000', self._newstatus_color) + ' &'
         print('*AMBIENT* ack - Executing: {}'.format(command))
         if AMBIENT_ENABLED:
             os.system(command)

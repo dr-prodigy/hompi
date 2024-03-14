@@ -438,11 +438,13 @@ def compute_status():
                 seconds=config.BUTTON_DURATION_SECS)
             io_status.last_change = current_time.isoformat()
             sensor.set_switch(config.BUTTONS[sw][0], True)
+            print("on")
 
-        if io_status.sw_status[sw] and current_time > sig_switch_timeout[sw]:
+        if io_status.sw_status[sw] and current_time >= sig_switch_timeout[sw]:
             io_status.sw_status[sw] = False
             io_status.last_change = current_time.isoformat()
             sensor.set_switch(config.BUTTONS[sw][0], False)
+            print("off")
 
     io_status.update(current_time)
 

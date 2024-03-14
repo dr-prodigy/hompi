@@ -114,16 +114,16 @@ def wipe_in_out(brightness=None, rgb_in='ffffff', rgb_out='000000', wait=.005, r
     # re-init to rgb_out
     set_color(brightness, rgb_out)
     # run animation
-    color_wipe(brightness, rgb_in, wait, config.LED_RIGHT_TO_LEFT)
-    color_wipe(brightness, rgb_out, wait, config.LED_RIGHT_TO_LEFT)
+    color_wipe(brightness, rgb_in, None, wait, config.LED_RIGHT_TO_LEFT)
+    color_wipe(brightness, rgb_out, None, wait, config.LED_RIGHT_TO_LEFT)
 
 
-def curtain_in_out(brightness=None, rgb_in='ffffff', rgb_out='000000', wait=.01, reverse=None):
+def curtain_in_out(brightness=None, rgb_in='ffffff', rgb_out='000000', wait=.01, reverse=False):
     # re-init to rgb_out
     set_color(brightness, rgb_out)
     # run animation
-    color_curtain(brightness, rgb_in, wait, True)
-    color_curtain(brightness, rgb_out, wait, True)
+    color_curtain(brightness, rgb_in, None, wait, reverse)
+    color_curtain(brightness, rgb_out, None, wait, reverse)
 
 
 # Fill the dots one after the other with a color
