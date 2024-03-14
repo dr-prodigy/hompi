@@ -34,7 +34,7 @@ AMBIENT_CLEAR_COMMAND = 'clear'
 AMBIENT_SET_COLOR_COMMAND = 'set_color {} {}'
 AMBIENT_CROSSFADE_COMMAND = 'crossfade {} {} {}'
 AMBIENT_GOING_TO_SLEEP_COMMAND = 'going_to_sleep {} {}'
-AMBIENT_ACK_COMMAND = 'curtain_in_out {} {} {} {} {}'
+AMBIENT_ACK_COMMAND = 'curtain_in_out {} {} {}'
 
 AMBIENT_COLOR_OFF = '000000'
 AMBIENT_COLOR_ON = 'FFFFFF'
@@ -278,7 +278,7 @@ class Ambient:
 
     def ambient_ack(self):
         command = AMBIENT_MODULE_CMD + AMBIENT_ACK_COMMAND.format(
-                      AMBIENT_MAX_BRIGHTNESS, 'ff0000', self._newstatus_color) + ' &'
+                      AMBIENT_MAX_BRIGHTNESS, 'ff0000', self._newstatus_colorx) + ' &'
         print('*AMBIENT* ack - Executing: {}'.format(command))
         if AMBIENT_ENABLED:
             os.system(command)
