@@ -22,7 +22,7 @@ import traceback
 import urllib3
 
 from requests import post
-from utils import log_stderr
+from utils import log_stdout, log_stderr
 from datetime import datetime, timedelta
 
 if not config.HASS_CHECK_SSL_CERT:
@@ -122,7 +122,7 @@ def publish_status(io_status, io_system, ambient):
             if datetime.now() >= next_publish:
                 response = post(url, headers=headers, json=entity["data"], verify=config.HASS_CHECK_SSL_CERT)
                 if config.VERBOSE_LOG:
-                    print('*HASS* PUBLISH ({}): {}'.format(entity_id, response.text))
+                    log_stdout('HASS', 'PUBLISH ({}): {}'.format(entity_id, response.text))
     except Exception as e:
         log_stderr('*HASS* ERR: PUBLISH ({}): {}'.format(entity_id, e))
         # exit and delay next publish for 60 secs

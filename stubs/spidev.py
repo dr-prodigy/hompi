@@ -20,17 +20,15 @@
 # **** Copy / symlink me to project root directory to enable stubbing ****
 
 import config
-
-DEBUG_LOG = config.VERBOSE_LOG
-
+from utils import log_stdout
 
 class SpiDev:
     @staticmethod
     def open(port, device):
-        if DEBUG_LOG:
-            print('SpiDev.open ({},{})'.format(port, device))
+        if config.HW_LOG:
+            log_stdout('SMBUS', 'open ({},{})'.format(port, device))
 
     @staticmethod
     def writebytes(data):
-        if DEBUG_LOG:
-            print('SpiDev.writebytes ({})'.format(data))
+        if config.HW_LOG:
+            log_stdout('SMBUS', 'writebytes ({})'.format(data))

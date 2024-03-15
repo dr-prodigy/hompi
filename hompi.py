@@ -40,7 +40,7 @@ import random
 import socket
 
 from tendo import singleton
-from utils import log_stderr, os_async_command
+from utils import log_stdout, log_stderr, os_async_command
 
 io_status = io_data.Status()
 io_system = io_data.SystemInfo()
@@ -68,10 +68,10 @@ try:
     if config.HOLIDAYS_COUNTRY:
         holiday_list = holidays.country_holidays(config.HOLIDAYS_COUNTRY)
     else:
-        print("*HOMPI* WARN: config.HOLIDAYS_COUNTRY missing, defaulting to IT")
+        log_stdout("*HOMPI* WARN: config.HOLIDAYS_COUNTRY missing, defaulting to IT")
         holiday_list = holidays.IT()
 except Exception:
-    print("*HOMPI* WARN: config.HOLIDAYS_COUNTRY missing or wrong, defaulting to IT")
+    log_stdout("*HOMPI* WARN: config.HOLIDAYS_COUNTRY missing or wrong, defaulting to IT")
     holiday_list = holidays.IT()
 
 task_every_secs = {
@@ -379,7 +379,7 @@ def get_temperature():
         log_temp_avg_counter = 1
         log_temp_avg_sum += log_temp_avg_counter
         log_temp_avg_accu += temp * log_temp_avg_counter
-        print('*HOMPI* Req: {:.2f}° - Int: {:.2f}° - Thermo: {}'.format(
+        log_stdout('HOMPI', 'Req: {:.2f}° - Int: {:.2f}° - Thermo: {}'.format(
             io_status.req_temp_c, temp, io_status.heating_status))
 
 
@@ -455,7 +455,7 @@ def sighup_handler(signal, frame):
 
 
 def sigterm_handler(signal, frame):
-    print('*HOMPI* got SIGTERM - exiting.')
+    log_stdout('HOMPI', 'got SIGTERM - exiting.')
     log_data('stop')
     sys.exit(0)
 
@@ -491,7 +491,7 @@ def refresh_program(time_):
         io_status.mode_desc = io_status.timetable_desc = row[1]
         io_status.short_mode_desc = row[2].upper()[0:1]
         is_program_changed = True
-        print('*HOMPI* Timetable: {} ({})'.format(io_status.mode_desc,
+        log_stdout('HOMPI', 'Timetable: {} ({})'.format(io_status.mode_desc,
                                           io_status.short_mode_desc))
         sensor.hompi_slaves_forward_command(io_status.hompi_slaves,
                                             'TT={}'.format(row[0]))
@@ -520,7 +520,7 @@ def refresh_program(time_):
         io_status.req_start_time = row[2]
         io_status.req_temp_desc = row[4]
         is_program_changed = True
-        print('*HOMPI* Day: {}({:02d}:{:02d}) - Temp({}): {:.2f}°'.format(
+        log_stdout('HOMPI', 'Day: {}({:02d}:{:02d}) - Temp({}): {:.2f}°'.format(
             row[1], datetime.datetime.today().hour,
             datetime.datetime.today().minute, row[4], row[5]))
 
@@ -541,7 +541,7 @@ def refresh_program(time_):
             io_status.req_end_time = row[0]
         else:
             io_status.req_end_time = 0000
-        print('*HOMPI* Time range: ({:02.0f}:{:02.0f}) - ({:02.0f}:{:02.0f})'.format(
+        log_stdout('HOMPI', 'Time range: ({:02.0f}:{:02.0f}) - ({:02.0f}:{:02.0f})'.format(
             math.floor(io_status.req_start_time // 100),
             io_status.req_start_time - math.floor(
                 io_status.req_start_time // 100) * 100,
@@ -585,7 +585,7 @@ def update_output():
             WHERE id = 0""".format(
                 io_status.get_output().replace('\'', '\'\'')))
         current_status = io_status.get_output()
-        print('*HOMPI* output: ' + current_status.replace('\n', ''))
+        log_stdout('HOMPI', 'output: ' + current_status.replace('\n', ''))
         if config.ENABLE_HASS_INTEGRATION:
             hass.publish_status(io_status, io_system, ambient)
 
@@ -773,7 +773,7 @@ def say(message, say_status = False):
         message = 'HOMPI - ' + message \
             + (' - ' + io_status.get_status_text() if say_status else '')
         command = config.SPEECH_COMMAND.format(message) + ' &'
-        print('*HOMPI* saying: {}'.format(message))
+        log_stdout('HOMPI', 'saying: {}'.format(message))
         os.system(command)
 
 
@@ -809,7 +809,7 @@ def log_data(event):
             VALUES (strftime('%s','now'), {:f}, {:f}, {:f}, {}, {})
             """.format(io_status.int_temp_c, io_status.ext_temp_c,
                        io_status.req_temp_c, event, description))
-        print('*HOMPI* gm_log: {}'.format(event))
+        log_stdout('HOMPI', 'gm_log: {}'.format(event))
     except (KeyboardInterrupt, SystemExit):
         raise
     except Exception as e:

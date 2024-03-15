@@ -29,13 +29,13 @@ import time
 import datetime
 import dateutil.parser
 
-from utils import log_stderr
+from utils import log_stdout, log_stderr
 
 # GPIO import
 try:
     import RPi.GPIO as GPIO
 except ImportError:
-    print('WARN: RPi.GPIO missing - loading stub library')
+    log_stdout('SENSORS', 'WARN: RPi.GPIO missing - loading stub library')
     import stubs.RPi.GPIO as GPIO
 
 import config
@@ -44,7 +44,7 @@ if config.MODULE_TEMP and config.HEATING_GPIO:
     try:
         HEATING_GPIO = int(config.HEATING_GPIO)
     except Exception:
-        print("WARN: config.HEATING_GPIO missing or wrong, defaulting to 17")
+        log_stdout('SENSORS', 'WARN: config.HEATING_GPIO missing or wrong, defaulting to 17')
         HEATING_GPIO = 17
 
 reader = codecs.getreader("utf-8")
@@ -53,7 +53,7 @@ reader = codecs.getreader("utf-8")
 m = hashlib.md5()
 m.update(config.API_KEY.encode('utf-8'))
 API_KEY = m.hexdigest().upper()
-print('API_KEY: {}'.format(API_KEY))
+log_stdout('SENSORS', 'API_KEY: {}'.format(API_KEY))
 
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
@@ -103,16 +103,15 @@ class Sensors:
         try:
             meteo = json.load(reader(request.urlopen(
                 self.METEO_URL.replace('[place]', config.PLACE), timeout=5)))
-            print(
-                ('*SENSOR* {} - Weather: {} - Temp.: {}° - Humidity: {}% Pressure: {} ' +
-                 'mbar - Wind: {} m/s').format(
+            log_stdout('SENSORS', '{} - Weather: {} - Temp.: {}° - Humidity: {}% Pressure: {} ' +
+                 'mbar - Wind: {} m/s'.format(
                     meteo['name'], meteo['weather'][0]['main'],
                     meteo['main']['temp'],
                     meteo['main']['humidity'],
                     meteo['main']['pressure'],
                     meteo['wind']['speed']))
         except request.URLError:
-            print('*SENSOR* WARNING: meteo not available.')
+            log_stdout('SENSORS', 'WARNING: meteo not available.')
         except Exception:
             log_stderr(traceback.format_exc())
         finally:
@@ -125,14 +124,14 @@ class Sensors:
             req = request.Request(self.APHORISM_URL, None,
                                   {'User-Agent': 'Mozilla/5.0'})
             aphorism = json.load(reader(request.urlopen(req, timeout=5)))
-            print(u'{} - {}'.format(
+            log_stdout('SENSORS', u'{} - {}'.format(
                 aphorism['quoteText'], aphorism['quoteAuthor']).encode(
                 'utf-8'))
         except request.URLError:
-            print('*SENSOR* WARNING: aphorism not available: skipped.')
+            log_stdout('SENSORS', 'WARNING: aphorism not available: skipped.')
         except Exception:
             # don't echo errors to stderr
-            print("*SENSOR* ERROR fetching aphorism")
+            log_stdout('SENSORS', 'ERROR fetching aphorism')
         finally:
             return aphorism
 
@@ -171,7 +170,7 @@ class Sensors:
     @staticmethod
     def set_heating(status):
         if config.MODULE_TEMP:
-            print("*SENSOR* - HEATING={}".format(status))
+            log_stdout('SENSORS', 'HEATING={}'.format(status))
             if config.RELAY_HILOW_MODE:
                 GPIO.output(HEATING_GPIO, GPIO.LOW if status else GPIO.HIGH)
             else:
@@ -180,7 +179,7 @@ class Sensors:
     # switch relay management
     @staticmethod
     def set_switch(gpio, status):
-        print("*SENSOR* - SWITCH({})={}".format(gpio, status))
+        log_stdout('SENSORS', 'SWITCH({})={}'.format(gpio, status))
         if config.RELAY_HILOW_MODE:
             GPIO.output(gpio, GPIO.LOW if status else GPIO.HIGH)
         else:
@@ -203,11 +202,11 @@ class Sensors:
                 if (datetime.datetime.now() - dateutil.parser.parse(
                         status['last_update'])).total_seconds() < 300:
                     hompi_slaves[status['id']] = status
-                    print('{} server replied with status: saved.'.format(
+                    log_stdout('SENSORS', '{} server replied with status: saved.'.format(
                         status['id']))
             except request.URLError:
                 print(traceback.format_exc())
-                print('*SENSOR* WARNING: {} server not available.'.format(url))
+                log_stdout('SENSORS', 'WARNING: {} server not available.'.format(url))
             except Exception:
                 log_stderr.write(traceback.format_exc())
 
@@ -220,8 +219,8 @@ class Sensors:
                     reader(request.urlopen(sensor_url, timeout=2, context=ssl_context)))
                 hompi_ext_sensors[ext_sensor_data['sensor']['name']] = ext_sensor_data['sensor']
             except request.URLError:
-                print(traceback.format_exc())
-                print('*SENSOR* WARNING: {} ext sensor not available.'.format(sensor_url))
+                log_stdout('SENSORS', traceback.format_exc())
+                log_stdout('SENSORS', 'WARNING: {} ext sensor not available.'.format(sensor_url))
             except Exception:
                 log_stderr.write(traceback.format_exc())
 
@@ -237,11 +236,10 @@ class Sensors:
                             slave_data['address'], request.quote(command_json),
                             API_KEY),
                         timeout=2)
-                    print('*SENSOR* Forwarded COMMAND: {} to: {}'.format(command,
+                    log_stdout('SENSORS', 'Forwarded COMMAND: {} to: {}'.format(command,
                                                                 slave_id))
                 except request.URLError:
-                    print(
-                        '*SENSOR* WARNING: {} server not available.'.format(slave_id))
+                    log_stdout('SENSORS', 'WARNING: {} server not available.'.format(slave_id))
                 except Exception:
                     log_stderr(traceback.format_exc())
 

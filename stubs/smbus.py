@@ -17,39 +17,35 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
+from utils import log_stdout
 import config
-
-DEBUG_LOG = config.VERBOSE_LOG
-
 
 class SMBus:
     def __init__(self, port):
-        if DEBUG_LOG:
-            print('__SMBus__ {}'.format(port))
+        if config.HW_LOG:
+            log_stdout('SMBUS', '__ port {}'.format(port))
 
     def write_byte(self, a, b):
-        if DEBUG_LOG:
-            print('SMBus.write_byte {},{}'.format(a, b))
+        if config.HW_LOG:
+            log_stdout('SMBUS', 'write_byte {},{}'.format(a, b))
 
     def write_cmd_arg(self, a, b):
-        if DEBUG_LOG:
-            print('SMBus.write_cmd_arg {},{}'.format(a, b))
+        if config.HW_LOG:
+            log_stdout('SMBUS', 'write_cmd_arg {},{}'.format(a, b))
 
     def write_block_data(self, a, b):
-        if DEBUG_LOG:
-            print('SMBus.write_block_data {},{}'.format(a, b))
+        if config.HW_LOG:
+            log_stdout('SMBUS', 'write_block_data {},{}'.format(a, b))
 
     def read_byte(self):
-        if DEBUG_LOG:
-            print('SMBus.read_byte FOO (0xFF)')
+        if config.HW_LOG:
+            log_stdout('SMBUS', 'read_byte FOO (0xFF)')
         return 0xFF
 
     def read_byte_data(self, a):
-        if DEBUG_LOG:
-            print('SMBus.read_byte_data {} (0xFF ...)'.format(a))
+        log_stdout('SMBUS', 'read_byte_data {} (0xFF ...)'.format(a))
         return [0xFF, 0xFF, 0xFF, 0xFF]
 
     def read_block_data(self, a):
-        if DEBUG_LOG:
-            print('SMBus.read_block_data {} (0xFF ...)'.format(a))
+        log_stdout('SMBUS', 'read_block_data {} (0xFF ...)'.format(a))
         return [0xFF, 0xFF, 0xFF, 0xFF]

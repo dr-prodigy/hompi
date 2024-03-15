@@ -25,7 +25,7 @@ import colorsys
 
 import config
 
-from utils import log_stderr
+from utils import log_stdout, log_stderr
 
 LED_STRIP_ELEMENTS = 32
 
@@ -71,7 +71,7 @@ CTRL_CODE_OFF = rgb2ctrl_code[0][0]
 def _do_cleanup():
     command = AMBIENT_MODULE_CMD + AMBIENT_CLEAR_COMMAND + ' &'
     if config.VERBOSE_LOG:
-        print('*AMBIENT* cleanup - Executing: {}'.format(command))
+        log_stdout('AMBIENT', 'cleanup - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
 
@@ -80,7 +80,7 @@ def _do_effect(effect, params):
     command = AMBIENT_MODULE_CMD + \
               '{} {} &'.format(effect, params)
     if config.VERBOSE_LOG:
-        print('*AMBIENT* effect {} - Executing: {}'.format(effect, command))
+        log_stdout('AMBIENT', 'effect {} - Executing: {}'.format(effect, command))
     if AMBIENT_ENABLED:
         os.system(command)
 
@@ -90,7 +90,7 @@ def _do_ambient_color(color, brightness):
     command = AMBIENT_MODULE_CMD + AMBIENT_SET_COLOR_COMMAND.format(
         AMBIENT_MIN_BRIGHTNESS, color) + ' &'
     if config.VERBOSE_LOG:
-        print('*AMBIENT* do color - Executing: {}'.format(command))
+        log_stdout('AMBIENT', 'do color - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
 
@@ -102,7 +102,7 @@ def _do_ambient_crossfade(color_start, brightness_start, color_end, brightness_e
     command = AMBIENT_MODULE_CMD + AMBIENT_CROSSFADE_COMMAND.format(
         AMBIENT_MIN_BRIGHTNESS, color_start, color_end) + ' &'
     if config.VERBOSE_LOG:
-        print('*AMBIENT* crossfade - Executing: {}'.format(command))
+        log_stdout('AMBIENT', 'crossfade - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
 
@@ -111,7 +111,7 @@ def _do_go_to_sleep(color):
     command = AMBIENT_MODULE_CMD + AMBIENT_GOING_TO_SLEEP_COMMAND.format(
         AMBIENT_MIN_BRIGHTNESS, color) + ' &'
     if config.VERBOSE_LOG:
-        print('*AMBIENT* go_to_sleep - Executing: {}'.format(command))
+        log_stdout('AMBIENT', 'go_to_sleep - Executing: {}'.format(command))
     if AMBIENT_ENABLED:
         os.system(command)
 
@@ -265,7 +265,7 @@ class Ambient:
     def set_ambient_effect(self, effect, params, timeout=datetime.datetime(9999, 12, 31), do_update=True):
         effect = effect.lower()
         if effect in EFFECT_LIST:
-            print('*AMBIENT* effect {} {}'.format(effect, params))
+            log_stdout('AMBIENT', 'effect {} {}'.format(effect, params))
             # power on
             self.set_ambient_on_off(True, timeout, False)
             # set effect
@@ -279,7 +279,7 @@ class Ambient:
     def ambient_ack(self):
         command = AMBIENT_MODULE_CMD + AMBIENT_ACK_COMMAND.format(
                       AMBIENT_MAX_BRIGHTNESS, 'ff0000', self._newstatus_color) + ' &'
-        print('*AMBIENT* ack - Executing: {}'.format(command))
+        log_stdout('AMBIENT', 'ack - Executing: {}'.format(command))
         if AMBIENT_ENABLED:
             os.system(command)
 
@@ -351,13 +351,13 @@ class Ambient:
     def ambient_redo(self):
         if not self.status_power_on:
             if config.VERBOSE_LOG:
-                print('*AMBIENT* redo CLEANUP')
+                log_stdout('AMBIENT', 'redo CLEANUP')
             _do_cleanup()
         elif self.status_effect:
             if config.VERBOSE_LOG:
-                print('*AMBIENT* redo effect {}'.format(self.status_effect))
+                log_stdout('AMBIENT', 'redo effect {}'.format(self.status_effect))
             _do_effect(self.status_effect, self.status_effect_params)
         elif self.status_color and self.status_power_on:
             if config.VERBOSE_LOG:
-                print('*AMBIENT* redo color {}'.format(self._newstatus_color))
+                log_stdout('AMBIENT', 'redo color {}'.format(self._newstatus_color))
             _do_ambient_color(self._newstatus_color, self._newstatus_brightness)
