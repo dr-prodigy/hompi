@@ -46,31 +46,53 @@ HOMPI_APHORISM_ICON = "mdi:comment-quote"
 HOMPI_AMBIENT_ICON = "mdi:television-ambient-light"
 HOMPI_AMBIENT_EFFECT_ICON = "mdi:palette"
 
+old_entity = {}
 
 def publish_status(io_status, io_system, ambient):
     global next_publish
-    hass_entities = [
-        {"entity_id": "hompi_id",
-         "data": {"state": io_status.id, "attributes": {"friendly_name": "Id", "icon": HOMPI_ID_ICON}}},
-        {"entity_id": "hompi_mode",
-         "data": {"state": io_status.mode_desc, "attributes": {"friendly_name": "Mode", "icon": HOMPI_MODE_ICON}}},
-        {"entity_id": "hompi_target",
-         "data": {
-             "state": "{} ({} °C) until h. {:0>5.2f}".format
-             (io_status.req_temp_desc, io_status.req_temp_c, io_status.req_end_time / 100),
-             "attributes":
-                 {"friendly_name": "Target", "icon": HOMPI_TARGET_ICON}}},
-        {"entity_id": "hompi_heating_status",
-         "data": {
-             "state": io_status.heating_status,
-             "attributes": {"friendly_name": "Heating", "icon":
-                 HOMPI_HEATING_WARMING_ICON if io_status.heating_status == "warming" else
-                 HOMPI_HEATING_ON_ICON if io_status.heating_status == "on" else
-                 HOMPI_HEATING_COOLING_ICON if io_status.heating_status == "cooling" else
-                 HOMPI_HEATING_OFF_ICON }}},
-    ]
+    hass_entities = []
+
+    if old_entity.get("hompi_id") != io_status.id:
+        old_entity["hompi_id"] = io_status.id
+        hass_entities.append(
+            {"entity_id": "hompi_id",
+             "data": {"state": io_status.id, "attributes": {"friendly_name": "Id", "icon": HOMPI_ID_ICON}}}
+        )
+    if old_entity.get("hompi_mode") != io_status.mode_desc:
+        old_entity["hompi_mode"] = io_status.mode_desc
+        hass_entities.append(
+            {"entity_id": "hompi_mode",
+             "data": {"state": io_status.mode_desc, "attributes": {"friendly_name": "Mode", "icon": HOMPI_MODE_ICON}}}
+        )
+
+    target = "{} ({} °C) until h. {:0>5.2f}".format(io_status.req_temp_desc, io_status.req_temp_c,
+                                                    io_status.req_end_time / 100)
+    if old_entity.get("hompi_target") != target:
+        old_entity["hompi_target"] = target
+        hass_entities.append(
+            {"entity_id": "hompi_target",
+             "data": {
+                 "state": target,
+                 "attributes":
+                     {"friendly_name": "Target", "icon": HOMPI_TARGET_ICON}}}
+        )
+
+    if old_entity.get("hompi_heating_status") != io_status.heating_status:
+        old_entity["hompi_heating_status"] = io_status.heating_status
+        hass_entities.append(
+            {"entity_id": "hompi_heating_status",
+             "data": {
+                 "state": io_status.heating_status,
+                 "attributes": {"friendly_name": "Heating", "icon":
+                     HOMPI_HEATING_WARMING_ICON if io_status.heating_status == "warming" else
+                     HOMPI_HEATING_ON_ICON if io_status.heating_status == "on" else
+                     HOMPI_HEATING_COOLING_ICON if io_status.heating_status == "cooling" else
+                     HOMPI_HEATING_OFF_ICON }}}
+        )
+
     # thermometer entities
-    if config.MODULE_TEMP:
+    if config.MODULE_TEMP and old_entity.get("hompi_temperature") != io_status.int_temp_c:
+        old_entity["hompi_temperature"] = io_status.int_temp_c
         hass_entities.append(
             {"entity_id": "hompi_temperature",
              "data": {"state": "{:.1f}".format(io_status.int_temp_c), "attributes":
@@ -78,14 +100,20 @@ def publish_status(io_status, io_system, ambient):
                   "device_class": "temperature", "unit_of_measurement": "°C"}}}
         )
     # aphorism entities
-    if config.MODULE_APHORISM:
+    state = "{} ({})".format(io_status.aphorism_text.strip(), io_status.aphorism_author.strip())
+    if config.MODULE_APHORISM and old_entity.get("forismatic") != state:
+        old_entity["forismatic"] = state
         hass_entities.append(
             {"entity_id": "forismatic",
-             "data": {"state": "{} ({})".format(io_status.aphorism_text.strip(), io_status.aphorism_author.strip()),
+             "data": {"state": state,
                       "attributes": {"friendly_name": "Forismatic", "icon": HOMPI_APHORISM_ICON}}}
         )
     # ambient light entities
-    if config.MODULE_AMBIENT:
+    comparer = "{}{}{}{}{}{}".format(io_status.ambient_on, io_status.id,
+                             ambient.status_brightness, ambient.status_color_dec, ambient.status_color_hs,
+                             ambient.status_effect)
+    if config.MODULE_AMBIENT and old_entity.get("hompi_ambient_light") != comparer:
+        old_entity["hompi_ambient_light"] = comparer
         light_sensor = {"entity_id": "hompi_ambient_light",
                         "data": {"state": io_status.ambient_on, "attributes":
                             {"unique_id": "hompi_ambient_{}".format(io_status.id.lower()),
@@ -106,12 +134,14 @@ def publish_status(io_status, io_system, ambient):
     # temperature entities
     for temp in io_system.temperatures:
         description = str(temp["description"])
-        hass_entities.append(
-            {"entity_id": "hompi_temp_{}".format(description.lower()),
-             "data": {"state": temp["temp_c"], "attributes":
-                 {"friendly_name": "Hompi temp {}".format(description.upper()), "icon": HOMPI_TEMP_ICON,
-                  "device_class": "temperature", "unit_of_measurement": "°C", "id": temp["id"]}}}
-        )
+        if old_entity.get("hompi_temp_{}".format(description.lower())) != temp["id"]:
+            old_entity["hompi_temp_{}".format(description.lower())] = temp["id"]
+            hass_entities.append(
+                {"entity_id": "hompi_temp_{}".format(description.lower()),
+                 "data": {"state": temp["temp_c"], "attributes":
+                     {"friendly_name": "Hompi temp {}".format(description.upper()), "icon": HOMPI_TEMP_ICON,
+                      "device_class": "temperature", "unit_of_measurement": "°C", "id": temp["id"]}}}
+            )
 
     entity_id = None
     try:
