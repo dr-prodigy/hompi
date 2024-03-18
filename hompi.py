@@ -573,18 +573,16 @@ def init_output():
 def update_output():
     global current_status
 
-    dbmgr = db.DatabaseManager()
-
     # update status
     if current_status != io_status.get_output():
+        dbmgr = db.DatabaseManager()
         io_status.current_image = resources.current_image(config.IMAGE_PATH)
         io_status.last_update = datetime.datetime.now().isoformat()
+        current_status = io_status.get_output()
         dbmgr.query(
             """UPDATE gm_output
             SET data = '{}', last_update = strftime('%s','now')
-            WHERE id = 0""".format(
-                io_status.get_output().replace('\'', '\'\'')))
-        current_status = io_status.get_output()
+            WHERE id = 0""".format(current_status.replace('\'', '\'\'')))
         log_stdout('HOMPI', 'output: ' + current_status.replace('\n', ''))
         if config.ENABLE_HASS_INTEGRATION:
             hass.publish_status(io_status, io_system, ambient)
