@@ -138,13 +138,11 @@ def main():
                 sensor.hompi_ext_sensors_refresh(io_status.hompi_ext_sensors)
 
             # update I/O: meteo
-            if secs_elapsed >= task_at_secs['get_meteo'] \
-                    and config.MODULE_METEO:
+            if secs_elapsed >= task_at_secs['get_meteo'] and config.MODULE_METEO:
                 meteo()
 
             # aphorism
-            if secs_elapsed >= task_at_secs['get_aphorism'] \
-                    and config.MODULE_APHORISM:
+            if secs_elapsed >= task_at_secs['get_aphorism'] and config.MODULE_APHORISM:
                 aphorism()
 
             # re-sync things
@@ -158,26 +156,23 @@ def main():
                 if config.MODULE_TEMP and temp_avg_sum == 0:
                     temp_avg_accu = temp_avg_counter = 0.0
                     io_status.int_temp_c = 0.0
+
+            # get temperature
+            if (secs_elapsed >= task_at_secs['get_temp']) and config.MODULE_TEMP:
+                get_temperature()
+
+            # update temperature
+            if (secs_elapsed >= task_at_secs['update_temp']):
+                # save new temperature (if valid)
+                if temp_avg_sum != 0:
+                    io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 2)
+                # reset temp sampling
+                temp_avg_accu = temp_avg_counter = temp_avg_sum = 0
             # OPERATIONS NOT DONE ON REFRESH - END
 
             # update I/O (ack occurring here gets ambient control)
             if secs_elapsed >= task_at_secs['update_io'] or refreshing:
                 process_input()
-
-            # get temperature
-            if (secs_elapsed >= task_at_secs[
-                    'get_temp'] or refreshing) and config.MODULE_TEMP:
-                get_temperature()
-
-            # update temperature
-            if (secs_elapsed >= task_at_secs[
-                    'update_temp'] or refreshing):
-                # save new temperature (if valid)
-                if temp_avg_sum != 0:
-                    io_status.int_temp_c = \
-                        round(temp_avg_accu / temp_avg_sum, 2)
-                # reset temp sampling
-                temp_avg_accu = temp_avg_counter = temp_avg_sum = 0
 
             # refresh program
             if secs_elapsed >= task_at_secs['refresh'] or refreshing:
@@ -187,14 +182,11 @@ def main():
             is_status_changed |= compute_status()
 
             # update I/O: output
-            if secs_elapsed >= task_at_secs['update_io'] or \
-                    refreshing or is_status_changed:
+            if secs_elapsed >= task_at_secs['update_io'] or is_status_changed:
                 update_output()
 
             # log data (check task_at_mins)
-            if (datetime.datetime.now().minute == task_at_mins[
-                'log'] or refreshing) \
-                    and log_temp_avg_sum > 0:
+            if (datetime.datetime.now().minute == task_at_mins['log'] or refreshing) and log_temp_avg_sum > 0:
                 io_status.int_temp_c = round(
                     log_temp_avg_accu / log_temp_avg_sum, 2)
                 log_temp_avg_accu = log_temp_avg_counter = log_temp_avg_sum = 0
