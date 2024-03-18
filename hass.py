@@ -115,10 +115,10 @@ def publish_status(io_status, io_system, ambient):
 
     entity_id = None
     try:
+        headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
         for entity in hass_entities:
             entity_id = entity["entity_id"]
             url = config.HASS_SERVER + STATUS_ENTITY_API_URL + entity_id
-            headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
 
             if datetime.now() >= next_publish:
                 response = post(url, headers=headers, json=entity["data"], verify=config.HASS_CHECK_SSL_CERT)
