@@ -758,6 +758,7 @@ def process_input():
 
 
 def show_message(lcd_message, telegram_message=""):
+    log_stdout('HOMPI', 'message: [{}] - {}'.format(lcd_message, telegram_message), LOG_INFO)
     if config.ENABLE_TELEGRAM:
         if telegram_message == "":
             telegram_message = lcd_message
