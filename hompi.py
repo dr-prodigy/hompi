@@ -288,7 +288,6 @@ def init():
         io_status.ext_temp_c = 6.0
         io_status.req_temp_desc = 'Economy'
         io_status.heating_status = 'off'
-        io_status.gate_status = False
         temp = TEST_INIT_TEMP
 
     initial_time = datetime.datetime.now()
