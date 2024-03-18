@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-import config
 
-DEBUG_LOG = config.VERBOSE_LOG
+from utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
 
 # stubs
 BOARD = 1
@@ -11,45 +10,35 @@ HIGH = 'HIGH'
 LOW = 'LOW'
 BCM = 'BCM'
 
-
 def setmode(a):
-    if DEBUG_LOG:
-        print('GPIO.setmode {}'.format(a))
+    log_stdout('GPIO', 'setmode {}'.format(a), LOG_GPIO)
 
 
 def setup(a, b):
-    if DEBUG_LOG:
-        print('GPIO.setup {},{}'.format(a, b))
+    log_stdout('GPIO', 'setup {},{}'.format(a, b), LOG_GPIO)
 
 
 def output(a, b):
-    if DEBUG_LOG:
-        print('GPIO.output {},{}'.format(a, b))
+    log_stdout('GPIO', 'output {},{}'.format(a, b), LOG_GPIO)
 
 
 def cleanup():
-    if DEBUG_LOG:
-        print('GPIO.cleanup')
+    log_stdout('GPIO', 'cleanup', LOG_GPIO)
 
 
 def setwarnings(flag):
-    if DEBUG_LOG:
-        print('GPIO.setwarnings {}'.format(flag))
+    log_stdout('GPIO', 'setwarnings {}'.format(flag), LOG_GPIO)
 
 
 class PWM():
     def __init__(self, a, b):
-        if DEBUG_LOG:
-            print('__GPIO.PWM__ {}'.format(a, b))
+        log_stdout('GPIO', '__PWM__ {}'.format(a, b), LOG_GPIO)
 
     def start(self, a):
-        if DEBUG_LOG:
-            print('GPIO.PWM.start {}'.format(a))
+        log_stdout('GPIO', 'PWM.start {}'.format(a), LOG_GPIO)
 
     def ChangeFrequency(self, a):
-        if DEBUG_LOG:
-            print('GPIO.PWM.ChangeFrequency {}'.format(a))
+        log_stdout('GPIO', 'PWM.ChangeFrequency {}'.format(a), LOG_GPIO)
 
     def ChangeDutyCycle(self, a):
-        if DEBUG_LOG:
-            print('GPIO.PWM.ChangeDutyCycle {}'.format(a))
+        log_stdout('GPIO', 'PWM.ChangeDutyCycle {}'.format(a), LOG_GPIO)

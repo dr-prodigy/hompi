@@ -29,13 +29,13 @@ import time
 import datetime
 import dateutil.parser
 
-from utils import log_stdout, log_stderr
+from utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
 
 # GPIO import
 try:
     import RPi.GPIO as GPIO
 except ImportError:
-    log_stdout('SENSORS', 'WARN: RPi.GPIO missing - loading stub library')
+    log_stdout('SENSORS', 'WARN: RPi.GPIO missing - loading stub library', LOG_WARN)
     import stubs.RPi.GPIO as GPIO
 
 import config
@@ -44,7 +44,7 @@ if config.MODULE_TEMP and config.HEATING_GPIO:
     try:
         HEATING_GPIO = int(config.HEATING_GPIO)
     except Exception:
-        log_stdout('SENSORS', 'WARN: config.HEATING_GPIO missing or wrong, defaulting to 17')
+        log_stdout('SENSORS', 'WARN: config.HEATING_GPIO missing or wrong, defaulting to 17', LOG_WARN)
         HEATING_GPIO = 17
 
 reader = codecs.getreader("utf-8")

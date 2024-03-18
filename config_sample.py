@@ -19,6 +19,8 @@
 
 # **** Copy me to config.py and modify me as needed ****
 
+from utils import LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+
 # ROOM NAME
 HOMPI_ID = 'Living'
 # HOMPI_SERVERS = ['http://hompi2_ip:5000','http://hompi3_ip:5000',]
@@ -67,7 +69,7 @@ LED_RIGHT_TO_LEFT = False
 
 # DEBUGGING
 TEST_MODE = 1
-VERBOSE_LOG = False
+LOG_LEVEL = LOG_DEBUG
 
 # VARIOUS SETTINGS
 HEATING_THRESHOLD = .05

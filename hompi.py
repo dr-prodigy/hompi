@@ -40,7 +40,8 @@ import random
 import socket
 
 from tendo import singleton
-from utils import log_stdout, log_stderr, os_async_command
+from utils import os_async_command
+from utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
 
 io_status = io_data.Status()
 io_system = io_data.SystemInfo()
@@ -68,10 +69,10 @@ try:
     if config.HOLIDAYS_COUNTRY:
         holiday_list = holidays.country_holidays(config.HOLIDAYS_COUNTRY)
     else:
-        log_stdout("*HOMPI* WARN: config.HOLIDAYS_COUNTRY missing, defaulting to IT")
+        log_stdout("HOMPI", "WARN: config.HOLIDAYS_COUNTRY missing, defaulting to IT", LOG_WARN)
         holiday_list = holidays.IT()
 except Exception:
-    log_stdout("*HOMPI* WARN: config.HOLIDAYS_COUNTRY missing or wrong, defaulting to IT")
+    log_stdout("HOMPI", "WARN: config.HOLIDAYS_COUNTRY missing, defaulting to IT", LOG_WARN)
     holiday_list = holidays.IT()
 
 task_every_secs = {
@@ -455,7 +456,7 @@ def sighup_handler(signal, frame):
 
 
 def sigterm_handler(signal, frame):
-    log_stdout('HOMPI', 'got SIGTERM - exiting.')
+    log_stdout('HOMPI', 'got SIGTERM - exiting.', LOG_INFO)
     log_data('stop')
     sys.exit(0)
 
@@ -773,7 +774,7 @@ def say(message, say_status = False):
         message = 'HOMPI - ' + message \
             + (' - ' + io_status.get_status_text() if say_status else '')
         command = config.SPEECH_COMMAND.format(message) + ' &'
-        log_stdout('HOMPI', 'saying: {}'.format(message))
+        log_stdout('HOMPI', 'saying: {}'.format(message), LOG_INFO)
         os.system(command)
 
 
@@ -793,7 +794,7 @@ def log_data(event):
             event = "'{}'".format(event.replace('\'', '\'\''))
 
         if not description:
-            if config.VERBOSE_LOG:
+            if config.TEST_MODE:
                 description = "'{}'".format(
                     io_status.get_output().replace('\'', '\'\''))
             else:

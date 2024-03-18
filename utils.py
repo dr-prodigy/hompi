@@ -22,8 +22,14 @@ import sys
 import datetime
 import config
 
-def log_stdout(module, data):
-    if config.VERBOSE_LOG:
+LOG_GPIO = 0
+LOG_DEBUG = 1
+LOG_INFO = 2
+LOG_WARN = 3
+LOG_ERROR = 4
+
+def log_stdout(module, data, log_level=LOG_DEBUG):
+    if log_level >= config.LOG_LEVEL:
         sys.stdout.write("*{}* - {}\n".format(module, data))
 
 def log_stderr(data):
