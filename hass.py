@@ -49,7 +49,7 @@ HOMPI_AMBIENT_EFFECT_ICON = "mdi:palette"
 old_entity = {}
 
 def publish_status(io_status, io_system, ambient):
-    global next_publish
+    global next_publish, old_entity
     hass_entities = []
 
     if old_entity.get("hompi_id") != io_status.id:
@@ -155,5 +155,6 @@ def publish_status(io_status, io_system, ambient):
                 log_stdout('HASS', 'PUBLISH ({}): {}'.format(entity_id, response.text))
     except Exception as e:
         log_stderr('*HASS* ERR: PUBLISH ({}): {}'.format(entity_id, e))
-        # exit and delay next publish for 60 secs
+        # cleanup old_entity, exit and delay next publish for 60 secs
+        old_entity = {}
         next_publish = datetime.now() + timedelta(seconds=60)
