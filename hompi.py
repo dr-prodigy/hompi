@@ -93,11 +93,10 @@ task_every_mins = {
 task_at_secs = {}
 task_at_mins = {}
 
-refreshing = True
-
+sighup_refresh = True
 
 def main():
-    global sig_command, refreshing, is_status_changed, is_program_changed, lcd
+    global sig_command, sighup_refresh, is_status_changed, is_program_changed, lcd
     global initial_time
     global temp, temp_avg_accu, temp_avg_counter, temp_avg_sum
     global log_temp_avg_accu, log_temp_avg_counter, log_temp_avg_sum
@@ -129,7 +128,7 @@ def main():
             if (io_status.req_end_time == current_time and
                     last_update_min != datetime.datetime.today().minute):
                 last_update_min = datetime.datetime.today().minute
-                refreshing = True
+                sighup_refresh = True
 
             # OPERATIONS NOT DONE ON REFRESH - START
             # update external hompis / sensors
@@ -171,26 +170,26 @@ def main():
             # OPERATIONS NOT DONE ON REFRESH - END
 
             # update I/O (ack occurring here gets ambient control)
-            if secs_elapsed >= task_at_secs['update_io'] or refreshing:
+            if secs_elapsed >= task_at_secs['update_io'] or sighup_refresh:
                 process_input()
 
             # refresh program
-            if secs_elapsed >= task_at_secs['refresh'] or refreshing:
+            if secs_elapsed >= task_at_secs['refresh'] or sighup_refresh:
                 refresh_program(current_time)
 
             # compute status (heating, switches, ...)
             is_status_changed |= compute_status()
 
             # update I/O: output
-            if secs_elapsed >= task_at_secs['update_io'] or is_status_changed:
+            if secs_elapsed >= task_at_secs['update_io'] or is_status_changed or sighup_refresh:
                 update_output()
 
             # log data (check task_at_mins)
-            if (datetime.datetime.now().minute == task_at_mins['log'] or refreshing) and log_temp_avg_sum > 0:
+            if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
                 io_status.int_temp_c = round(
                     log_temp_avg_accu / log_temp_avg_sum, 2)
                 log_temp_avg_accu = log_temp_avg_counter = log_temp_avg_sum = 0
-                log_data('refreshing' if refreshing else '.')
+                log_data('refreshing' if sighup_refresh else '.')
 
             # update LCD message (NOT ON REFRESH)
             if secs_elapsed >= task_at_secs['update_lcd_content']:
@@ -212,7 +211,7 @@ def main():
                 say('', say_status=True)
 
             # stop refreshing cycle, reset status and program change
-            refreshing = is_status_changed = is_program_changed = False
+            sighup_refresh = is_status_changed = is_program_changed = False
 
             # update scheduled tasks (skip any lost task)
             for task in task_every_secs.keys():
@@ -244,7 +243,7 @@ def main():
 
                 if sig_command:
                     sig_command = False
-                    refreshing = True
+                    sighup_refresh = True
 
             except (KeyboardInterrupt, SystemExit):
                 # cleanup sensors & LCD
