@@ -69,6 +69,9 @@ def publish_status(io_status, io_system, ambient):
     if io_status.req_temp_desc != "Off":
         target = "{} ({} °C) until h. {:0>5.2f}".format(io_status.req_temp_desc, io_status.req_temp_c,
                                                         io_status.req_end_time / 100)
+    else:
+        target = io_status.req_temp_desc
+
     if old_entity.get("hompi_target") != target:
         old_entity["hompi_target"] = target
         hass_entities.append(
