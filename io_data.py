@@ -43,6 +43,8 @@ class Status:
         # heating
         if config.MODULE_TEMP:
             self.int_temp_c = 0.0
+        if config.MODULE_TRV:
+            self.trv_status = {}
         self.mode_id = ''
         self.mode_desc = ''
         self.short_mode_desc = ''

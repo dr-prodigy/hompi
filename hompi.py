@@ -183,6 +183,9 @@ def main():
             # update I/O: output
             if secs_elapsed >= task_at_secs['update_io'] or is_status_changed or sighup_refresh:
                 update_output()
+                if config.MODULE_TRV:
+                    # TODO: update TRV
+                    pass
 
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
@@ -384,12 +387,17 @@ def compute_status():
         slave_heating_on |= slave['heating_status'] == 'warming' or slave[
             'heating_status'] == 'on'
 
+    trv_heating_on = False
+    for trv in io_status.trv_status.items():
+        trv_heating_on |= trv[1]['cur_temp_c'] < trv[1]['req_temp_c']
+
     if io_status.int_temp_c:
         last_change = dateutil.parser.parse(io_status.last_change)
         # print(current_time - last_change).total_seconds()
 
         if io_status.req_temp_c - io_status.int_temp_c >= \
-                config.HEATING_THRESHOLD or slave_heating_on:
+                config.HEATING_THRESHOLD or slave_heating_on or \
+                trv_heating_on:
             if io_status.heating_status == 'off' or \
                     io_status.heating_status == 'cooling':
                 # log_data('heating ON')
@@ -490,7 +498,7 @@ def refresh_program(time_):
     row = dbmgr.query(
         """SELECT
             tdata.orderby, tdtype.description, time_hhmm, delta_calc_mm,
-            temp.description, temp_c
+            temp.description, temp_c, tdtype.id
         FROM gm_timetable_day_type AS tdtype
         INNER JOIN gm_timetable_type_data AS tdata
             ON tdata.day_type_id = tdtype.id
@@ -514,6 +522,24 @@ def refresh_program(time_):
         log_stdout('HOMPI', 'Day: {}({:02d}:{:02d}) - Temp({}): {:.2f}°'.format(
             row[1], datetime.datetime.today().hour,
             datetime.datetime.today().minute, row[4], row[5]))
+
+        if config.MODULE_TRV:
+            # get required TRV updates (NULL trv_id => update all TRVs)
+            rows = dbmgr.query(
+                """SELECT DISTINCT trv.friendly_name, temp.description, temp_c
+                    FROM gm_timetable_type_data_trv AS tdata_trv
+                    INNER JOIN gm_trv AS trv
+                        ON (trv.id = tdata_trv.trv_id OR tdata_trv.trv_id IS NULL)
+                    INNER JOIN gm_temp AS temp
+                        ON temp.id = tdata_trv.temp_id
+                    WHERE timetable_type_data_id = {:d}
+                    ORDER BY trv.id""".format(day_type)
+            ).fetchall()
+            if rows:
+                # add TRV updates
+                io_status.trv_status.clear()
+                for row in rows:
+                    io_status.trv_status[row[0]] = { "req_temp_c": row[2], "cur_temp_c" : 999 }
 
         # get next change
         row = dbmgr.query(
