@@ -167,6 +167,7 @@ def main():
                     io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 2)
                 # reset temp sampling
                 temp_avg_accu = temp_avg_counter = temp_avg_sum = 0
+                # TODO: get TRV temperatures
             # OPERATIONS NOT DONE ON REFRESH - END
 
             # update I/O (ack occurring here gets ambient control)
