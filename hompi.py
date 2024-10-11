@@ -36,6 +36,7 @@ import dashboard
 import resources
 import ambient
 import random
+import mqtt
 
 import socket
 
@@ -181,12 +182,11 @@ def main():
             # compute status (heating, switches, ...)
             is_status_changed |= compute_status()
 
-            # update I/O: output
+            # update I/O: output and TRV
             if secs_elapsed >= task_at_secs['update_io'] or is_status_changed or sighup_refresh:
                 update_output()
                 if config.MODULE_TRV:
-                    # TODO: update TRV
-                    pass
+                    mqtt.update_trv(io_status, io_system)
 
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
@@ -396,9 +396,8 @@ def compute_status():
         last_change = dateutil.parser.parse(io_status.last_change)
         # print(current_time - last_change).total_seconds()
 
-        if io_status.req_temp_c - io_status.int_temp_c >= \
-                config.HEATING_THRESHOLD or slave_heating_on or \
-                trv_heating_on:
+        if io_status.req_temp_c - io_status.int_temp_c >= config.HEATING_THRESHOLD \
+                or slave_heating_on or trv_heating_on:
             if io_status.heating_status == 'off' or \
                     io_status.heating_status == 'cooling':
                 # log_data('heating ON')
@@ -527,7 +526,7 @@ def refresh_program(time_):
         if config.MODULE_TRV:
             # get required TRV updates (NULL trv_id => update all TRVs)
             rows = dbmgr.query(
-                """SELECT DISTINCT trv.friendly_name, temp.description, temp_c
+                """SELECT DISTINCT trv.friendly_name, trv.calibration, temp_c, temp.description
                     FROM gm_timetable_type_data_trv AS tdata_trv
                     INNER JOIN gm_trv AS trv
                         ON (trv.id = tdata_trv.trv_id OR tdata_trv.trv_id IS NULL)
@@ -540,7 +539,10 @@ def refresh_program(time_):
                 # add TRV updates
                 io_status.trv_status.clear()
                 for row in rows:
-                    io_status.trv_status[row[0]] = { "req_temp_c": row[2], "cur_temp_c" : 999 }
+                    published = row[0] in io_status.trv_status.keys() \
+                        and io_status.trv_status[row[0]]["req_temp_c"] == row[2]
+                    io_status.trv_status[row[0]] = \
+                        { "req_temp_c": row[2], "cur_temp_c": 999, "calibration": row[1], "published": published }
 
         # get next change
         row = dbmgr.query(

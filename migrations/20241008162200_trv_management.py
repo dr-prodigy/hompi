@@ -10,7 +10,8 @@ def upgrade(connection):
     sql = """
         CREATE TABLE `gm_trv` (
             `id` INTEGER PRIMARY KEY AUTOINCREMENT,
-            `friendly_name` TEXT NOT NULL )
+            `friendly_name` TEXT NOT NULL,
+            `calibration` INTEGER NOT NULL DEFAULT 0 )
     """
     connection.execute(sql)
     connection.commit()
@@ -29,7 +30,9 @@ def upgrade(connection):
     connection.commit()
 
     sql = """
-        INSERT INTO `gm_trv` (`id`, `friendly_name`) VALUES (1, 'test-trv')
+        INSERT INTO `gm_trv`
+            (`id`, `friendly_name`, `calibration`)
+        VALUES (1, 'test-trv', -2)
     """
     connection.execute(sql)
     connection.commit()
