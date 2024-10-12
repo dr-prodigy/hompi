@@ -180,6 +180,10 @@ def main():
             if secs_elapsed >= task_at_secs['refresh'] or sighup_refresh:
                 refresh_program(current_time)
 
+            # start MQTT integration
+            if config.ENABLE_TRV_INTEGRATION:
+                mqtt.run(io_status)
+
             # compute status (heating, switches, ...)
             is_status_changed |= compute_status()
 
@@ -305,10 +309,6 @@ def init():
     # reset message
     io_status.reset_message()
 
-    # start MQTT integration
-    if config.ENABLE_TRV_INTEGRATION:
-        mqtt.run()
-
 
 def meteo():
     meteo_data = sensor.get_meteo()
@@ -397,7 +397,7 @@ def compute_status():
             'heating_status'] == 'on'
 
     trv_heating_on = False
-    for trv in io_status.trv_status.items():
+    for trv in io_status.areas.items():
         trv_heating_on |= trv[1]['cur_temp_c'] < trv[1]['req_temp_c']
 
     if io_status.int_temp_c:
@@ -534,7 +534,7 @@ def refresh_program(time_):
         if config.ENABLE_TRV_INTEGRATION:
             # get required TRV updates (NULL trv_id => update all TRVs)
             rows = dbmgr.query(
-                """SELECT DISTINCT area.id,
+                """SELECT DISTINCT area.id, area.area_name,
                         area.mqtt_temp_name, area.mqtt_temp_payload_regex, area.temp_calibration,
                         area.mqtt_trv_name, area.mqtt_trv_publish_payload,
                         temp.temp_c
@@ -548,14 +548,14 @@ def refresh_program(time_):
             ).fetchall()
             if rows:
                 # add TRV updates
-                io_status.trv_status.clear()
+                io_status.areas.clear()
                 for row in rows:
-                    published = row[0] in io_status.trv_status.keys() \
-                        and io_status.trv_status[row[0]]["req_temp_c"] == row[2]
-                    io_status.trv_status[row[0]] = \
-                        {"mqtt_temp_name": row[1], "mqtt_temp_payload_regex": row[2],
-                         "temp_calibration": row[3], "mqtt_trv_name": row[4],
-                         "mqtt_trv_publish_payload": row[5], "req_temp_c": row[6],
+                    published = row[0] in io_status.areas.keys() \
+                                and io_status.areas[row[0]]["req_temp_c"] == row[7]
+                    io_status.areas[row[0]] = {"area": row[1],
+                         "mqtt_temp_name": row[2], "mqtt_temp_payload_regex": row[3],
+                         "temp_calibration": row[4], "mqtt_trv_name": row[5],
+                         "mqtt_trv_publish_payload": row[6], "req_temp_c": row[7],
                          "cur_temp_c": 999, "published": published }
 
         # get next change

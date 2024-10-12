@@ -44,7 +44,7 @@ class Status:
         if config.MODULE_TEMP:
             self.int_temp_c = 0.0
         if config.ENABLE_TRV_INTEGRATION:
-            self.trv_status = {}
+            self.areas = {}
         self.mode_id = ''
         self.mode_desc = ''
         self.short_mode_desc = ''
