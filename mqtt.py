@@ -64,8 +64,8 @@ class MQTT:
         for trv in io_status.trv_status:  # type: ignore
             current_trv = io_status.trv_status[trv]
             if not current_trv["published"]:
-                log_stdout("MQTT", "{}: req_temp_c = {}, calibration = {}".
-                           format(trv, current_trv["req_temp_c"], current_trv["calibration"]),
+                log_stdout("MQTT", "{}: req_temp_c = {}, temp_calibration = {}".
+                           format(trv, current_trv["req_temp_c"], current_trv["temp_calibration"]),
                            LOG_INFO)
                 try:
                     # TODO: do update

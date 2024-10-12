@@ -186,7 +186,7 @@ def main():
             # update I/O: output and TRV
             if secs_elapsed >= task_at_secs['update_io'] or is_status_changed or sighup_refresh:
                 update_output()
-                if config.MODULE_TRV:
+                if config.ENABLE_TRV_INTEGRATION:
                     mqtt.update_trv(io_status)
 
             # log data (check task_at_mins)
@@ -257,7 +257,7 @@ def main():
                 ambient.reset()
                 io_status.set_ambient(ambient)
                 # start MQTT integration
-                if config.MODULE_TRV:
+                if config.ENABLE_TRV_INTEGRATION:
                     mqtt.cleanup()
                 raise
             except Exception:
@@ -306,7 +306,7 @@ def init():
     io_status.reset_message()
 
     # start MQTT integration
-    if config.MODULE_TRV:
+    if config.ENABLE_TRV_INTEGRATION:
         mqtt.run()
 
 
@@ -531,17 +531,20 @@ def refresh_program(time_):
             row[1], datetime.datetime.today().hour,
             datetime.datetime.today().minute, row[4], row[5]))
 
-        if config.MODULE_TRV:
+        if config.ENABLE_TRV_INTEGRATION:
             # get required TRV updates (NULL trv_id => update all TRVs)
             rows = dbmgr.query(
-                """SELECT DISTINCT trv.friendly_name, trv.calibration, temp_c, temp.description
-                    FROM gm_timetable_type_data_trv AS tdata_trv
-                    INNER JOIN gm_trv AS trv
-                        ON (trv.id = tdata_trv.trv_id OR tdata_trv.trv_id IS NULL)
+                """SELECT DISTINCT area.id,
+                        area.mqtt_temp_name, area.mqtt_temp_payload_regex, area.temp_calibration,
+                        area.mqtt_trv_name, area.mqtt_trv_publish_payload,
+                        temp.temp_c
+                    FROM gm_timetable_type_data_area AS tdata_area
+                    INNER JOIN gm_area AS area
+                        ON (area.id = tdata_area.area_id OR tdata_area.area_id IS NULL)
                     INNER JOIN gm_temp AS temp
-                        ON temp.id = tdata_trv.temp_id
+                        ON temp.id = tdata_area.temp_id
                     WHERE timetable_type_data_id = {:d}
-                    ORDER BY trv.id""".format(day_type)
+                    ORDER BY area.id""".format(day_type)
             ).fetchall()
             if rows:
                 # add TRV updates
@@ -550,7 +553,10 @@ def refresh_program(time_):
                     published = row[0] in io_status.trv_status.keys() \
                         and io_status.trv_status[row[0]]["req_temp_c"] == row[2]
                     io_status.trv_status[row[0]] = \
-                        { "req_temp_c": row[2], "cur_temp_c": 999, "calibration": row[1], "published": published }
+                        {"mqtt_temp_name": row[1], "mqtt_temp_payload_regex": row[2],
+                         "temp_calibration": row[3], "mqtt_trv_name": row[4],
+                         "mqtt_trv_publish_payload": row[5], "req_temp_c": row[6],
+                         "cur_temp_c": 999, "published": published }
 
         # get next change
         row = dbmgr.query(
