@@ -49,6 +49,7 @@ io_system = io_data.SystemInfo()
 sensor = sensors.Sensors()
 lcd = dashboard.Dashboard()
 ambient = ambient.Ambient()
+mqtt = mqtt.MQTT()
 
 TEST_INIT_TEMP = 20.0
 TEST_DELTA_EXT_INT_FACTOR = .001
@@ -186,7 +187,7 @@ def main():
             if secs_elapsed >= task_at_secs['update_io'] or is_status_changed or sighup_refresh:
                 update_output()
                 if config.MODULE_TRV:
-                    mqtt.update_trv(io_status, io_system)
+                    mqtt.update_trv(io_status)
 
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
@@ -255,6 +256,9 @@ def main():
                 lcd.cleanup()
                 ambient.reset()
                 io_status.set_ambient(ambient)
+                # start MQTT integration
+                if config.MODULE_TRV:
+                    mqtt.cleanup()
                 raise
             except Exception:
                 # LCD I/O error: refresh LCD screen
@@ -300,6 +304,10 @@ def init():
 
     # reset message
     io_status.reset_message()
+
+    # start MQTT integration
+    if config.MODULE_TRV:
+        mqtt.run()
 
 
 def meteo():

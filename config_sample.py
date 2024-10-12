@@ -44,6 +44,10 @@ HASS_SERVER = 'http://localhost:8123/'
 HASS_CHECK_SSL_CERT = False
 HASS_TOKEN = 'abc123'
 
+MQTT_BROKER = '192.168.76.10'
+MQTT_PORT = 1883
+MQTT_BASE_TOPIC = 'zigbee2mqtt'
+
 # LCD modes : NONE = 0, GPIO_CharLCD = 1, I2C = 2
 MODULE_LCD = 2
 I2C_BUS = 1  # i2c bus (0 -- original Pi, 1 -- Rev 2 Pi)
