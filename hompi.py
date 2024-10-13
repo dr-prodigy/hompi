@@ -397,8 +397,8 @@ def compute_status():
             'heating_status'] == 'on'
 
     trv_heating_on = False
-    for area in io_status.areas.items():
-        trv_heating_on |= area[1]['cur_temp_c'] < area[1]['req_temp_c']
+    for area in io_status.areas.values():
+        trv_heating_on |= area['cur_temp_c'] < area['req_temp_c']
 
     if io_status.int_temp_c:
         last_change = dateutil.parser.parse(io_status.last_change)
@@ -555,14 +555,14 @@ def refresh_program(time_):
                 area["mqtt_temp_name"] = row[2]
                 area["temp_calibration"] = row[4]
                 area["mqtt_trv_name"] = row[5]
-                area["req_temp_c"] = row[7]
-                published = io_status.areas[row[0]]["req_temp_c"] == row[7]
+                req_temp_c = float(row[7])
+                area["published"] = ("req_temp_c" in area.keys() and area["req_temp_c"] == req_temp_c)
+                area["req_temp_c"] = req_temp_c
                 if not "cur_temp_c" in area.keys():
                     area["cur_temp_c"] = 999
-                area["published"] = published
                 area["last_update"] = datetime.datetime.now().isoformat()
                 # MQTT subscription
-                mqtt.subscribe(row[0], row[1], row[2], row[3], row[4])
+                mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
 
         # get next change
         row = dbmgr.query(

@@ -27,7 +27,7 @@ class MQTT:
     def __init__(self):
         self.__running = False
         self.__client = self.__connect_mqtt()
-        self.__decoders = {}
+        self.__areas = {}
         self.__io_status = None
 
     @staticmethod
@@ -36,18 +36,18 @@ class MQTT:
             if flags.session_present:
                 pass
             if rc == 0:
-                log_stdout("MQTT", "Connected to MQTT broker {}:{}"
+                log_stdout('MQTT', 'Connected to MQTT broker {}:{}'
                            .format(config.MQTT_BROKER, config.MQTT_PORT), LOG_INFO)
             else:
-                log_stderr("Failed to connect, return code {}\n".format(rc))
+                log_stderr('Failed to connect, return code {}\n'.format(rc))
 
         def on_disconnect(client, userdata, flags, rc, properties):
             if rc == 0:
                 # success disconnect
-                log_stdout("MQTT", "Disconnect OK", LOG_INFO)
+                log_stdout('MQTT', 'Disconnect OK', LOG_INFO)
             else:
                 # error processing
-                log_stderr("Failed to disconnect, return code {}\n".format(rc))
+                log_stderr('Failed to disconnect, return code {}\n'.format(rc))
 
         client = mqtt_client.Client(CallbackAPIVersion.VERSION2)
         # client.username_pw_set(username, password)
@@ -56,47 +56,63 @@ class MQTT:
         client.connect(config.MQTT_BROKER, config.MQTT_PORT)
         return client
 
+    def __publish(self, area_id, req_temp_c, calibration):
+        def on_publish(client, userdata, result):
+            print("data published \n")
+            pass
+
+        area = self.__areas[area_id]
+        if area['mqtt_trv_name']:
+            topic = '{}/{}'.format(config.MQTT_BASE_TOPIC, area['mqtt_trv_name'])
+            payload = (area['mqtt_trv_publish_payload']
+                      .replace('**TEMP**', str(req_temp_c))
+                      .replace('**TEMP_CAL**', str(calibration)))
+            self.__client.on_publish = on_publish
+            self.__client.publish(topic, payload)
+            log_stdout('MQTT', 'Publishing to {}: {}'.
+                       format(topic, payload, LOG_INFO))
+
     def update_areas(self):
-        for area in self.__io_status.areas.values():  # type: ignore
-            if not area["published"]:
-                log_stdout("MQTT", "{}: req_temp_c = {}, temp_calibration = {}".
-                           format(area["area"], area["req_temp_c"], area["temp_calibration"]),
-                           LOG_INFO)
-                try:
-                    # TODO: do update
-                    area["published"] = True
-                except Exception as e:
-                    log_stderr('MQTT ERR: UPDATE_TRV ({}): {}'.format(area, e))
+        for area_id in self.__io_status.areas.keys():
+            area = self.__io_status.areas[area_id]
+            if not area['published']:
+                self.__publish(area_id, area['req_temp_c'], area['temp_calibration'])
+                area['published'] = True
 
-    def subscribe(self, area_id, area_name, mqtt_name, decoding_regex, calibration):
+    def subscribe(self, area_id, area_name,
+                  mqtt_name, decoding_regex, calibration,
+                  mqtt_trv_name, mqtt_trv_publish_payload):
         def on_message(client, userdata, msg):
-            log_stdout("MQTT", "Message: {}".format(msg.payload.decode()), LOG_INFO)
-            mqtt_name = self.__decoders[msg.topic]["mqtt_name"]
-            regex = self.__decoders[msg.topic]["decoding_regex"]
-            calibration = self.__decoders[msg.topic]["calibration"]
-            result = re.search(regex, msg.payload.decode())
-            if result:
-                cur_temp = float(result.group(1)) + calibration
-                log_stdout("MQTT", "Update from {} - cur_temp: {}".format(mqtt_name, cur_temp))
-                for area in self.__io_status.areas.values():
-                    if area["mqtt_temp_name"] == mqtt_name:
-                        area["cur_temp_c"] = cur_temp
+            log_stdout('MQTT', 'Message: {}'.format(msg.payload.decode()), LOG_INFO)
+            for area_id in self.__areas.keys():
+                decoder = self.__areas[area_id]
+                if decoder['topic'] == msg.topic:
+                    mqtt_name = decoder['mqtt_name']
+                    regex = decoder['decoding_regex']
+                    calibration = decoder['calibration']
+                    result = re.search(regex, msg.payload.decode())
+                    if result:
+                        cur_temp = float(result.group(1)) + calibration
+                        log_stdout('MQTT', 'Update from {} - cur_temp: {}'.format(mqtt_name, cur_temp))
+                        self.__io_status.areas[area_id]['cur_temp_c'] = cur_temp
 
-        topic = "{}/{}".format(config.MQTT_BASE_TOPIC, mqtt_name)
-        self.__decoders[topic] = \
-            { "area_id": area_id, "mqtt_name": mqtt_name, "decoding_regex": decoding_regex, "calibration": calibration }
+        topic = '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_name)
+        self.__areas[area_id] = \
+            { 'topic': topic,
+              'mqtt_name': mqtt_name, 'decoding_regex': decoding_regex, 'calibration': calibration,
+              'mqtt_trv_name': mqtt_trv_name, 'mqtt_trv_publish_payload': mqtt_trv_publish_payload }
         self.__client.subscribe(topic)
         self.__client.on_message = on_message
-        log_stdout("MQTT", "Area {}: subscribed to {}".format(area_name, topic), LOG_INFO)
+        log_stdout('MQTT', 'Area {}: subscribed to {}'.format(area_name, topic), LOG_INFO)
 
     def run(self, io_status):
         if not self.__running:
             self.__running = True
             self.__io_status = io_status
             self.__client.loop_start()
-            log_stdout("MQTT", "Loop started", LOG_INFO)
+            log_stdout('MQTT', 'Loop started', LOG_INFO)
 
     def cleanup(self):
-        log_stdout("MQTT", "cleanup", LOG_INFO)
+        log_stdout('MQTT', 'cleanup', LOG_INFO)
         self.__client.loop_stop()
-        self.__decoders.clear()
+        self.__areas.clear()
