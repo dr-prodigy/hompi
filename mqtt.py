@@ -25,8 +25,10 @@ from paho.mqtt.enums import CallbackAPIVersion
 
 class MQTT:
     def __init__(self):
-        self.__client = None
         self.__running = False
+        self.__client = self.__connect_mqtt()
+        self.__decoders = {}
+        self.__io_status = None
 
     @staticmethod
     def __connect_mqtt() -> mqtt_client:
@@ -54,39 +56,47 @@ class MQTT:
         client.connect(config.MQTT_BROKER, config.MQTT_PORT)
         return client
 
-    def update_trv(self, io_status):
-        for trv in io_status.areas:  # type: ignore
-            current_trv = io_status.areas[trv]
-            if not current_trv["published"]:
+    def update_areas(self):
+        for area in self.__io_status.areas.values():  # type: ignore
+            if not area["published"]:
                 log_stdout("MQTT", "{}: req_temp_c = {}, temp_calibration = {}".
-                           format(trv, current_trv["req_temp_c"], current_trv["temp_calibration"]),
+                           format(area["area"], area["req_temp_c"], area["temp_calibration"]),
                            LOG_INFO)
                 try:
                     # TODO: do update
-                    current_trv["published"] = True
+                    area["published"] = True
                 except Exception as e:
-                    log_stderr('MQTT ERR: UPDATE_TRV ({}): {}'.format(trv, e))
+                    log_stderr('MQTT ERR: UPDATE_TRV ({}): {}'.format(area, e))
+
+    def subscribe(self, area_id, area_name, mqtt_name, decoding_regex, calibration):
+        def on_message(client, userdata, msg):
+            log_stdout("MQTT", "Message: {}".format(msg.payload.decode()), LOG_INFO)
+            mqtt_name = self.__decoders[msg.topic]["mqtt_name"]
+            regex = self.__decoders[msg.topic]["decoding_regex"]
+            calibration = self.__decoders[msg.topic]["calibration"]
+            result = re.search(regex, msg.payload.decode())
+            if result:
+                cur_temp = float(result.group(1)) + calibration
+                log_stdout("MQTT", "Update from {} - cur_temp: {}".format(mqtt_name, cur_temp))
+                for area in self.__io_status.areas.values():
+                    if area["mqtt_temp_name"] == mqtt_name:
+                        area["cur_temp_c"] = cur_temp
+
+        topic = "{}/{}".format(config.MQTT_BASE_TOPIC, mqtt_name)
+        self.__decoders[topic] = \
+            { "area_id": area_id, "mqtt_name": mqtt_name, "decoding_regex": decoding_regex, "calibration": calibration }
+        self.__client.subscribe(topic)
+        self.__client.on_message = on_message
+        log_stdout("MQTT", "Area {}: subscribed to {}".format(area_name, topic), LOG_INFO)
 
     def run(self, io_status):
         if not self.__running:
-            def on_message(client, userdata, msg):
-                log_stdout("MQTT", "Message: {}".format(msg.payload.decode()), LOG_INFO)
-                cur_temp = None
-                result = re.search('"energy":([0-9.-]*),', msg.payload.decode())
-                if result:
-                    cur_temp = result.group(1)
-                log_stdout("MQTT", "Update from {} - cur_temp: {}".format(msg.topic, cur_temp))
-
-            self.__client = self.__connect_mqtt()
-            for area in io_status.areas.values():
-                area_name = area["area"]
-                topic = "{}/{}".format(config.MQTT_BASE_TOPIC, area["mqtt_temp_name"])
-                self.__client.subscribe(topic)
-                self.__client.on_message = on_message
-                log_stdout("MQTT", "Area {}: subscribed to {}".format(area_name, topic), LOG_INFO)
-
-            self.__client.loop_start()
             self.__running = True
+            self.__io_status = io_status
+            self.__client.loop_start()
+            log_stdout("MQTT", "Loop started", LOG_INFO)
 
     def cleanup(self):
+        log_stdout("MQTT", "cleanup", LOG_INFO)
         self.__client.loop_stop()
+        self.__decoders.clear()

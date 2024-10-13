@@ -187,11 +187,11 @@ def main():
             # compute status (heating, switches, ...)
             is_status_changed |= compute_status()
 
-            # update I/O: output and TRV
+            # update I/O: output and MQTT areas
             if secs_elapsed >= task_at_secs['update_io'] or is_status_changed or sighup_refresh:
                 update_output()
                 if config.ENABLE_TRV_INTEGRATION:
-                    mqtt.update_trv(io_status)
+                    mqtt.update_areas()
 
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
@@ -397,8 +397,8 @@ def compute_status():
             'heating_status'] == 'on'
 
     trv_heating_on = False
-    for trv in io_status.areas.items():
-        trv_heating_on |= trv[1]['cur_temp_c'] < trv[1]['req_temp_c']
+    for area in io_status.areas.items():
+        trv_heating_on |= area[1]['cur_temp_c'] < area[1]['req_temp_c']
 
     if io_status.int_temp_c:
         last_change = dateutil.parser.parse(io_status.last_change)
@@ -532,7 +532,7 @@ def refresh_program(time_):
             datetime.datetime.today().minute, row[4], row[5]))
 
         if config.ENABLE_TRV_INTEGRATION:
-            # get required TRV updates (NULL trv_id => update all TRVs)
+            # get current day_type MQTT integrations (NULL area_id => all areas)
             rows = dbmgr.query(
                 """SELECT DISTINCT area.id, area.area_name,
                         area.mqtt_temp_name, area.mqtt_temp_payload_regex, area.temp_calibration,
@@ -546,17 +546,23 @@ def refresh_program(time_):
                     WHERE timetable_type_data_id = {:d}
                     ORDER BY area.id""".format(day_type)
             ).fetchall()
-            if rows:
-                # add TRV updates
-                io_status.areas.clear()
-                for row in rows:
-                    published = row[0] in io_status.areas.keys() \
-                                and io_status.areas[row[0]]["req_temp_c"] == row[7]
-                    io_status.areas[row[0]] = {"area": row[1],
-                         "mqtt_temp_name": row[2], "mqtt_temp_payload_regex": row[3],
-                         "temp_calibration": row[4], "mqtt_trv_name": row[5],
-                         "mqtt_trv_publish_payload": row[6], "req_temp_c": row[7],
-                         "cur_temp_c": 999, "published": published }
+            # update io_status and MQTT subscriptions
+            for row in rows:
+                if row[0] not in io_status.areas:
+                    io_status.areas[row[0]] = {}
+                area = io_status.areas[row[0]]
+                area["area"] = row[1]
+                area["mqtt_temp_name"] = row[2]
+                area["temp_calibration"] = row[4]
+                area["mqtt_trv_name"] = row[5]
+                area["req_temp_c"] = row[7]
+                published = io_status.areas[row[0]]["req_temp_c"] == row[7]
+                if not "cur_temp_c" in area.keys():
+                    area["cur_temp_c"] = 999
+                area["published"] = published
+                area["last_update"] = datetime.datetime.now().isoformat()
+                # MQTT subscription
+                mqtt.subscribe(row[0], row[1], row[2], row[3], row[4])
 
         # get next change
         row = dbmgr.query(
