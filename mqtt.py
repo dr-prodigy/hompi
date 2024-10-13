@@ -57,17 +57,12 @@ class MQTT:
         return client
 
     def __publish(self, area_id, req_temp_c, calibration):
-        def on_publish(client, userdata, result):
-            print("data published \n")
-            pass
-
         area = self.__areas[area_id]
         if area['mqtt_trv_name']:
             topic = '{}/{}'.format(config.MQTT_BASE_TOPIC, area['mqtt_trv_name'])
             payload = (area['mqtt_trv_publish_payload']
                       .replace('**TEMP**', str(req_temp_c))
                       .replace('**TEMP_CAL**', str(calibration)))
-            self.__client.on_publish = on_publish
             self.__client.publish(topic, payload)
             log_stdout('MQTT', 'Publishing to {}: {}'.
                        format(topic, payload, LOG_INFO))
