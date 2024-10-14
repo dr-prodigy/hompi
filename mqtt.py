@@ -19,16 +19,19 @@
 import config
 import re
 
-from utils import LOG_INFO, log_stdout, log_stderr, LOG_DEBUG
+from utils import LOG_INFO, log_stdout, log_stderr
 from paho.mqtt import client as mqtt_client
 from paho.mqtt.enums import CallbackAPIVersion
 
 class MQTT:
     def __init__(self):
         self.__running = False
-        self.__client = self.__connect_mqtt()
         self.__areas = {}
-        self.__io_status = None
+        self.__io_status = self.__client = None
+        try:
+            self.__client = self.__connect_mqtt()
+        except Exception as e:
+            log_stderr('*MQTT* - Failed to connect: {}\n'.format(e))
 
     @staticmethod
     def __connect_mqtt() -> mqtt_client:
@@ -39,7 +42,7 @@ class MQTT:
                 log_stdout('MQTT', 'Connected to MQTT broker {}:{}'
                            .format(config.MQTT_BROKER, config.MQTT_PORT), LOG_INFO)
             else:
-                log_stderr('Failed to connect, return code {}\n'.format(rc))
+                log_stderr('*MQTT* - Failed to connect: return code {}\n'.format(rc))
 
         def on_disconnect(client, userdata, flags, rc, properties):
             if rc == 0:
@@ -47,7 +50,7 @@ class MQTT:
                 log_stdout('MQTT', 'Disconnect OK', LOG_INFO)
             else:
                 # error processing
-                log_stderr('Failed to disconnect, return code {}\n'.format(rc))
+                log_stderr('*MQTT* - Failed to disconnect: return code {}\n'.format(rc))
 
         client = mqtt_client.Client(CallbackAPIVersion.VERSION2)
         # client.username_pw_set(username, password)
@@ -63,9 +66,13 @@ class MQTT:
             payload = (area['mqtt_trv_publish_payload']
                       .replace('**TEMP**', str(req_temp_c))
                       .replace('**TEMP_CAL**', str(calibration)))
-            self.__client.publish(topic, payload)
-            log_stdout('MQTT', 'Publishing to {}: {}'.
-                       format(topic, payload, LOG_INFO))
+            if self.__client:
+                self.__client.publish(topic, payload)
+                log_stdout('MQTT', 'Publish({}): {}'.
+                           format(topic, payload, LOG_INFO))
+            else:
+                log_stdout('MQTT', 'SKIPPED - Publish({}): {}'.
+                           format(topic, payload, LOG_INFO))
 
     def update_areas(self):
         for area_id in self.__io_status.areas.keys():
@@ -96,18 +103,23 @@ class MQTT:
             { 'topic': topic,
               'mqtt_name': mqtt_name, 'decoding_regex': decoding_regex, 'calibration': calibration,
               'mqtt_trv_name': mqtt_trv_name, 'mqtt_trv_publish_payload': mqtt_trv_publish_payload }
-        self.__client.subscribe(topic)
-        self.__client.on_message = on_message
-        log_stdout('MQTT', 'Area {}: subscribed to {}'.format(area_name, topic), LOG_INFO)
+        if self.__client:
+            self.__client.subscribe(topic)
+            self.__client.on_message = on_message
+            log_stdout('MQTT', 'Area {} subscribe ({})'.format(area_name, topic), LOG_INFO)
+        else:
+            log_stdout('MQTT', 'SKIPPED - Area {} subscribe ({})'.format(area_name, topic), LOG_INFO)
 
     def run(self, io_status):
         if not self.__running:
             self.__running = True
             self.__io_status = io_status
-            self.__client.loop_start()
-            log_stdout('MQTT', 'Loop started', LOG_INFO)
+            if self.__client:
+                self.__client.loop_start()
+                log_stdout('MQTT', 'Loop started', LOG_INFO)
 
     def cleanup(self):
         log_stdout('MQTT', 'cleanup', LOG_INFO)
-        self.__client.loop_stop()
+        if self.__client:
+            self.__client.loop_stop()
         self.__areas.clear()
