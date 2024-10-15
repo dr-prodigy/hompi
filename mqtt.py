@@ -68,11 +68,11 @@ class MQTT:
                       .replace('**TEMP_CAL**', str(calibration)))
             if self.__client:
                 self.__client.publish(topic, payload)
-                log_stdout('MQTT', 'Publish({}): {}'.
-                           format(topic, payload, LOG_INFO))
+                log_stdout('MQTT', 'Publish {} -> ({})'.
+                           format(payload, topic, LOG_INFO))
             else:
-                log_stdout('MQTT', 'SKIPPED - Publish({}): {}'.
-                           format(topic, payload, LOG_INFO))
+                log_stdout('MQTT', 'SKIPPED - Publish {} -> ({})'.
+                           format(payload, topic, LOG_INFO))
 
     def update_areas(self):
         for area_id in self.__io_status.areas.keys():
@@ -85,13 +85,13 @@ class MQTT:
                   mqtt_name, decoding_regex, calibration,
                   mqtt_trv_name, mqtt_trv_publish_payload):
         def on_message(client, userdata, msg):
-            log_stdout('MQTT', 'Message: {}'.format(msg.payload.decode()), LOG_INFO)
+            log_stdout('MQTT', '({}) -> {}'.format(msg.topic, msg.payload.decode()), LOG_INFO)
             for area_id in self.__areas.keys():
-                decoder = self.__areas[area_id]
-                if decoder['topic'] == msg.topic:
-                    mqtt_name = decoder['mqtt_name']
-                    regex = decoder['decoding_regex']
-                    calibration = decoder['calibration']
+                area = self.__areas[area_id]
+                if area['topic'] == msg.topic:
+                    mqtt_name = area['mqtt_name']
+                    regex = area['decoding_regex']
+                    calibration = area['calibration']
                     result = re.search(regex, msg.payload.decode())
                     if result:
                         cur_temp = float(result.group(1)) + calibration
