@@ -24,17 +24,17 @@ from paho.mqtt import client as mqtt_client
 from paho.mqtt.enums import CallbackAPIVersion
 
 class MQTT:
-    def __init__(self):
+    def __init__(self, io_status):
         self.__running = False
         self.__areas = {}
-        self.__io_status = self.__client = None
+        self.__io_status = io_status
+        self.__client = None
         try:
             self.__client = self.__connect_mqtt()
         except Exception as e:
             log_stderr('*MQTT* - Failed to connect: {}\n'.format(e))
 
-    @staticmethod
-    def __connect_mqtt() -> mqtt_client:
+    def __connect_mqtt(self) -> mqtt_client:
         def on_connect(client, userdata, flags, rc, properties):
             if flags.session_present:
                 pass
@@ -47,7 +47,7 @@ class MQTT:
         def on_disconnect(client, userdata, flags, rc, properties):
             if rc == 0:
                 # success disconnect
-                log_stdout('MQTT', 'Disconnect OK', LOG_INFO)
+                log_stdout('MQTT', 'Disconnected: ok', LOG_INFO)
             else:
                 # error processing
                 log_stderr('*MQTT* - Failed to disconnect: return code {}\n'.format(rc))
@@ -110,16 +110,17 @@ class MQTT:
         else:
             log_stdout('MQTT', 'SKIPPED - Area {} subscribe ({})'.format(area_name, topic), LOG_INFO)
 
-    def run(self, io_status):
-        if not self.__running:
+    def run(self):
+        # start loop once after connection is ready
+        if self.__client and not self.__running:
             self.__running = True
-            self.__io_status = io_status
-            if self.__client:
-                self.__client.loop_start()
-                log_stdout('MQTT', 'Loop started', LOG_INFO)
+            self.__client.loop_start()
+            log_stdout('MQTT', 'Loop started', LOG_INFO)
 
     def cleanup(self):
-        log_stdout('MQTT', 'cleanup', LOG_INFO)
+        log_stdout('MQTT', 'Cleanup', LOG_INFO)
         if self.__client:
             self.__client.loop_stop()
+            self.__client.disconnect()
+        self.__running = False
         self.__areas.clear()

@@ -49,7 +49,7 @@ io_system = io_data.SystemInfo()
 sensor = sensors.Sensors()
 lcd = dashboard.Dashboard()
 ambient = ambient.Ambient()
-mqtt = mqtt.MQTT()
+mqtt = mqtt.MQTT(io_status)
 
 TEST_INIT_TEMP = 20.0
 TEST_DELTA_EXT_INT_FACTOR = .001
@@ -151,8 +151,9 @@ def main():
                 # restart LCD
                 lcd.refresh_display(io_status)
                 # ambient color
-                ambient.ambient_redo()
-                io_status.set_ambient(ambient)
+                if config.MODULE_AMBIENT:
+                    ambient.ambient_redo()
+                    io_status.set_ambient(ambient)
                 # temp sensor failure: reset temp sampling
                 if config.MODULE_TEMP and temp_avg_sum == 0:
                     temp_avg_accu = temp_avg_counter = 0.0
@@ -169,7 +170,6 @@ def main():
                     io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 2)
                 # reset temp sampling
                 temp_avg_accu = temp_avg_counter = temp_avg_sum = 0
-                # TODO: get TRV temperatures
             # OPERATIONS NOT DONE ON REFRESH - END
 
             # update I/O (ack occurring here gets ambient control)
@@ -182,7 +182,7 @@ def main():
 
             # start MQTT integration
             if config.ENABLE_TRV_INTEGRATION:
-                mqtt.run(io_status)
+                mqtt.run()
 
             # compute status (heating, switches, ...)
             is_status_changed |= compute_status()
@@ -210,6 +210,7 @@ def main():
             lcd.cleanup()
             ambient.reset()
             io_status.set_ambient(ambient)
+            mqtt.cleanup()
             raise
         except Exception:
             log_stderr(traceback.format_exc())
@@ -233,9 +234,10 @@ def main():
                     while task_at_mins[task] >= 60:
                         task_at_mins[task] -= 60
 
-            # sync ambient
-            ambient.update()
-            io_status.set_ambient(ambient)
+            if config.MODULE_AMBIENT:
+                # sync ambient
+                ambient.update()
+                io_status.set_ambient(ambient)
 
             try:
                 # update lcd screen to 1 sec approx.
@@ -260,9 +262,7 @@ def main():
                 lcd.cleanup()
                 ambient.reset()
                 io_status.set_ambient(ambient)
-                # start MQTT integration
-                if config.ENABLE_TRV_INTEGRATION:
-                    mqtt.cleanup()
+                mqtt.cleanup()
                 raise
             except Exception:
                 # LCD I/O error: refresh LCD screen
@@ -397,8 +397,9 @@ def compute_status():
             'heating_status'] == 'on'
 
     trv_heating_on = False
-    for area in io_status.areas.values():
-        trv_heating_on |= area['cur_temp_c'] < area['req_temp_c']
+    if config.ENABLE_TRV_INTEGRATION:
+        for area in io_status.areas.values():
+            trv_heating_on |= area['cur_temp_c'] < area['req_temp_c']
 
     if io_status.int_temp_c:
         last_change = dateutil.parser.parse(io_status.last_change)
@@ -713,46 +714,47 @@ def process_input():
             say('Message: {}'.format(value))
             is_status_changed = show_ack = True
         elif command == 'AMBIENT':
-            try:
-                if not arg:
-                    arg = 'COLOR'
-                if arg == 'COLOR':
-                    ambient.set_ambient_color(
-                        value,
-                        datetime.datetime.now() +
-                        datetime.timedelta(hours=4))
-                    show_message('AMBIENT', 'AMBIENT COLOR: #{}'.format(value))
-                    say('Ambient color')
-                elif arg == 'COLOR_HS':
-                    ambient.set_ambient_color_hs(
-                        value,
-                        datetime.datetime.now() +
-                        datetime.timedelta(hours=4))
-                    show_message('AMBIENT', 'AMBIENT COLOR_HS: #{}'.format(value))
-                    say('Ambient color')
-                elif arg == 'BRIGHTNESS':
-                    ambient.set_ambient_brightness(value)
-                    show_message('AMBIENT', 'AMBIENT BRIGHTNESS: #{}'.format(value))
-                    say('Ambient brightness')
-                elif arg == 'STATUS':
-                    ambient.set_ambient_on_off(
-                        value == 'ON',
-                        datetime.datetime.now() +
-                        datetime.timedelta(hours=4))
-                    show_message('AMBIENT', 'AMBIENT STATUS: {}'.format(value))
-                    say('Ambient status {}'.format(value))
-                else:
-                    try:
-                        ambient.set_ambient_effect(arg, value,
-                        datetime.datetime.now() +
-                        datetime.timedelta(hours=4))
-                        show_message('AMBIENT', 'AMBIENT {}'.format(arg))
-                        say('Ambient effect')
-                    except Exception as e:
-                        log_data('PARSERROR ({}): {}'.format(data, e))
-                io_status.set_ambient(ambient)
-            except Exception as e:
-                log_data('PARSERROR ({}): {}'.format(data, e))
+            if config.MODULE_AMBIENT:
+                try:
+                    if not arg:
+                        arg = 'COLOR'
+                    if arg == 'COLOR':
+                        ambient.set_ambient_color(
+                            value,
+                            datetime.datetime.now() +
+                            datetime.timedelta(hours=4))
+                        show_message('AMBIENT', 'AMBIENT COLOR: #{}'.format(value))
+                        say('Ambient color')
+                    elif arg == 'COLOR_HS':
+                        ambient.set_ambient_color_hs(
+                            value,
+                            datetime.datetime.now() +
+                            datetime.timedelta(hours=4))
+                        show_message('AMBIENT', 'AMBIENT COLOR_HS: #{}'.format(value))
+                        say('Ambient color')
+                    elif arg == 'BRIGHTNESS':
+                        ambient.set_ambient_brightness(value)
+                        show_message('AMBIENT', 'AMBIENT BRIGHTNESS: #{}'.format(value))
+                        say('Ambient brightness')
+                    elif arg == 'STATUS':
+                        ambient.set_ambient_on_off(
+                            value == 'ON',
+                            datetime.datetime.now() +
+                            datetime.timedelta(hours=4))
+                        show_message('AMBIENT', 'AMBIENT STATUS: {}'.format(value))
+                        say('Ambient status {}'.format(value))
+                    else:
+                        try:
+                            ambient.set_ambient_effect(arg, value,
+                            datetime.datetime.now() +
+                            datetime.timedelta(hours=4))
+                            show_message('AMBIENT', 'AMBIENT {}'.format(arg))
+                            say('Ambient effect')
+                        except Exception as e:
+                            log_data('PARSERROR ({}): {}'.format(data, e))
+                    io_status.set_ambient(ambient)
+                except Exception as e:
+                    log_data('PARSERROR ({}): {}'.format(data, e))
         elif command == 'GATE':
             # execute gate only once per cycle, and not while another
             # is running
