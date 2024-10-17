@@ -181,8 +181,8 @@ def main():
                 refresh_program(current_time)
 
             # start MQTT integration
-            if config.ENABLE_TRV_INTEGRATION:
-                mqtt.run()
+            # if config.ENABLE_TRV_INTEGRATION:
+            #     mqtt.run()
 
             # compute status (heating, switches, ...)
             is_status_changed |= compute_status()

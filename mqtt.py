@@ -18,29 +18,33 @@
 
 import config
 import re
+import time
 
-from utils import LOG_INFO, log_stdout, log_stderr
+from utils import LOG_INFO, log_stdout, log_stderr, LOG_DEBUG
 from paho.mqtt import client as mqtt_client
 from paho.mqtt.enums import CallbackAPIVersion
 
 class MQTT:
     def __init__(self, io_status):
-        self.__running = False
+        self.__running = self.__connected = False
         self.__areas = {}
         self.__io_status = io_status
         self.__client = None
-        try:
-            self.__client = self.__connect_mqtt()
-        except Exception as e:
-            log_stderr('*MQTT* - Failed to connect: {}\n'.format(e))
+        if config.ENABLE_TRV_INTEGRATION:
+            try:
+                self.__client = self.__connect_mqtt()
+            except Exception as e:
+                log_stderr('*MQTT* - Failed to connect: {}\n'.format(e))
 
     def __connect_mqtt(self) -> mqtt_client:
+        self.__connected = False
         def on_connect(client, userdata, flags, rc, properties):
             if flags.session_present:
                 pass
             if rc == 0:
                 log_stdout('MQTT', 'Connected to MQTT broker {}:{}'
                            .format(config.MQTT_BROKER, config.MQTT_PORT), LOG_INFO)
+                self.__connected = True
             else:
                 log_stderr('*MQTT* - Failed to connect: return code {}\n'.format(rc))
 
@@ -52,19 +56,24 @@ class MQTT:
                 # error processing
                 log_stderr('*MQTT* - Failed to disconnect: return code {}\n'.format(rc))
 
-        client = mqtt_client.Client(CallbackAPIVersion.VERSION2)
+        _client = mqtt_client.Client(CallbackAPIVersion.VERSION2)
         # client.username_pw_set(username, password)
-        client.on_connect = on_connect
-        client.on_disconnect = on_disconnect
-        client.connect(config.MQTT_BROKER, config.MQTT_PORT)
-        return client
+        _client.on_connect = on_connect
+        _client.on_disconnect = on_disconnect
+        _client.connect(config.MQTT_BROKER, config.MQTT_PORT)
+        _client.loop_start()
+        while not self.__connected:
+            time.sleep(.05)
+        if config.LOG_LEVEL == LOG_DEBUG:
+            _client.subscribe("$SYS/broker/log/#")
+        return _client
 
     def __publish(self, area_id, req_temp_c, calibration):
         area = self.__areas[area_id]
         if area['mqtt_trv_name']:
-            topic = '{}/{}'.format(config.MQTT_BASE_TOPIC, area['mqtt_trv_name'])
+            topic = '{}/{}/set'.format(config.MQTT_BASE_TOPIC, area['mqtt_trv_name'])
             payload = (area['mqtt_trv_publish_payload']
-                      .replace('**TEMP**', str(req_temp_c))
+                      .replace('**TEMP**', str(int(req_temp_c)))
                       .replace('**TEMP_CAL**', str(calibration)))
             if self.__client:
                 self.__client.publish(topic, payload)
@@ -85,7 +94,8 @@ class MQTT:
                   mqtt_name, decoding_regex, calibration,
                   mqtt_trv_name, mqtt_trv_publish_payload):
         def on_message(client, userdata, msg):
-            log_stdout('MQTT', '({}) -> {}'.format(msg.topic, msg.payload.decode()), LOG_INFO)
+            msg_topic = "LOG" if msg.topic == "$SYS/broker/log/#" else msg.topic
+            log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_INFO)
             for area_id in self.__areas.keys():
                 area = self.__areas[area_id]
                 if area['topic'] == msg.topic:
@@ -110,12 +120,6 @@ class MQTT:
         else:
             log_stdout('MQTT', 'SKIPPED - Area {} subscribe ({})'.format(area_name, topic), LOG_INFO)
 
-    def run(self):
-        # start loop once after connection is ready
-        if self.__client and not self.__running:
-            self.__running = True
-            self.__client.loop_start()
-            log_stdout('MQTT', 'Loop started', LOG_INFO)
 
     def cleanup(self):
         log_stdout('MQTT', 'Cleanup', LOG_INFO)
