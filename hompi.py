@@ -512,7 +512,7 @@ def refresh_program(time_):
     row = dbmgr.query(
         """SELECT
             tdata.orderby, tdtype.description, time_hhmm, delta_calc_mm,
-            temp.description, temp_c, tdtype.id
+            temp.description, temp_c, tdtype.id, tdata.id
         FROM gm_timetable_day_type AS tdtype
         INNER JOIN gm_timetable_type_data AS tdata
             ON tdata.day_type_id = tdtype.id
@@ -523,6 +523,7 @@ def refresh_program(time_):
         ORDER BY orderby DESC""".format(day_type, time_)
     ).fetchone()
 
+    tdtypedata_id = row[7]
     if io_status.day_type_desc != row[1] or \
             io_status.req_temp_c != row[5] or \
             io_status.req_start_time != row[2] or \
@@ -576,7 +577,7 @@ def refresh_program(time_):
                 INNER JOIN gm_temp AS temp
                     ON temp.id = tdata_area.temp_id
                 WHERE timetable_type_data_id = {:d}
-                ORDER BY area.id""".format(day_type)
+                ORDER BY area.id""".format(tdtypedata_id)
         ).fetchall()
         # update io_status and MQTT subscriptions
         for row in rows:

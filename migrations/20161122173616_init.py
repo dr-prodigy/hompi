@@ -12,7 +12,7 @@ def upgrade(connection):
 
     cursor = connection.cursor()
 
-    scriptFile = open(os.path.dirname(os.path.realpath(__file__)) + "/_init.sql", 'r')
+    scriptFile = open(os.path.dirname(os.path.realpath(__file__)) + "/20161122173616_init.sql", 'r')
     script = scriptFile.read()
     scriptFile.close()
     connection.executescript(script)
