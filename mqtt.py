@@ -19,6 +19,7 @@
 import config
 import re
 import time
+import datetime
 
 from utils import LOG_INFO, log_stdout, log_stderr, LOG_DEBUG
 from paho.mqtt import client as mqtt_client
@@ -95,20 +96,18 @@ class MQTT:
                   mqtt_name, decoding_regex, calibration,
                   mqtt_trv_name, mqtt_trv_publish_payload):
         def on_message(client, userdata, msg):
-            if config.LOG_LEVEL == LOG_DEBUG:
-                msg_topic = "LOG" if msg.topic == "$SYS/broker/log/#" else msg.topic
-                log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_INFO)
+            msg_topic = "DEBUG" if msg.topic.startswith("$SYS/broker/log/") else msg.topic
+            log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_DEBUG)
             for area_id in self.__areas.keys():
                 area = self.__areas[area_id]
                 if area['topic'] == msg.topic:
-                    mqtt_name = area['mqtt_name']
-                    regex = area['decoding_regex']
-                    calibration = area['calibration']
-                    result = re.search(regex, msg.payload.decode())
-                    if result:
-                        cur_temp = float(result.group(1))
-                        log_stdout('MQTT', 'Update from {} - cur_temp: {}'.format(mqtt_name, cur_temp))
-                        self.__io_status.areas[area_id]['cur_temp_c'] = cur_temp
+                    cur_area = self.__io_status.areas[area_id]
+                    cur_area["last_update"] = datetime.datetime.now().isoformat()
+                    cur_area['temp_calibration'] = area['calibration']
+                    result = re.search(area['decoding_regex'], msg.payload.decode())
+                    cur_temp = float(result.group(1)) if result else 999
+                    cur_area['cur_temp_c'] = cur_temp
+                    log_stdout('MQTT', 'Update from {} - cur_temp: {}'.format(area['mqtt_name'], cur_temp))
 
         topic = '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_name)
         self.__areas[area_id] = \

@@ -51,6 +51,7 @@ lcd = dashboard.Dashboard()
 ambient = ambient.Ambient()
 mqtt = mqtt.MQTT(io_status)
 
+TRV_DATA_EXPIRATION_SECS = 1200 # 20 minutes
 TEST_INIT_TEMP = 20.0
 TEST_DELTA_EXT_INT_FACTOR = .001
 TEST_DELTA_THERMO_ON_TEMP_C = .03
@@ -399,7 +400,10 @@ def compute_status():
     trv_heating_on = False
     if config.ENABLE_TRV_INTEGRATION:
         for area in io_status.areas.values():
-            trv_heating_on |= area['cur_temp_c'] < area['req_temp_c']
+            # ignore expired TRV data
+            if ('last_update' in area and
+                (current_time - dateutil.parser.parse(area['last_update'])).total_seconds() < TRV_DATA_EXPIRATION_SECS):
+                trv_heating_on |= area['cur_temp_c'] < area['req_temp_c']
 
     if io_status.int_temp_c:
         last_change = dateutil.parser.parse(io_status.last_change)
@@ -532,39 +536,6 @@ def refresh_program(time_):
             row[1], datetime.datetime.today().hour,
             datetime.datetime.today().minute, row[4], row[5]))
 
-        if config.ENABLE_TRV_INTEGRATION:
-            # get current day_type MQTT integrations (NULL area_id => all areas)
-            rows = dbmgr.query(
-                """SELECT DISTINCT area.id, area.area_name,
-                        area.mqtt_temp_name, area.mqtt_temp_payload_regex, area.temp_calibration,
-                        area.mqtt_trv_name, area.mqtt_trv_publish_payload,
-                        temp.temp_c
-                    FROM gm_timetable_type_data_area AS tdata_area
-                    INNER JOIN gm_area AS area
-                        ON (area.id = tdata_area.area_id OR tdata_area.area_id IS NULL)
-                    INNER JOIN gm_temp AS temp
-                        ON temp.id = tdata_area.temp_id
-                    WHERE timetable_type_data_id = {:d}
-                    ORDER BY area.id""".format(day_type)
-            ).fetchall()
-            # update io_status and MQTT subscriptions
-            for row in rows:
-                if row[0] not in io_status.areas:
-                    io_status.areas[row[0]] = {}
-                area = io_status.areas[row[0]]
-                area["area"] = row[1]
-                area["mqtt_temp_name"] = row[2]
-                area["temp_calibration"] = row[4]
-                area["mqtt_trv_name"] = row[5]
-                req_temp_c = float(row[7])
-                area["published"] = ("req_temp_c" in area.keys() and area["req_temp_c"] == req_temp_c)
-                area["req_temp_c"] = req_temp_c
-                if not "cur_temp_c" in area.keys():
-                    area["cur_temp_c"] = 999
-                area["last_update"] = datetime.datetime.now().isoformat()
-                # MQTT subscription
-                mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
-
         # get next change
         row = dbmgr.query(
             """SELECT
@@ -590,6 +561,44 @@ def refresh_program(time_):
             io_status.req_end_time - math.floor(
                 io_status.req_end_time // 100) * 100
         ))
+
+    # get MQTT areas (NULL area_id => all areas)
+    if config.ENABLE_TRV_INTEGRATION:
+        rows = dbmgr.query(
+            """SELECT DISTINCT area.id, area.area_name,
+                    area.mqtt_temp_name, area.mqtt_temp_payload_regex, area.temp_calibration,
+                    area.mqtt_trv_name, area.mqtt_trv_publish_payload,
+                    temp.temp_c
+                FROM gm_timetable_type_data_area AS tdata_area
+                INNER JOIN gm_area AS area
+                    ON (area.id = tdata_area.area_id OR tdata_area.area_id IS NULL)
+                INNER JOIN gm_temp AS temp
+                    ON temp.id = tdata_area.temp_id
+                WHERE timetable_type_data_id = {:d}
+                ORDER BY area.id""".format(day_type)
+        ).fetchall()
+        # update io_status and MQTT subscriptions
+        for row in rows:
+            if row[0] not in io_status.areas:
+                io_status.areas[row[0]] = {}
+            area = io_status.areas[row[0]]
+            area["area"] = row[1]
+            area["mqtt_temp_name"] = row[2]
+            area["temp_calibration"] = row[4]
+            area["mqtt_trv_name"] = row[5]
+            req_temp_c = float(row[7])
+            temp_calibration = float(row[4])
+            area["published"] = ("req_temp_c" in area.keys() and
+                                 "temp_calibration" in area.keys() and
+                                 area["req_temp_c"] == req_temp_c and
+                                 area["temp_calibration"] == temp_calibration)
+            area["req_temp_c"] = req_temp_c
+            area["temp_calibration"] = temp_calibration
+            if not "cur_temp_c" in area.keys():
+                area["cur_temp_c"] = 999
+            # MQTT subscription
+            mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
+
 
     # refresh temperatures
     rows = dbmgr.query("SELECT id, description, temp_c FROM gm_temp")
