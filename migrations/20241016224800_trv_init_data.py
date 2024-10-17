@@ -72,7 +72,7 @@ def upgrade(connection):
         INSERT INTO `gm_area`
             (`id`, `area_name`, `mqtt_temp_name`, `mqtt_temp_payload_regex`, `temp_calibration`,
              `mqtt_trv_name`, `mqtt_trv_publish_payload`)
-        VALUES (5, 'Bagno', 'TempHum1_S', '""temperature": *([0-9.-]*),', 0,
+        VALUES (5, 'Bagno', 'TempHum1_S', '"temperature": *([0-9.-]*),', 0,
         '', '')
     """
     connection.execute(sql)
