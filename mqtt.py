@@ -93,8 +93,8 @@ class MQTT:
                 area['published'] = True
 
     def subscribe(self, area_id, area_name,
-                  mqtt_name, decoding_regex, calibration,
-                  mqtt_trv_name, mqtt_trv_publish_payload):
+                  mqtt_name, cur_temp_c_regex, req_temp_c_regex, calibration,
+                  mqtt_trv_name, mqtt_trv_publish_payload, subscribed):
         def on_message(client, userdata, msg):
             msg_topic = "DEBUG" if msg.topic.startswith("$SYS/broker/log/") else msg.topic
             log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_DEBUG)
@@ -104,17 +104,22 @@ class MQTT:
                     cur_area = self.__io_status.areas[area_id]
                     cur_area["last_update"] = datetime.datetime.now().isoformat()
                     cur_area['temp_calibration'] = area['calibration']
-                    result = re.search(area['decoding_regex'], msg.payload.decode())
-                    cur_temp = float(result.group(1)) if result else 999
-                    cur_area['cur_temp_c'] = cur_temp
-                    log_stdout('MQTT', 'Update from {} - cur_temp: {}'.format(area['mqtt_name'], cur_temp))
+                    temp = re.search(area['cur_temp_c_regex'], msg.payload.decode())
+                    cur_temp_c = float(temp.group(1)) if temp else 999
+                    temp = re.search(area['req_temp_c_regex'], msg.payload.decode())
+                    cur_area['cur_temp_c'] = cur_temp_c
+                    req_temp_c = float(temp.group(1)) if temp else 0
+                    cur_area['req_temp_c'] = req_temp_c
+                    log_stdout('MQTT', 'Update from {} - cur_temp_c: {} - req_temp_c: {}'.
+                               format(area['mqtt_name'], cur_temp_c, req_temp_c))
 
         topic = '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_name)
         self.__areas[area_id] = \
-            { 'topic': topic,
-              'mqtt_name': mqtt_name, 'decoding_regex': decoding_regex, 'calibration': calibration,
-              'mqtt_trv_name': mqtt_trv_name, 'mqtt_trv_publish_payload': mqtt_trv_publish_payload }
-        if self.__client:
+            { 'topic': topic, 'mqtt_name': mqtt_name,
+              'cur_temp_c_regex': cur_temp_c_regex, 'req_temp_c_regex': req_temp_c_regex,
+              'calibration': calibration, 'mqtt_trv_name': mqtt_trv_name,
+              'mqtt_trv_publish_payload': mqtt_trv_publish_payload }
+        if self.__client and not subscribed:
             self.__client.subscribe(topic)
             self.__client.on_message = on_message
             log_stdout('MQTT', 'Area {} subscribe ({})'.format(area_name, topic), LOG_INFO)

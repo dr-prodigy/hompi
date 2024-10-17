@@ -12,10 +12,11 @@ def upgrade(connection):
             `id` INTEGER PRIMARY KEY AUTOINCREMENT,
             `area_name` TEXT NOT NULL,
             `mqtt_temp_name` TEXT NOT NULL,
-            `mqtt_temp_payload_regex` TEXT NOT NULL, 
+            `mqtt_cur_temp_c_regex` TEXT NOT NULL, 
+            `mqtt_req_temp_c_regex` TEXT, 
             `temp_calibration` INTEGER NOT NULL DEFAULT 0,
-            `mqtt_trv_name` TEXT NOT NULL,
-            `mqtt_trv_publish_payload` TEXT NOT NULL )
+            `mqtt_trv_name` TEXT,
+            `mqtt_trv_publish_payload` TEXT )
     """
     connection.execute(sql)
     connection.commit()
@@ -35,9 +36,9 @@ def upgrade(connection):
 
     sql = """
         INSERT INTO `gm_area`
-            (`id`, `area_name`, `mqtt_temp_name`, `mqtt_temp_payload_regex`, `temp_calibration`,
-             `mqtt_trv_name`, `mqtt_trv_publish_payload`)
-        VALUES (1, 'test-area', 'test-temp', '{myregex}', 0,
+            (`id`, `area_name`, `mqtt_temp_name`, `mqtt_cur_temp_c_regex`, `mqtt_req_temp_c_regex`,
+             `temp_calibration`, `mqtt_trv_name`, `mqtt_trv_publish_payload`)
+        VALUES (1, 'test-area', 'test-temp', '{myregex}', '{myregex}',0,
         'test-trv', '{"boost_heating": "OFF", "child_lock": "UNLOCK", "current_heating_setpoint": **TEMP**, "eco_mode": "OFF", "eco_temperature": 19, "local_temperature_calibration": **TEMP_CAL**, "preset": "manual", "window_detection": "OFF"}')
     """
     connection.execute(sql)

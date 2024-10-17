@@ -425,7 +425,8 @@ def compute_status():
                 io_status.heating_status = 'on'
         # *** stop heating on exact temp! ***
         if io_status.int_temp_c - io_status.req_temp_c >= 0 and \
-                not slave_heating_on:
+                not slave_heating_on and \
+                not trv_heating_on:
             if io_status.heating_status == 'on' or \
                     io_status.heating_status == 'warming':
                 # log_data('heating OFF')
@@ -566,8 +567,8 @@ def refresh_program(time_):
     if config.ENABLE_TRV_INTEGRATION:
         rows = dbmgr.query(
             """SELECT DISTINCT area.id, area.area_name,
-                    area.mqtt_temp_name, area.mqtt_temp_payload_regex, area.temp_calibration,
-                    area.mqtt_trv_name, area.mqtt_trv_publish_payload,
+                    area.mqtt_temp_name, area.mqtt_cur_temp_c_regex, area.mqtt_req_temp_c_regex,
+                    area.temp_calibration, area.mqtt_trv_name, area.mqtt_trv_publish_payload,
                     temp.temp_c
                 FROM gm_timetable_type_data_area AS tdata_area
                 INNER JOIN gm_area AS area
@@ -579,25 +580,29 @@ def refresh_program(time_):
         ).fetchall()
         # update io_status and MQTT subscriptions
         for row in rows:
+            subscribed = True
             if row[0] not in io_status.areas:
                 io_status.areas[row[0]] = {}
+                subscribed = False
             area = io_status.areas[row[0]]
             area["area"] = row[1]
             area["mqtt_temp_name"] = row[2]
-            area["temp_calibration"] = row[4]
-            area["mqtt_trv_name"] = row[5]
-            req_temp_c = float(row[7])
-            temp_calibration = float(row[4])
-            area["published"] = ("req_temp_c" in area.keys() and
-                                 "temp_calibration" in area.keys() and
-                                 area["req_temp_c"] == req_temp_c and
-                                 area["temp_calibration"] == temp_calibration)
+            area["mqtt_trv_name"] = row[6]
+            req_temp_c = float(row[8])
+            temp_calibration = float(row[5])
+            published = ("req_temp_c" in area.keys() and
+                         "temp_calibration" in area.keys() and
+                         area["req_temp_c"] == req_temp_c and
+                         area["temp_calibration"] == temp_calibration)
+            area["published"] = published
             area["req_temp_c"] = req_temp_c
             area["temp_calibration"] = temp_calibration
             if not "cur_temp_c" in area.keys():
                 area["cur_temp_c"] = 999
+
             # MQTT subscription
-            mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
+            if not published or not subscribed:
+                mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], subscribed)
 
 
     # refresh temperatures
