@@ -32,7 +32,7 @@ def upgrade(connection):
         INSERT INTO `gm_area`
             (`id`, `area_name`, `mqtt_temp_name`, `mqtt_temp_payload_regex`, `temp_calibration`,
              `mqtt_trv_name`, `mqtt_trv_publish_payload`)
-        VALUES (1, 'Cucina', 'TRV1', '"local_temperature": ([0-9.-]*),', 0,
+        VALUES (1, 'Cucina', 'TRV1', '"local_temperature": *([0-9.-]*),', 0,
         'TRV1', '{"boost_heating": "OFF", "child_lock": "UNLOCK", "current_heating_setpoint": **TEMP**, "eco_mode": "OFF", "local_temperature_calibration": **TEMP_CAL**, "preset": "manual", "window_detection": "OFF"}')
     """
     connection.execute(sql)
@@ -42,7 +42,7 @@ def upgrade(connection):
         INSERT INTO `gm_area`
             (`id`, `area_name`, `mqtt_temp_name`, `mqtt_temp_payload_regex`, `temp_calibration`,
              `mqtt_trv_name`, `mqtt_trv_publish_payload`)
-        VALUES (2, 'Bagnetto', 'TRV2', '"local_temperature": ([0-9.-]*),', 0,
+        VALUES (2, 'Bagnetto', 'TRV2', '"local_temperature": *([0-9.-]*),', 0,
         'TRV2', '{"boost_heating": "OFF", "child_lock": "UNLOCK", "current_heating_setpoint": **TEMP**, "eco_mode": "OFF", "local_temperature_calibration": **TEMP_CAL**, "preset": "manual", "window_detection": "OFF"}')
     """
     connection.execute(sql)
@@ -52,7 +52,7 @@ def upgrade(connection):
         INSERT INTO `gm_area`
             (`id`, `area_name`, `mqtt_temp_name`, `mqtt_temp_payload_regex`, `temp_calibration`,
              `mqtt_trv_name`, `mqtt_trv_publish_payload`)
-        VALUES (3, 'Camera', 'TRV3', '"local_temperature": ([0-9.-]*),', 0,
+        VALUES (3, 'Camera', 'TRV3', '"local_temperature": *([0-9.-]*),', -3,
         'TRV3', '{"boost_heating": "OFF", "child_lock": "UNLOCK", "current_heating_setpoint": **TEMP**, "eco_mode": "OFF", "local_temperature_calibration": **TEMP_CAL**, "preset": "manual", "window_detection": "OFF"}')
     """
     connection.execute(sql)
@@ -62,7 +62,7 @@ def upgrade(connection):
         INSERT INTO `gm_area`
             (`id`, `area_name`, `mqtt_temp_name`, `mqtt_temp_payload_regex`, `temp_calibration`,
              `mqtt_trv_name`, `mqtt_trv_publish_payload`)
-        VALUES (4, 'Cameretta', 'TRV4', '"local_temperature": ([0-9.-]*),', 0,
+        VALUES (4, 'Cameretta', 'TRV4', '"local_temperature": *([0-9.-]*),', 0,
         'TRV4', '{"boost_heating": "OFF", "child_lock": "UNLOCK", "current_heating_setpoint": **TEMP**, "eco_mode": "OFF", "local_temperature_calibration": **TEMP_CAL**, "preset": "manual", "window_detection": "OFF"}')
     """
     connection.execute(sql)
@@ -72,7 +72,7 @@ def upgrade(connection):
         INSERT INTO `gm_area`
             (`id`, `area_name`, `mqtt_temp_name`, `mqtt_temp_payload_regex`, `temp_calibration`,
              `mqtt_trv_name`, `mqtt_trv_publish_payload`)
-        VALUES (5, 'Bagno', 'TempHum1_S', '""temperature": ([0-9.-]*),', 0,
+        VALUES (5, 'Bagno', 'TempHum1_S', '""temperature": *([0-9.-]*),', 0,
         '', '')
     """
     connection.execute(sql)

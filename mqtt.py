@@ -64,6 +64,7 @@ class MQTT:
         _client.loop_start()
         while not self.__connected:
             time.sleep(.05)
+
         if config.LOG_LEVEL == LOG_DEBUG:
             _client.subscribe("$SYS/broker/log/#")
         return _client
@@ -73,7 +74,7 @@ class MQTT:
         if area['mqtt_trv_name']:
             topic = '{}/{}/set'.format(config.MQTT_BASE_TOPIC, area['mqtt_trv_name'])
             payload = (area['mqtt_trv_publish_payload']
-                      .replace('**TEMP**', str(int(req_temp_c)))
+                      .replace('**TEMP**', str(req_temp_c))
                       .replace('**TEMP_CAL**', str(calibration)))
             if self.__client:
                 self.__client.publish(topic, payload)
@@ -94,8 +95,9 @@ class MQTT:
                   mqtt_name, decoding_regex, calibration,
                   mqtt_trv_name, mqtt_trv_publish_payload):
         def on_message(client, userdata, msg):
-            msg_topic = "LOG" if msg.topic == "$SYS/broker/log/#" else msg.topic
-            log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_INFO)
+            if config.LOG_LEVEL == LOG_DEBUG:
+                msg_topic = "LOG" if msg.topic == "$SYS/broker/log/#" else msg.topic
+                log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_INFO)
             for area_id in self.__areas.keys():
                 area = self.__areas[area_id]
                 if area['topic'] == msg.topic:
@@ -104,7 +106,7 @@ class MQTT:
                     calibration = area['calibration']
                     result = re.search(regex, msg.payload.decode())
                     if result:
-                        cur_temp = float(result.group(1)) + calibration
+                        cur_temp = float(result.group(1))
                         log_stdout('MQTT', 'Update from {} - cur_temp: {}'.format(mqtt_name, cur_temp))
                         self.__io_status.areas[area_id]['cur_temp_c'] = cur_temp
 

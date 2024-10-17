@@ -60,7 +60,7 @@ CREATE TABLE "gm_temp" (
 	`temp_c`	REAL NOT NULL,
 	FOREIGN KEY(`timetable_id`) REFERENCES `gm_timetable`(`id`)
 );
-INSERT INTO `gm_temp` (id,timetable_id,description,temp_c) VALUES (1,1,'Manual',19.0);
+INSERT INTO `gm_temp` (id,timetable_id,description,temp_c) VALUES (1,1,'Manual',20.0);
 INSERT INTO `gm_temp` (id,timetable_id,description,temp_c) VALUES (2,2,'Economy',17.0);
 INSERT INTO `gm_temp` (id,timetable_id,description,temp_c) VALUES (3,2,'Comfort',20.0);
 INSERT INTO `gm_temp` (id,timetable_id,description,temp_c) VALUES (4,3,'Winter-safe',6.0);
@@ -78,5 +78,5 @@ CREATE TABLE "gm_control" (
 	`timetable_id`	INTEGER,
 	FOREIGN KEY(`timetable_id`) REFERENCES `gm_timetable`(`id`)
 );
-INSERT INTO `gm_control` (id,timetable_id) VALUES (0,2);
+INSERT INTO `gm_control` (id,timetable_id) VALUES (0,1);
 COMMIT;
