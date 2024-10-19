@@ -51,7 +51,6 @@ lcd = dashboard.Dashboard()
 ambient = ambient.Ambient()
 mqtt = mqtt.MQTT(io_status)
 
-TRV_DATA_EXPIRATION_SECS = 1200 # 20 minutes
 TEST_DELTA_EXT_INT_FACTOR = .001
 TEST_DELTA_THERMO_ON_TEMP_C = .03
 current_status = ''
@@ -407,7 +406,8 @@ def compute_status():
         for area in io_status.areas.values():
             # ignore expired TRV data
             if ('last_update' in area and
-                (current_time - dateutil.parser.parse(area['last_update'])).total_seconds() < TRV_DATA_EXPIRATION_SECS):
+                (current_time - dateutil.parser.parse(area['last_update'])).total_seconds() <
+                    config.TRV_DATA_EXPIRATION_SECS):
                 ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, area['cur_temp_c'])
                 trv_heating_on |= area['cur_temp_c'] < area['req_temp_c']
 
