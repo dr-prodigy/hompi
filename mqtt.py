@@ -113,7 +113,7 @@ class MQTT:
                     else:
                         req_temp_c = "-"
                     cur_area['cur_temp_c'] = cur_temp_c
-                    log_stdout('MQTT', 'Update from {} - cur_temp_c: {} - req_temp_c: {}'.
+                    log_stdout('MQTT', '{} update - cur_temp_c: {} - req_temp_c: {}'.
                                format(area['mqtt_name'], cur_temp_c, req_temp_c), LOG_INFO)
 
         topic = '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_name)
