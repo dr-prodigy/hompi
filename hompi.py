@@ -127,7 +127,7 @@ def main():
                 datetime.datetime.today().minute
 
             #  refresh at end time (do once per minute)
-            if (io_status.req_end_time == current_time and
+            if (io_status.req_end_time <= current_time and
                     last_update_min != datetime.datetime.today().minute):
                 last_update_min = datetime.datetime.today().minute
                 sighup_refresh = True
@@ -295,9 +295,9 @@ def init():
         io_status.ext_temp_c = 6.0
         io_status.req_temp_desc = 'Economy'
         io_status.heating_status = 'off'
-        # initial temperature = manual
+        # initial temperature = manual + 1°C
         dbmgr = db.DatabaseManager()
-        row = dbmgr.query("SELECT temp_c FROM gm_temp WHERE id = 1").fetchone()
+        row = dbmgr.query("SELECT temp_c + 1 FROM gm_temp WHERE id = 1").fetchone()
         if row:
             temp = row[0]
 
@@ -414,7 +414,7 @@ def compute_status():
                 (current_time - dateutil.parser.parse(area['last_update'])).total_seconds() <
                     config.TRV_DATA_EXPIRATION_SECS):
                 ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, area['cur_temp_c'])
-                trv_heating_on |= area['cur_temp_c'] < area['req_temp_c']
+                trv_heating_on |= area['req_temp_c'] - area['cur_temp_c'] >= config.HEATING_THRESHOLD
 
     if ext_cur_temp_c:
         ext_cur_temp_c = '({})'.format(ext_cur_temp_c[:-2])
