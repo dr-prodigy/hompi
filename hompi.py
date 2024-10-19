@@ -52,7 +52,6 @@ ambient = ambient.Ambient()
 mqtt = mqtt.MQTT(io_status)
 
 TRV_DATA_EXPIRATION_SECS = 1200 # 20 minutes
-TEST_INIT_TEMP = 20.0
 TEST_DELTA_EXT_INT_FACTOR = .001
 TEST_DELTA_THERMO_ON_TEMP_C = .03
 current_status = ''
@@ -161,11 +160,11 @@ def main():
                     io_status.int_temp_c = 0.0
 
             # get temperature
-            if (secs_elapsed >= task_at_secs['get_temp']) and config.MODULE_TEMP:
+            if secs_elapsed >= task_at_secs['get_temp'] and config.MODULE_TEMP:
                 get_temperature()
 
             # update temperature
-            if (secs_elapsed >= task_at_secs['update_temp']):
+            if secs_elapsed >= task_at_secs['update_temp']:
                 # save new temperature (if valid)
                 if temp_avg_sum != 0:
                     io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 2)
@@ -292,7 +291,11 @@ def init():
         io_status.ext_temp_c = 6.0
         io_status.req_temp_desc = 'Economy'
         io_status.heating_status = 'off'
-        temp = TEST_INIT_TEMP
+        # initial temperature = manual
+        dbmgr = db.DatabaseManager()
+        row = dbmgr.query("SELECT temp_c FROM gm_temp WHERE id = 1").fetchone()
+        if row:
+            temp = row[0]
 
     initial_time = datetime.datetime.now()
 
@@ -392,8 +395,10 @@ def compute_status():
 
     current_time = datetime.datetime.now()
 
+    ext_cur_temp_c = ''
     slave_heating_on = False
     for slave_id, slave in io_status.hompi_slaves.items():
+        ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, slave['int_temp_c'])
         slave_heating_on |= slave['heating_status'] == 'warming' or slave[
             'heating_status'] == 'on'
 
@@ -403,7 +408,11 @@ def compute_status():
             # ignore expired TRV data
             if ('last_update' in area and
                 (current_time - dateutil.parser.parse(area['last_update'])).total_seconds() < TRV_DATA_EXPIRATION_SECS):
+                ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, area['cur_temp_c'])
                 trv_heating_on |= area['cur_temp_c'] < area['req_temp_c']
+
+    if ext_cur_temp_c:
+        ext_cur_temp_c = '({})'.format(ext_cur_temp_c[:-2])
 
     if io_status.int_temp_c:
         last_change = dateutil.parser.parse(io_status.last_change)
@@ -458,12 +467,17 @@ def compute_status():
             sensor.set_switch(config.BUTTONS[sw][0], False)
 
     io_status.update(current_time)
+    changed = io_status.last_change == current_time.isoformat()
+    if changed:
+        log_stdout('HOMPI', 'Req: {:.2f}° - Int: {:.2f}° - Ext: {} - Thermo changed to: {}'.format(
+            io_status.req_temp_c, temp, ext_cur_temp_c, io_status.heating_status), LOG_INFO)
 
-    return io_status.last_change == current_time.isoformat()
+    return changed
 
 
 def sighup_handler(signal, frame):
     global sig_command
+    log_stdout('HOMPI', 'got SIGHUP - refreshing.', LOG_INFO)
     sig_command = True
 
 

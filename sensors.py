@@ -111,7 +111,7 @@ class Sensors:
                     meteo['main']['pressure'],
                     meteo['wind']['speed']))
         except request.URLError:
-            log_stdout('SENSORS', 'WARNING: meteo not available.')
+            log_stdout('SENSORS', 'WARNING: meteo not available.', LOG_WARN)
         except Exception:
             log_stderr(traceback.format_exc())
         finally:
@@ -128,10 +128,10 @@ class Sensors:
                 aphorism['quoteText'], aphorism['quoteAuthor']).encode(
                 'utf-8'))
         except request.URLError:
-            log_stdout('SENSORS', 'WARNING: aphorism not available: skipped.')
+            log_stdout('SENSORS', 'WARNING: aphorism not available: skipped.', LOG_WARN)
         except Exception:
             # don't echo errors to stderr
-            log_stdout('SENSORS', 'ERROR fetching aphorism')
+            log_stdout('SENSORS', 'ERROR fetching aphorism', LOG_WARN)
         finally:
             return aphorism
 
@@ -205,8 +205,8 @@ class Sensors:
                     log_stdout('SENSORS', '{} server replied with status: saved.'.format(
                         status['id']))
             except request.URLError:
-                print(traceback.format_exc())
-                log_stdout('SENSORS', 'WARNING: {} server not available.'.format(url))
+                log_stdout('SENSORS', traceback.format_exc(), LOG_WARN)
+                log_stdout('SENSORS', 'WARNING: {} server not available.'.format(url), LOG_WARN)
             except Exception:
                 log_stderr.write(traceback.format_exc())
 
@@ -219,8 +219,8 @@ class Sensors:
                     reader(request.urlopen(sensor_url, timeout=2, context=ssl_context)))
                 hompi_ext_sensors[ext_sensor_data['sensor']['name']] = ext_sensor_data['sensor']
             except request.URLError:
-                log_stdout('SENSORS', traceback.format_exc())
-                log_stdout('SENSORS', 'WARNING: {} ext sensor not available.'.format(sensor_url))
+                log_stdout('SENSORS', traceback.format_exc(), LOG_WARN)
+                log_stdout('SENSORS', 'WARNING: {} ext sensor not available.'.format(sensor_url), LOG_WARN)
             except Exception:
                 log_stderr.write(traceback.format_exc())
 
@@ -239,7 +239,7 @@ class Sensors:
                     log_stdout('SENSORS', 'Forwarded COMMAND: {} to: {}'.format(command,
                                                                 slave_id))
                 except request.URLError:
-                    log_stdout('SENSORS', 'WARNING: {} server not available.'.format(slave_id))
+                    log_stdout('SENSORS', 'WARNING: {} server not available.'.format(slave_id), LOG_WARN)
                 except Exception:
                     log_stderr(traceback.format_exc())
 

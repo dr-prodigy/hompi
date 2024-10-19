@@ -29,7 +29,8 @@ LOG_WARN = 3
 LOG_ERROR = 4
 
 def log_stdout(module, data, log_level=LOG_DEBUG):
-    if log_level >= config.LOG_LEVEL:
+    if log_level >= config.LOG_LEVEL and module not in config.LOG_MUTE_MODULES or \
+        log_level > config.LOG_INFO:
         sys.stdout.write("*{}* - {}\n".format(module, data))
 
 def log_stderr(data):

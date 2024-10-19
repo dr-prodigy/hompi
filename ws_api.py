@@ -465,5 +465,17 @@ def set_timetable_data(data_json):
     return "Ok"
 
 
+@app.route('/hompi/_refresh', methods=['GET'])
+def refresh():
+    try:
+        if not _check_sharedkey():
+            return "Forbidden", 403
+        _signal_server()
+    except Exception:
+        print("_refresh(): error")
+        print(traceback.format_exc())
+        return "Error", 400  # BAD_REQUEST
+    return "Ok"
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)

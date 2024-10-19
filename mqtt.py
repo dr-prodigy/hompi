@@ -97,7 +97,7 @@ class MQTT:
                   mqtt_trv_name, mqtt_trv_publish_payload, subscribed):
         def on_message(client, userdata, msg):
             msg_topic = "DEBUG" if msg.topic.startswith("$SYS/broker/log/") else msg.topic
-            log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_DEBUG)
+            log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_INFO)
             for area_id in self.__areas.keys():
                 area = self.__areas[area_id]
                 if area['topic'] == msg.topic:
@@ -106,10 +106,13 @@ class MQTT:
                     cur_area['temp_calibration'] = area['calibration']
                     temp = re.search(area['cur_temp_c_regex'], msg.payload.decode())
                     cur_temp_c = float(temp.group(1)) if temp else 999
-                    temp = re.search(area['req_temp_c_regex'], msg.payload.decode())
+                    if area['req_temp_c_regex']:
+                        temp = re.search(area['req_temp_c_regex'], msg.payload.decode())
+                        req_temp_c = float(temp.group(1)) if temp else 0
+                        cur_area['req_temp_c'] = req_temp_c
+                    else:
+                        req_temp_c = "-"
                     cur_area['cur_temp_c'] = cur_temp_c
-                    req_temp_c = float(temp.group(1)) if temp else 0
-                    cur_area['req_temp_c'] = req_temp_c
                     log_stdout('MQTT', 'Update from {} - cur_temp_c: {} - req_temp_c: {}'.
                                format(area['mqtt_name'], cur_temp_c, req_temp_c), LOG_INFO)
 
