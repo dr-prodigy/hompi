@@ -21,7 +21,7 @@ import re
 import time
 import datetime
 
-from utils import LOG_INFO, log_stdout, log_stderr, LOG_DEBUG
+from utils import LOG_INFO, log_stdout, log_stderr, LOG_DEBUG, LOG_WARN
 from paho.mqtt import client as mqtt_client
 from paho.mqtt.enums import CallbackAPIVersion
 
@@ -82,8 +82,8 @@ class MQTT:
                 log_stdout('MQTT', 'Publish {} -> ({})'.
                            format(payload, topic, LOG_INFO))
             else:
-                log_stdout('MQTT', 'SKIPPED - Publish {} -> ({})'.
-                           format(payload, topic, LOG_INFO))
+                log_stdout('MQTT', 'Missing client - Publish SKIPPED {} -> ({})'.
+                           format(payload, topic, LOG_WARN))
 
     def update_areas(self):
         for area_id in self.__io_status.areas.keys():
@@ -111,7 +111,7 @@ class MQTT:
                     req_temp_c = float(temp.group(1)) if temp else 0
                     cur_area['req_temp_c'] = req_temp_c
                     log_stdout('MQTT', 'Update from {} - cur_temp_c: {} - req_temp_c: {}'.
-                               format(area['mqtt_name'], cur_temp_c, req_temp_c))
+                               format(area['mqtt_name'], cur_temp_c, req_temp_c), LOG_INFO)
 
         topic = '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_name)
         self.__areas[area_id] = \
@@ -123,8 +123,6 @@ class MQTT:
             self.__client.subscribe(topic)
             self.__client.on_message = on_message
             log_stdout('MQTT', 'Area {} subscribe ({})'.format(area_name, topic), LOG_INFO)
-        else:
-            log_stdout('MQTT', 'SKIPPED - Area {} subscribe ({})'.format(area_name, topic), LOG_INFO)
 
 
     def cleanup(self):
