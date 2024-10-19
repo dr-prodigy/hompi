@@ -79,8 +79,8 @@ class MQTT:
                       .replace('**TEMP_CAL**', str(calibration)))
             if self.__client:
                 self.__client.publish(topic, payload)
-                log_stdout('MQTT', 'Publish {} -> ({})'.
-                           format(payload, topic, LOG_INFO))
+                log_stdout('MQTT', 'Area: {} - Publish: req. temp.: {}, calibration: {}'.
+                           format(area['area_name'], req_temp_c, calibration, LOG_INFO))
             else:
                 log_stdout('MQTT', 'Missing client - Publish SKIPPED {} -> ({})'.
                            format(payload, topic, LOG_WARN))
@@ -97,7 +97,7 @@ class MQTT:
                   mqtt_trv_name, mqtt_trv_publish_payload, subscribed):
         def on_message(client, userdata, msg):
             msg_topic = "DEBUG" if msg.topic.startswith("$SYS/broker/log/") else msg.topic
-            log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_INFO)
+            log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_DEBUG)
             for area_id in self.__areas.keys():
                 area = self.__areas[area_id]
                 if area['topic'] == msg.topic:
@@ -118,14 +118,15 @@ class MQTT:
 
         topic = '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_name)
         self.__areas[area_id] = \
-            { 'topic': topic, 'mqtt_name': mqtt_name,
+            { 'area_name': area_name,
+              'topic': topic, 'mqtt_name': mqtt_name,
               'cur_temp_c_regex': cur_temp_c_regex, 'req_temp_c_regex': req_temp_c_regex,
               'calibration': calibration, 'mqtt_trv_name': mqtt_trv_name,
               'mqtt_trv_publish_payload': mqtt_trv_publish_payload }
         if self.__client and not subscribed:
             self.__client.subscribe(topic)
             self.__client.on_message = on_message
-            log_stdout('MQTT', 'Area {} subscribe ({})'.format(area_name, topic), LOG_INFO)
+            log_stdout('MQTT', 'Area: {} - subscribe ({})'.format(area_name, topic), LOG_INFO)
 
 
     def cleanup(self):
