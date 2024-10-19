@@ -80,9 +80,10 @@ task_every_secs = {
     'hompi_ext_refresh': 61.0,
     'update_lcd_content': 11.0,
     'get_temp': 20.0,
-    'get_meteo': 300.0,  # 5 mins
-    'get_aphorism': 241.0,  # 4 mins
-    'refresh': 120.0,  # 2 min (multiple of get_temp)
+    'get_meteo': 300.0,    #  5 mins
+    'get_aphorism': 241.0, #  4 mins
+    'refresh': 1800.0,     # 30 mins (multiple of get_temp)
+    'reiterate': 120.0,    #  2 mins
     'update_temp': 80.0,
     'update_io': 10.0,
 }
@@ -145,8 +146,8 @@ def main():
             if secs_elapsed >= task_at_secs['get_aphorism'] and config.MODULE_APHORISM:
                 aphorism()
 
-            # re-sync things
-            if secs_elapsed >= task_at_secs['refresh']:
+            # re-iterate things
+            if secs_elapsed >= task_at_secs['reiterate']:
                 # restart LCD
                 lcd.refresh_display(io_status)
                 # ambient color
@@ -178,6 +179,8 @@ def main():
             # refresh program
             if secs_elapsed >= task_at_secs['refresh'] or sighup_refresh:
                 refresh_program(current_time)
+                # after a sighup refresh, reschedule task forward
+                task_at_secs['refresh'] = secs_elapsed
 
             # start MQTT integration
             # if config.ENABLE_TRV_INTEGRATION:
@@ -191,6 +194,8 @@ def main():
                 update_output()
                 if config.ENABLE_TRV_INTEGRATION:
                     mqtt.update_areas()
+                # after a sighup refresh, reschedule task forward
+                task_at_secs['update_io'] = secs_elapsed
 
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
@@ -653,7 +658,7 @@ def update_output():
             """UPDATE gm_output
             SET data = '{}', last_update = strftime('%s','now')
             WHERE id = 0""".format(current_status.replace('\'', '\'\'')))
-        log_stdout('HOMPI', 'output: ' + current_status.replace('\n', ''))
+        log_stdout('HOMPI', 'new output: ' + current_status.replace('\n', ''))
         if config.ENABLE_HASS_INTEGRATION:
             hass.publish_status(io_status, io_system, ambient)
 
