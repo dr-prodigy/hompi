@@ -180,7 +180,7 @@ def main():
             if secs_elapsed >= task_at_secs['refresh'] or sighup_refresh:
                 refresh_program(current_time)
                 # after a sighup refresh, reschedule task forward
-                task_at_secs['refresh'] = secs_elapsed
+                task_at_secs['refresh'] = secs_elapsed - 1
 
             # start MQTT integration
             # if config.ENABLE_TRV_INTEGRATION:
@@ -195,7 +195,7 @@ def main():
                 if config.ENABLE_TRV_INTEGRATION:
                     mqtt.update_areas()
                 # after a sighup refresh, reschedule task forward
-                task_at_secs['update_io'] = secs_elapsed
+                task_at_secs['update_io'] = secs_elapsed - 1
 
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
@@ -295,9 +295,9 @@ def init():
         io_status.ext_temp_c = 6.0
         io_status.req_temp_desc = 'Economy'
         io_status.heating_status = 'off'
-        # initial temperature = manual + 1°C
+        # initial temperature = manual
         dbmgr = db.DatabaseManager()
-        row = dbmgr.query("SELECT temp_c + 1 FROM gm_temp WHERE id = 1").fetchone()
+        row = dbmgr.query("SELECT temp_c FROM gm_temp WHERE id = 1").fetchone()
         if row:
             temp = row[0]
 
