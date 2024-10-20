@@ -126,9 +126,10 @@ def main():
             current_time = datetime.datetime.today().hour * 100 + \
                 datetime.datetime.today().minute
 
-            #  refresh at end time (do once per minute)
-            if (io_status.req_end_time <= current_time and
-                    last_update_min != datetime.datetime.today().minute):
+            #  refresh at EXACT end time (only once per minute)
+            # TODO: fix Daylight Saving Time change
+            if (current_time == io_status.req_end_time and
+                last_update_min != datetime.datetime.today().minute):
                 last_update_min = datetime.datetime.today().minute
                 sighup_refresh = True
 
@@ -390,8 +391,7 @@ def get_temperature():
         log_temp_avg_counter = 1
         log_temp_avg_sum += log_temp_avg_counter
         log_temp_avg_accu += temp * log_temp_avg_counter
-        log_stdout('HOMPI', 'Req: {:.2f}° - Int: {:.2f}° - Thermo: {}'.format(
-            io_status.req_temp_c, temp, io_status.heating_status))
+        log_stdout('HOMPI', 'Get temp: {:.2f}° - Thermo: {}'.format(temp, io_status.heating_status))
 
 
 def compute_status():
@@ -415,9 +415,6 @@ def compute_status():
                     config.TRV_DATA_EXPIRATION_SECS):
                 ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, area['cur_temp_c'])
                 trv_heating_on |= area['req_temp_c'] - area['cur_temp_c'] >= config.HEATING_THRESHOLD
-
-    if ext_cur_temp_c:
-        ext_cur_temp_c = '({})'.format(ext_cur_temp_c[:-2])
 
     if io_status.int_temp_c:
         last_change = dateutil.parser.parse(io_status.last_change)
@@ -474,7 +471,9 @@ def compute_status():
     io_status.update(current_time)
     changed = io_status.last_change == current_time.isoformat()
     if changed:
-        log_stdout('HOMPI', 'Req: {:.2f}° - Int: {:.2f}° - Ext: {} - Thermo changed to: {}'.format(
+        if ext_cur_temp_c:
+            ext_cur_temp_c = 'Ext: ({}) -'.format(ext_cur_temp_c[:-2])
+        log_stdout('HOMPI', 'Req: {:.2f}° - Int: {:.2f}° - {} Thermo changed to: {}'.format(
             io_status.req_temp_c, temp, ext_cur_temp_c, io_status.heating_status), LOG_INFO)
 
     return changed
