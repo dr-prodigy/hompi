@@ -70,7 +70,7 @@ BUTTONS = [
     [22, 'Living'],
     [23, 'Bedroom'],
 ]
-BUTTON_DURATION_SECS = 3
+BUTTON_DURATION_SECS = 1
 
 # AMBIENT LED
 LED_RIGHT_TO_LEFT = False
