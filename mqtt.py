@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
-import traceback
 import config
 import re
 import time
@@ -30,7 +29,7 @@ CONNECT_TIMEOUT_SECS = 5
 
 class MQTT:
     def __init__(self, io_status):
-        self.__running = self.__connected = False
+        self.__connected = False
         self.__areas = {}
         self.__io_status = io_status
         self.__client = None
@@ -52,6 +51,7 @@ class MQTT:
                 log_stdout('MQTT', 'Connected to broker {}:{}'
                            .format(config.MQTT_BROKER, config.MQTT_PORT), LOG_INFO)
                 self.__connected = True
+                for area in self.__areas.values(): area['subscribed'] = False
             else:
                 log_stderr('*MQTT* - Failed to connect to broker {}:{}: {}'.
                            format(config.MQTT_BROKER, config.MQTT_PORT, rc))
@@ -60,10 +60,10 @@ class MQTT:
             if rc == 0:
                 # successful disconnect
                 log_stdout('MQTT', 'Disconnected: ok', LOG_INFO)
-                self.__connected = False
             else:
                 # error processing
                 log_stderr('*MQTT* - Failed to disconnect: {}'.format(rc))
+            self.__connected = False
 
         self.__connected = False
         _client = mqtt_client.Client(CallbackAPIVersion.VERSION2)
@@ -82,35 +82,11 @@ class MQTT:
             _client.subscribe("$SYS/broker/log/#")
         return _client
 
-    def __publish(self, area_id, req_temp_c, calibration):
-        area = self.__areas[area_id]
-        if area['mqtt_trv_name']:
-            topic = '{}/{}/set'.format(config.MQTT_BASE_TOPIC, area['mqtt_trv_name'])
-            payload = (area['mqtt_trv_publish_payload']
-                      .replace('**TEMP**', str(req_temp_c))
-                      .replace('**TEMP_CAL**', str(calibration)))
-            if self.__client:
-                self.__client.publish(topic, payload)
-                log_stdout('MQTT', 'Area: {} - Publish: req. temp.: {}, calibration: {}'.
-                           format(area['area_name'], req_temp_c, calibration, LOG_INFO))
-            else:
-                log_stdout('MQTT', 'Missing client - Publish SKIPPED {} -> ({})'.
-                           format(payload, topic, LOG_WARN))
-
-    def update_areas(self):
-        for area_id in self.__io_status.areas.keys():
-            area = self.__io_status.areas[area_id]
-            if not area['published']:
-                if not self.__connect(): break
-                self.__publish(area_id, area['req_temp_c'], area['temp_calibration'])
-                area['published'] = True
-
-    def subscribe(self, area_id, area_name,
-                  mqtt_name, cur_temp_c_regex, req_temp_c_regex, calibration,
-                  mqtt_trv_name, mqtt_trv_publish_payload, subscribed):
+    def __subscribe(self, topic):
         def on_message(client, userdata, msg):
             msg_topic = "DEBUG" if msg.topic.startswith("$SYS/broker/log/") else msg.topic
             log_stdout('MQTT', '({}) -> {}'.format(msg_topic, msg.payload.decode()), LOG_DEBUG)
+            # topic decoding
             for area_id in self.__areas.keys():
                 area = self.__areas[area_id]
                 if area['topic'] == msg.topic:
@@ -129,24 +105,57 @@ class MQTT:
                     log_stdout('MQTT', '{} update - cur_temp_c: {} - req_temp_c: {}'.
                                format(area['mqtt_name'], cur_temp_c, req_temp_c), LOG_INFO)
 
-        topic = '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_name)
+        self.__client.subscribe(topic)
+        self.__client.on_message = on_message
+
+    def __publish(self, area_id, req_temp_c, calibration):
+        published = False
+        area = self.__areas[area_id]
+        if area['mqtt_trv_name']:
+            topic = '{}/{}/set'.format(config.MQTT_BASE_TOPIC, area['mqtt_trv_name'])
+            payload = (area['mqtt_trv_publish_payload']
+                      .replace('**TEMP**', str(req_temp_c))
+                      .replace('**TEMP_CAL**', str(calibration)))
+            if self.__connected:
+                self.__client.publish(topic, payload)
+                log_stdout('MQTT', 'Area: {} - Publish: req. temp.: {}, calibration: {}'.
+                           format(area['area_name'], req_temp_c, calibration), LOG_INFO)
+                published = True
+            else:
+                log_stdout('MQTT', 'Not connected - Publish SKIPPED {} -> ({})'.
+                           format(payload, topic, LOG_WARN))
+        return published
+
+    def update_areas(self):
+        # subscribe to topics
+        for area in self.__areas.values():
+            if not area['subscribed']:
+                if not self.__connect(): return
+                self.__subscribe(area['topic'])
+                area['subscribed'] = True
+                log_stdout('MQTT',
+                           'Area: {} - subscribe ({})'.format(area['area_name'], area['topic']), LOG_INFO)
+        # publish updates
+        for area_id in self.__io_status.areas.keys():
+            area = self.__io_status.areas[area_id]
+            if not area['published']:
+                if not self.__connect(): return
+                area['published'] = self.__publish(area_id, area['req_temp_c'], area['temp_calibration'])
+
+    def subscribe(self, area_id, area_name,
+                  mqtt_name, cur_temp_c_regex, req_temp_c_regex, calibration,
+                  mqtt_trv_name, mqtt_trv_publish_payload):
         self.__areas[area_id] = \
-            { 'area_name': area_name,
-              'topic': topic, 'mqtt_name': mqtt_name,
+            { 'area_name': area_name, 'mqtt_name': mqtt_name,
+              'topic': '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_name),
               'cur_temp_c_regex': cur_temp_c_regex, 'req_temp_c_regex': req_temp_c_regex,
               'calibration': calibration, 'mqtt_trv_name': mqtt_trv_name,
-              'mqtt_trv_publish_payload': mqtt_trv_publish_payload }
-        # todo: defer subscription if connection is not available
-        if self.__connect() and not subscribed:
-            self.__client.subscribe(topic)
-            self.__client.on_message = on_message
-            log_stdout('MQTT', 'Area: {} - subscribe ({})'.format(area_name, topic), LOG_INFO)
-
+              'mqtt_trv_publish_payload': mqtt_trv_publish_payload,
+              'subscribed': False }
 
     def cleanup(self):
         log_stdout('MQTT', 'Cleanup', LOG_INFO)
         if self.__client:
             self.__client.loop_stop()
             self.__client.disconnect()
-        self.__running = False
         self.__areas.clear()
