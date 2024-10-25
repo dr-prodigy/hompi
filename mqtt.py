@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
+import traceback
 import config
 import re
 import time
@@ -25,46 +26,48 @@ from utils import LOG_INFO, log_stdout, log_stderr, LOG_DEBUG, LOG_WARN
 from paho.mqtt import client as mqtt_client
 from paho.mqtt.enums import CallbackAPIVersion
 
+CONNECT_TIMEOUT_SECS = 5
+
 class MQTT:
     def __init__(self, io_status):
         self.__running = self.__connected = False
         self.__areas = {}
         self.__io_status = io_status
         self.__client = None
-        if config.ENABLE_TRV_INTEGRATION:
-            try:
-                self.__client = self.__connect_mqtt()
-            except Exception as e:
-                log_stderr('*MQTT* - Failed to connect: {}\n'.format(e))
 
     def __connect_mqtt(self) -> mqtt_client:
-        self.__connected = False
         def on_connect(client, userdata, flags, rc, properties):
             if flags.session_present:
                 pass
             if rc == 0:
-                log_stdout('MQTT', 'Connected to MQTT broker {}:{}'
+                log_stdout('MQTT', 'Connected to broker {}:{}'
                            .format(config.MQTT_BROKER, config.MQTT_PORT), LOG_INFO)
                 self.__connected = True
             else:
-                log_stderr('*MQTT* - Failed to connect: return code {}\n'.format(rc))
+                log_stderr('*MQTT* - Failed to connect to broker {}:{}: {}'.
+                           format(config.MQTT_BROKER, config.MQTT_PORT, rc))
 
         def on_disconnect(client, userdata, flags, rc, properties):
             if rc == 0:
-                # success disconnect
+                # successful disconnect
                 log_stdout('MQTT', 'Disconnected: ok', LOG_INFO)
+                self.__connected = False
             else:
                 # error processing
-                log_stderr('*MQTT* - Failed to disconnect: return code {}\n'.format(rc))
+                log_stderr('*MQTT* - Failed to disconnect: {}'.format(rc))
 
+        self.__connected = False
         _client = mqtt_client.Client(CallbackAPIVersion.VERSION2)
         # client.username_pw_set(username, password)
         _client.on_connect = on_connect
         _client.on_disconnect = on_disconnect
         _client.connect(config.MQTT_BROKER, config.MQTT_PORT)
         _client.loop_start()
-        while not self.__connected:
-            time.sleep(.05)
+
+        start_time = datetime.datetime.now()
+        while not self.__connected and \
+            (datetime.datetime.now() - start_time).total_seconds() < CONNECT_TIMEOUT_SECS:
+            time.sleep(.1)
 
         if config.LOG_LEVEL == LOG_DEBUG:
             _client.subscribe("$SYS/broker/log/#")
@@ -89,6 +92,13 @@ class MQTT:
         for area_id in self.__io_status.areas.keys():
             area = self.__io_status.areas[area_id]
             if not area['published']:
+                # lazy MQTT server connection
+                if not self.__connected:
+                    try:
+                        self.__client = self.__connect_mqtt()
+                    except Exception as e:
+                        log_stderr('*MQTT* - Failed to connect: {}'.format(e))
+                        break
                 self.__publish(area_id, area['req_temp_c'], area['temp_calibration'])
                 area['published'] = True
 

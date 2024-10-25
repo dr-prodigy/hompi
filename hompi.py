@@ -416,42 +416,43 @@ def compute_status():
                 ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, area['cur_temp_c'])
                 trv_heating_on |= area['req_temp_c'] - area['cur_temp_c'] >= config.HEATING_THRESHOLD
 
-    if io_status.int_temp_c:
-        last_change = dateutil.parser.parse(io_status.last_change)
-        # print(current_time - last_change).total_seconds()
+    if config.MODULE_TEMP:
+        if io_status.int_temp_c:
+            last_change = dateutil.parser.parse(io_status.last_change)
+            # print(current_time - last_change).total_seconds()
 
-        if io_status.req_temp_c - io_status.int_temp_c >= config.HEATING_THRESHOLD \
-                or slave_heating_on or trv_heating_on:
-            if io_status.heating_status == 'off' or \
-                    io_status.heating_status == 'cooling':
-                # log_data('heating ON')
-                io_status.last_change = current_time.isoformat()
-                io_status.heating_status = 'warming'
-                if config.TEST_MODE == 0:
-                    sensor.set_heating(True)
-            elif io_status.heating_status == 'warming' and \
-                    (current_time - last_change).total_seconds() / 60.0 > \
-                    config.THERMO_CHANGE_MINS:
-                io_status.last_change = current_time.isoformat()
-                io_status.heating_status = 'on'
-        # *** stop heating on exact temp! ***
-        if io_status.int_temp_c - io_status.req_temp_c >= 0 and \
-                not slave_heating_on and \
-                not trv_heating_on:
-            if io_status.heating_status == 'on' or \
-                    io_status.heating_status == 'warming':
-                # log_data('heating OFF')
-                io_status.last_change = current_time.isoformat()
-                io_status.heating_status = 'cooling'
-                if config.TEST_MODE == 0:
-                    sensor.set_heating(False)
-            elif io_status.heating_status == 'cooling' and \
-                    (current_time - last_change).total_seconds() / 60.0 > \
-                    config.THERMO_CHANGE_MINS:
-                io_status.last_change = current_time.isoformat()
-                io_status.heating_status = 'off'
-    else:
-        io_status.int_temp_c = 0
+            if io_status.req_temp_c - io_status.int_temp_c >= config.HEATING_THRESHOLD \
+                    or slave_heating_on or trv_heating_on:
+                if io_status.heating_status == 'off' or \
+                        io_status.heating_status == 'cooling':
+                    # log_data('heating ON')
+                    io_status.last_change = current_time.isoformat()
+                    io_status.heating_status = 'warming'
+                    if config.TEST_MODE == 0:
+                        sensor.set_heating(True)
+                elif io_status.heating_status == 'warming' and \
+                        (current_time - last_change).total_seconds() / 60.0 > \
+                        config.THERMO_CHANGE_MINS:
+                    io_status.last_change = current_time.isoformat()
+                    io_status.heating_status = 'on'
+            # *** stop heating on exact temp! ***
+            if io_status.int_temp_c - io_status.req_temp_c >= 0 and \
+                    not slave_heating_on and \
+                    not trv_heating_on:
+                if io_status.heating_status == 'on' or \
+                        io_status.heating_status == 'warming':
+                    # log_data('heating OFF')
+                    io_status.last_change = current_time.isoformat()
+                    io_status.heating_status = 'cooling'
+                    if config.TEST_MODE == 0:
+                        sensor.set_heating(False)
+                elif io_status.heating_status == 'cooling' and \
+                        (current_time - last_change).total_seconds() / 60.0 > \
+                        config.THERMO_CHANGE_MINS:
+                    io_status.last_change = current_time.isoformat()
+                    io_status.heating_status = 'off'
+        else:
+            io_status.int_temp_c = 0
 
     # switch management
     for sw in range(len(config.BUTTONS)):
