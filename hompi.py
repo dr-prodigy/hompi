@@ -200,9 +200,10 @@ def main():
 
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
-                io_status.int_temp_c = round(
-                    log_temp_avg_accu / log_temp_avg_sum, 2)
-                log_temp_avg_accu = log_temp_avg_counter = log_temp_avg_sum = 0
+                if config.MODULE_TEMP:
+                    io_status.int_temp_c = round(
+                        log_temp_avg_accu / log_temp_avg_sum, 2)
+                    log_temp_avg_accu = log_temp_avg_counter = log_temp_avg_sum = 0
                 log_data('refreshing' if sighup_refresh else '.')
 
             # update LCD message (NOT ON REFRESH)
@@ -658,7 +659,7 @@ def update_output():
             """UPDATE gm_output
             SET data = '{}', last_update = strftime('%s','now')
             WHERE id = 0""".format(current_status.replace('\'', '\'\'')))
-        log_stdout('HOMPI', 'new output: ' + current_status.replace('\n', ''))
+        log_stdout('HOMPI', 'New output: ' + current_status.replace('\n', ''))
         if config.ENABLE_HASS_INTEGRATION:
             hass.publish_status(io_status, io_system, ambient)
 
@@ -831,7 +832,7 @@ def process_input():
 
 
 def show_message(lcd_message, telegram_message=""):
-    log_stdout('HOMPI', 'message: [{}] - {}'.format(lcd_message, telegram_message), LOG_INFO)
+    log_stdout('HOMPI', 'Message: [{}] - {}'.format(lcd_message, telegram_message), LOG_INFO)
     if config.ENABLE_TELEGRAM:
         if telegram_message == "":
             telegram_message = lcd_message
@@ -877,14 +878,16 @@ def log_data(event):
             # remove last ; and add quotes
             description = "'{}'".format(description[:-1])
 
+        int_temp_c = io_status.int_temp_c if config.MODULE_TEMP else 0
+        ext_temp_c = io_status.ext_temp_c if config.MODULE_METEO else 0
         dbmgr = db.DatabaseManager()
         dbmgr.query("""
             INSERT INTO gm_log
             (datetime, int_temp_c, ext_temp_c, req_temp_c, event, description)
             VALUES (strftime('%s','now'), {:f}, {:f}, {:f}, {}, {})
-            """.format(io_status.int_temp_c, io_status.ext_temp_c,
+            """.format(int_temp_c, ext_temp_c,
                        io_status.req_temp_c, event, description))
-        log_stdout('HOMPI', 'gm_log: {}'.format(event))
+        log_stdout('HOMPI', 'DB log: {}'.format(event))
     except (KeyboardInterrupt, SystemExit):
         raise
     except Exception as e:

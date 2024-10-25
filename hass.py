@@ -105,36 +105,38 @@ def publish_status(io_status, io_system, ambient):
                   "device_class": "temperature", "unit_of_measurement": "°C"}}}
         )
     # aphorism entities
-    state = "{} ({})".format(io_status.aphorism_text.strip(), io_status.aphorism_author.strip())
-    if config.MODULE_APHORISM and old_entity.get("forismatic") != state:
-        old_entity["forismatic"] = state
-        hass_entities.append(
-            {"entity_id": "forismatic",
-             "data": {"state": state,
-                      "attributes": {"friendly_name": "Forismatic", "icon": HOMPI_APHORISM_ICON}}}
-        )
+    if config.MODULE_APHORISM:
+        state = "{} ({})".format(io_status.aphorism_text.strip(), io_status.aphorism_author.strip())
+        if old_entity.get("forismatic") != state:
+            old_entity["forismatic"] = state
+            hass_entities.append(
+                {"entity_id": "forismatic",
+                "data": {"state": state,
+                        "attributes": {"friendly_name": "Forismatic", "icon": HOMPI_APHORISM_ICON}}}
+            )
     # ambient light entities
-    comparer = "{}{}{}{}{}{}".format(io_status.ambient_on, io_status.id,
-                             ambient.status_brightness, ambient.status_color_dec, ambient.status_color_hs,
-                             ambient.status_effect)
-    if config.MODULE_AMBIENT and old_entity.get("hompi_ambient_light") != comparer:
-        old_entity["hompi_ambient_light"] = comparer
-        light_sensor = {"entity_id": "hompi_ambient_light",
-                        "data": {"state": io_status.ambient_on, "attributes":
-                            {"unique_id": "hompi_ambient_{}".format(io_status.id.lower()),
-                             "friendly_name": "Hompi ambient light",
-                             "icon": HOMPI_AMBIENT_ICON,
-                             "effect_list": ambient.EFFECT_LIST,
-                             }}}
-        if ambient.status_power_on:
-            light_sensor["data"]["attributes"].update(
-                {"brightness": ambient.status_brightness,
-                 "rgb_color": ambient.status_color_dec,
-                 "hs_color": ambient.status_color_hs})
-            if ambient.status_effect:
+    if config.MODULE_AMBIENT: 
+        comparer = "{}{}{}{}{}{}".format(io_status.ambient_on, io_status.id,
+                                ambient.status_brightness, ambient.status_color_dec, ambient.status_color_hs,
+                                ambient.status_effect)
+        if old_entity.get("hompi_ambient_light") != comparer:
+            old_entity["hompi_ambient_light"] = comparer
+            light_sensor = {"entity_id": "hompi_ambient_light",
+                            "data": {"state": io_status.ambient_on, "attributes":
+                                {"unique_id": "hompi_ambient_{}".format(io_status.id.lower()),
+                                "friendly_name": "Hompi ambient light",
+                                "icon": HOMPI_AMBIENT_ICON,
+                                "effect_list": ambient.EFFECT_LIST,
+                                }}}
+            if ambient.status_power_on:
                 light_sensor["data"]["attributes"].update(
-                    {"effect": ambient.status_effect, "icon": HOMPI_AMBIENT_EFFECT_ICON})
-        hass_entities.append(light_sensor)
+                    {"brightness": ambient.status_brightness,
+                    "rgb_color": ambient.status_color_dec,
+                    "hs_color": ambient.status_color_hs})
+                if ambient.status_effect:
+                    light_sensor["data"]["attributes"].update(
+                        {"effect": ambient.status_effect, "icon": HOMPI_AMBIENT_EFFECT_ICON})
+            hass_entities.append(light_sensor)
 
     # temperature entities
     for temp in io_system.temperatures:

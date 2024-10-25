@@ -395,7 +395,7 @@ class Dashboard:
             # bignum test mode
             main_temp = '0123456789\''
         else:
-            if self._current_program % 4 == 0:
+            if config.MODULE_TEMP and self._current_program % 4 == 0:
                 main_temp = '{:04.1f}\''.format(io_status.int_temp_c)
             else:
                 main_temp = strftime("%H:%M")
@@ -422,7 +422,7 @@ class Dashboard:
                 # +----------------+
                 self.set_charset(CHARSET_BIGNUM)
 
-                if self._current_program % 4 == 0:
+                if config.MODULE_TEMP and self._current_program % 4 == 0:
                     self.line[0] = '{} {}'.format(heating_icon,
                                                   main_temp1.center(14))
                     self.line[1] = '{} {}'.format(mode_icon,
@@ -436,11 +436,11 @@ class Dashboard:
                 # |A  20.6° > 19:30|
                 # +----------------+
                 # self.set_charset(CHARSET_SYMBOL) # change charset
-                self.line[0] = '{} {:02.0f}^{:02.0f}   {:.1f}\xDFC'.format(
+                self.line[0] = '{} {:02.0f}^{:02.0f}   {}'.format(
                     heating_icon,
                     datetime.datetime.now().hour,
                     datetime.datetime.now().minute,
-                    io_status.int_temp_c)
+                    '{:.1f}\xDFC'.format(io_status.int_temp_c) if config.MODULE_TEMP else '' )
                 if io_status.message != '':
                     self.line[1] = ' \xA5 \xA5 \xA5 ' + \
                                    io_status.message + ' \xA5 \xA5 \xA5'

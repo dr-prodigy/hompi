@@ -63,19 +63,22 @@ class Status:
         self.message = ''
         hide_message_time = datetime.datetime.now()
         # ambient
-        self.ambient_color = '000000'
-        self.ambient_effect = None
-        self.ambient_on = False
+        if config.MODULE_AMBIENT:
+            self.ambient_color = '000000'
+            self.ambient_effect = None
+            self.ambient_on = False
         # meteo
-        self.ext_temp_c = 0.0
-        self.place = ''
-        self.weather = ''
-        self.humidity = 0
-        self.pressure = 0
-        self.wind = 0.0
+        if config.MODULE_METEO:
+            self.ext_temp_c = 0.0
+            self.place = ''
+            self.weather = ''
+            self.humidity = 0
+            self.pressure = 0
+            self.wind = 0.0
         # aphorism
-        self.aphorism_text = ''
-        self.aphorism_author = ''
+        if config.MODULE_APHORISM:
+            self.aphorism_text = ''
+            self.aphorism_author = ''
 
     def get_output(self):
         return json.dumps(self.__dict__, indent=0)
