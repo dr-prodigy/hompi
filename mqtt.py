@@ -35,6 +35,15 @@ class MQTT:
         self.__io_status = io_status
         self.__client = None
 
+    def __connect(self):
+        # lazy MQTT server connection
+        if not self.__client or not self.__connected:
+            try:
+                self.__client = self.__connect_mqtt()
+            except Exception as e:
+                log_stderr('*MQTT* - Failed to connect: {}'.format(e))
+        return self.__connected
+
     def __connect_mqtt(self) -> mqtt_client:
         def on_connect(client, userdata, flags, rc, properties):
             if flags.session_present:
@@ -92,13 +101,7 @@ class MQTT:
         for area_id in self.__io_status.areas.keys():
             area = self.__io_status.areas[area_id]
             if not area['published']:
-                # lazy MQTT server connection
-                if not self.__connected:
-                    try:
-                        self.__client = self.__connect_mqtt()
-                    except Exception as e:
-                        log_stderr('*MQTT* - Failed to connect: {}'.format(e))
-                        break
+                if not self.__connect(): break
                 self.__publish(area_id, area['req_temp_c'], area['temp_calibration'])
                 area['published'] = True
 
@@ -133,7 +136,8 @@ class MQTT:
               'cur_temp_c_regex': cur_temp_c_regex, 'req_temp_c_regex': req_temp_c_regex,
               'calibration': calibration, 'mqtt_trv_name': mqtt_trv_name,
               'mqtt_trv_publish_payload': mqtt_trv_publish_payload }
-        if self.__client and not subscribed:
+        # todo: defer subscription if connection is not available
+        if self.__connect() and not subscribed:
             self.__client.subscribe(topic)
             self.__client.on_message = on_message
             log_stdout('MQTT', 'Area: {} - subscribe ({})'.format(area_name, topic), LOG_INFO)
