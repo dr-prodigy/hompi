@@ -661,10 +661,11 @@ def update_output():
             SET data = '{}', last_update = strftime('%s','now')
             WHERE id = 0""".format(current_status.replace('\'', '\'\'')))
         log_stdout('HOMPI', 'New output: ' + current_status.replace('\n', ''))
-        if config.ENABLE_HASS_INTEGRATION:
-            hass.publish_status(io_status, io_system, ambient)
-
         update_lcd_content(change=False)
+
+    # update Home Assistant
+    if config.ENABLE_HASS_INTEGRATION:
+        hass.publish_status(io_status, io_system, ambient)
 
 
 def process_input():
