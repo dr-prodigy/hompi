@@ -49,14 +49,15 @@ REFRESH_MINUTES = 10
 
 headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
 old_entity = {}
-next_refresh = datetime.now()
+refresh_time = publish_time = datetime.now()
 
 def publish_status(io_status, io_system, ambient):
-    global next_refresh, old_entity
+    global refresh_time, publish_time, old_entity
     hass_entities = []
 
-    # refresh
-    if datetime.now() >= next_refresh:
+    # refresh time: cleanup old status
+    if datetime.now() >= refresh_time:
+        refresh_time = datetime.now() + timedelta(minutes=REFRESH_MINUTES)
         old_entity = {}
 
     if old_entity.get("hompi_id") != io_status.id:
@@ -159,16 +160,14 @@ def publish_status(io_status, io_system, ambient):
 
     entity_id = None
     try:
-        if datetime.now() >= next_refresh and len(hass_entities) > 0:
+        if len(hass_entities) > 0 and datetime.now() >= publish_time:
             log_stdout('HASS', 'Publishing {} entities to HASS'.format(len(hass_entities)), LOG_INFO)
             for entity in hass_entities:
                 entity_id = entity["entity_id"]
                 url = config.HASS_SERVER + STATUS_ENTITY_API_URL + entity_id
                 response = post(url, headers=headers, json=entity["data"], verify=config.HASS_CHECK_SSL_CERT)
                 log_stdout('HASS', 'PUBLISH ({}): {}'.format(entity_id, response.text))
-            next_refresh = datetime.now() + timedelta(minutes=REFRESH_MINUTES)
     except Exception as e:
+        # error: cleanup old_entity and delay next publish for RETRY_MINUTES
         log_stderr('*HASS* ERR: PUBLISH ({}): {}'.format(entity_id, e))
-        # cleanup old_entity: exit and retry publish
-        old_entity = {}
-        next_refresh = datetime.now() + timedelta(minutes=RETRY_MINUTES)
+        publish_time = refresh_time = datetime.now() + timedelta(minutes=RETRY_MINUTES)
