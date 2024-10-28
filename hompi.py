@@ -140,11 +140,11 @@ def main():
                 sensor.hompi_ext_sensors_refresh(io_status.hompi_ext_sensors)
 
             # update I/O: meteo
-            if secs_elapsed >= task_at_secs['get_meteo'] and config.MODULE_METEO:
+            if config.MODULE_METEO and secs_elapsed >= task_at_secs['get_meteo']:
                 meteo()
 
             # aphorism
-            if secs_elapsed >= task_at_secs['get_aphorism'] and config.MODULE_APHORISM:
+            if config.MODULE_APHORISM and secs_elapsed >= task_at_secs['get_aphorism']:
                 aphorism()
 
             # re-iterate things
@@ -161,7 +161,7 @@ def main():
                     io_status.int_temp_c = 0.0
 
             # get temperature
-            if secs_elapsed >= task_at_secs['get_temp'] and config.MODULE_TEMP:
+            if config.MODULE_TEMP and secs_elapsed >= task_at_secs['get_temp']:
                 get_temperature()
 
             # update temperature
@@ -176,27 +176,26 @@ def main():
             # update I/O (ack occurring here gets ambient control)
             if secs_elapsed >= task_at_secs['update_io'] or sighup_refresh:
                 process_input()
+                # after a sighup refresh, reschedule task forward (see below!)
 
             # refresh program
             if secs_elapsed >= task_at_secs['refresh'] or sighup_refresh:
                 refresh_program(current_time)
                 # after a sighup refresh, reschedule task forward
-                task_at_secs['refresh'] = secs_elapsed - 1
-
-            # start MQTT integration
-            # if config.ENABLE_TRV_INTEGRATION:
-            #     mqtt.run()
+                task_at_secs['refresh'] = secs_elapsed
 
             # compute status (heating, switches, ...)
             is_status_changed |= compute_status()
 
-            # update I/O: output and MQTT areas
+            # update I/O: output, HASS and MQTT areas
             if secs_elapsed >= task_at_secs['update_io'] or is_status_changed or sighup_refresh:
                 update_output()
                 if config.ENABLE_TRV_INTEGRATION:
                     mqtt.update_areas()
+                if config.ENABLE_HASS_INTEGRATION:
+                    hass.publish_status(io_status, io_system, ambient)
                 # after a sighup refresh, reschedule task forward
-                task_at_secs['update_io'] = secs_elapsed - 1
+                task_at_secs['update_io'] = secs_elapsed
 
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
@@ -622,8 +621,8 @@ def refresh_program(time_):
                 area["cur_temp_c"] = 999
 
             # MQTT subscription
-            if not published or not subscribed:
-                mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], subscribed)
+            if not subscribed:
+                mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 
 
     # refresh temperatures
@@ -660,9 +659,6 @@ def update_output():
             SET data = '{}', last_update = strftime('%s','now')
             WHERE id = 0""".format(current_status.replace('\'', '\'\'')))
         log_stdout('HOMPI', 'New output: ' + current_status.replace('\n', ''))
-        if config.ENABLE_HASS_INTEGRATION:
-            hass.publish_status(io_status, io_system, ambient)
-
         update_lcd_content(change=False)
 
 
