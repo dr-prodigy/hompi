@@ -184,18 +184,16 @@ def main():
                 # after a sighup refresh, reschedule task forward
                 task_at_secs['refresh'] = secs_elapsed
 
-            # start MQTT integration
-            # if config.ENABLE_TRV_INTEGRATION:
-            #     mqtt.run()
-
             # compute status (heating, switches, ...)
             is_status_changed |= compute_status()
 
-            # update I/O: output and MQTT areas
+            # update I/O: output, HASS and MQTT areas
             if secs_elapsed >= task_at_secs['update_io'] or is_status_changed or sighup_refresh:
                 update_output()
                 if config.ENABLE_TRV_INTEGRATION:
                     mqtt.update_areas()
+                if config.ENABLE_HASS_INTEGRATION:
+                    hass.publish_status(io_status, io_system, ambient)
                 # after a sighup refresh, reschedule task forward
                 task_at_secs['update_io'] = secs_elapsed
 
@@ -662,10 +660,6 @@ def update_output():
             WHERE id = 0""".format(current_status.replace('\'', '\'\'')))
         log_stdout('HOMPI', 'New output: ' + current_status.replace('\n', ''))
         update_lcd_content(change=False)
-
-    # update Home Assistant
-    if config.ENABLE_HASS_INTEGRATION:
-        hass.publish_status(io_status, io_system, ambient)
 
 
 def process_input():

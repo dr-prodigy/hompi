@@ -44,19 +44,19 @@ HOMPI_APHORISM_ICON = "mdi:comment-quote"
 HOMPI_AMBIENT_ICON = "mdi:television-ambient-light"
 HOMPI_AMBIENT_EFFECT_ICON = "mdi:palette"
 
-RETRY_MINUTES = 1
+RETRY_MINUTES = 2
 REFRESH_MINUTES = 10
 
+headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
 old_entity = {}
-next_retry = next_refresh = datetime.now()
+next_refresh = datetime.now()
 
 def publish_status(io_status, io_system, ambient):
-    global next_retry, next_refresh, old_entity
+    global next_refresh, old_entity
     hass_entities = []
 
     # refresh
     if datetime.now() >= next_refresh:
-        next_refresh = datetime.now() + timedelta(minutes=REFRESH_MINUTES)
         old_entity = {}
 
     if old_entity.get("hompi_id") != io_status.id:
@@ -159,18 +159,16 @@ def publish_status(io_status, io_system, ambient):
 
     entity_id = None
     try:
-        headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
-        if len(hass_entities) > 0:
+        if datetime.now() >= next_refresh and len(hass_entities) > 0:
             log_stdout('HASS', 'Publishing {} entities to HASS'.format(len(hass_entities)), LOG_INFO)
-        for entity in hass_entities:
-            entity_id = entity["entity_id"]
-            url = config.HASS_SERVER + STATUS_ENTITY_API_URL + entity_id
-
-            if datetime.now() >= next_retry:
+            for entity in hass_entities:
+                entity_id = entity["entity_id"]
+                url = config.HASS_SERVER + STATUS_ENTITY_API_URL + entity_id
                 response = post(url, headers=headers, json=entity["data"], verify=config.HASS_CHECK_SSL_CERT)
                 log_stdout('HASS', 'PUBLISH ({}): {}'.format(entity_id, response.text))
+            next_refresh = datetime.now() + timedelta(minutes=REFRESH_MINUTES)
     except Exception as e:
         log_stderr('*HASS* ERR: PUBLISH ({}): {}'.format(entity_id, e))
         # cleanup old_entity: exit and retry publish
         old_entity = {}
-        next_retry = datetime.now() + timedelta(minutes=RETRY_MINUTES)
+        next_refresh = datetime.now() + timedelta(minutes=RETRY_MINUTES)
