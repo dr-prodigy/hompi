@@ -25,6 +25,6 @@ cd $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # move up
 cd ..
 # create virtualenv, activate it, setup requirements
-python3 -m virtualenv --system-site-packages venv
+python3 -m virtualenv venv
 . venv/bin/activate
 pip install -r requirements/requirements.txt
