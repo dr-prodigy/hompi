@@ -585,6 +585,7 @@ def refresh_program(time_):
 
     # get MQTT areas (NULL area_id => all areas)
     if config.ENABLE_TRV_INTEGRATION:
+        min_req_temp_c = max_req_temp_c = io_status.req_temp_c
         rows = dbmgr.query(
             """SELECT DISTINCT area.id, area.area_name,
                     area.mqtt_temp_name, area.mqtt_cur_temp_c_regex, area.mqtt_req_temp_c_regex,
@@ -598,8 +599,6 @@ def refresh_program(time_):
                 WHERE timetable_type_data_id = {:d}
                 ORDER BY area.id""".format(tdtypedata_id)
         ).fetchall()
-        min_req_temp_c = 999
-        max_req_temp_c = 0
         # update io_status and MQTT subscriptions
         for row in rows:
             subscribed = True
@@ -631,9 +630,8 @@ def refresh_program(time_):
             max_req_temp_c = req_temp_c if req_temp_c > max_req_temp_c else max_req_temp_c
 
         # Differentiated areas
-        if (min_req_temp_c != 999 and max_req_temp_c != 0) and \
-           (min_req_temp_c != max_req_temp_c or min_req_temp_c != io_status.req_temp_c):
-            req_area_temps = '{} / {}'.format(min_req_temp_c, max_req_temp_c)
+        if (min_req_temp_c != max_req_temp_c):
+            req_area_temps = '{}/{}'.format(min_req_temp_c, max_req_temp_c)
         else:
             req_area_temps = ''
         if req_area_temps != io_status.req_area_temps:
