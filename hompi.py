@@ -598,6 +598,8 @@ def refresh_program(time_):
                 WHERE timetable_type_data_id = {:d}
                 ORDER BY area.id""".format(tdtypedata_id)
         ).fetchall()
+        min_req_temp_c = 999
+        max_req_temp_c = 0
         # update io_status and MQTT subscriptions
         for row in rows:
             subscribed = True
@@ -624,6 +626,19 @@ def refresh_program(time_):
             if not subscribed:
                 mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 
+            # Collect min and max area temperatures
+            min_req_temp_c = req_temp_c if req_temp_c < min_req_temp_c else min_req_temp_c
+            max_req_temp_c = req_temp_c if req_temp_c > max_req_temp_c else max_req_temp_c
+
+        # Differentiated areas
+        if (min_req_temp_c != 999 and max_req_temp_c != 0) and \
+           (min_req_temp_c != max_req_temp_c or min_req_temp_c != io_status.req_temp_c):
+            req_area_temps = '{} / {}'.format(min_req_temp_c, max_req_temp_c)
+        else:
+            req_area_temps = ''
+        if req_area_temps != io_status.req_area_temps:
+            io_status.req_area_temps = req_area_temps
+            is_program_changed = True
 
     # refresh temperatures
     rows = dbmgr.query("SELECT id, description, temp_c FROM gm_temp")
