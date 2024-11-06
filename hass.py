@@ -174,5 +174,5 @@ def publish_status(io_status, io_system, ambient):
                 log_stdout('HASS', 'PUBLISH ({}): {}'.format(entity_id, response.text))
     except Exception as e:
         # error: cleanup old_entity and delay next publish for RETRY_MINUTES
-        log_stderr('*HASS* ERR: PUBLISH ({}): {}'.format(entity_id, e))
+        log_stderr('*HASS* ERR: PUBLISH ({}): {} -> delaying {} mins'.format(entity_id, e, RETRY_MINUTES))
         publish_time = refresh_time = datetime.now() + timedelta(minutes=RETRY_MINUTES)

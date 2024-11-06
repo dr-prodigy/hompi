@@ -626,12 +626,12 @@ def refresh_program(time_):
                 mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 
             # Collect min and max area temperatures
-            min_req_temp_c = req_temp_c if req_temp_c < min_req_temp_c else min_req_temp_c
-            max_req_temp_c = req_temp_c if req_temp_c > max_req_temp_c else max_req_temp_c
+            if req_temp_c < min_req_temp_c: min_req_temp_c = req_temp_c
+            if req_temp_c > max_req_temp_c: max_req_temp_c = req_temp_c
 
         # Differentiated areas
-        if (min_req_temp_c != max_req_temp_c):
-            req_area_temps = '{}/{}'.format(min_req_temp_c, max_req_temp_c)
+        if min_req_temp_c != max_req_temp_c:
+            req_area_temps = '{} / {}'.format(min_req_temp_c, max_req_temp_c)
         else:
             req_area_temps = ''
         if req_area_temps != io_status.req_area_temps:

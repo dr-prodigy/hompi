@@ -88,17 +88,11 @@ class Status:
         if self.message != '':
             status = '{}'.format(self.message)
         else:
-            state = 'manual' if self.mode_desc == 'Manual' else\
-                'automatic' if self.mode_desc == 'Automatic' else\
-                'off' if self.mode_desc == 'Off' else 'Winter safe'
-            heating = 'off' if self.heating_status == 'off' else\
-                'on' if self.heating_status == 'on' else\
-                'cooling' if self.heating_status == 'cooling' else\
-                'warming'
-
+            state = self.mode_desc.lower().replace('-', ' ')
+            heating = self.heating_status.lower().replace('-', ' ')
             status = 'temperature {:.1f} degrees, {} mode'.\
                      format(self.int_temp_c, state) + \
-                     (', {:.1f} degrees required, heating {}'.format(
+                     (', target {:.1f} degrees, heating {}'.format(
                         self.req_temp_c, heating)
                          if state in ['automatic', 'manual'] else
                          '')

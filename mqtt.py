@@ -19,13 +19,15 @@
 import config
 import re
 import time
-import datetime
 
+from datetime import datetime, timedelta
 from utils import LOG_INFO, log_stdout, log_stderr, LOG_DEBUG, LOG_WARN
 from paho.mqtt import client as mqtt_client
 from paho.mqtt.enums import CallbackAPIVersion
 
 CONNECT_TIMEOUT_SECS = 5
+RETRY_MINUTES = 2
+publish_time = datetime.now()
 
 class MQTT:
     def __init__(self, io_status):
@@ -35,12 +37,14 @@ class MQTT:
         self.__client = None
 
     def __connect(self):
+        global publish_time
         # lazy MQTT server connection
         if not self.__client or not self.__connected:
             try:
                 self.__client = self.__connect_mqtt()
             except Exception as e:
-                log_stderr('*MQTT* - Failed to connect: {}'.format(e))
+                log_stderr('*MQTT* - Failed to connect: {} -> delaying {} mins'.format(e, RETRY_MINUTES))
+                publish_time = datetime.now() + timedelta(minutes=RETRY_MINUTES)
         return self.__connected
 
     def __connect_mqtt(self) -> mqtt_client:
@@ -73,9 +77,9 @@ class MQTT:
         _client.connect(config.MQTT_BROKER, config.MQTT_PORT)
         _client.loop_start()
 
-        start_time = datetime.datetime.now()
+        start_time = datetime.now()
         while not self.__connected and \
-            (datetime.datetime.now() - start_time).total_seconds() < CONNECT_TIMEOUT_SECS:
+            (datetime.now() - start_time).total_seconds() < CONNECT_TIMEOUT_SECS:
             time.sleep(.1)
 
         if config.LOG_LEVEL == LOG_DEBUG:
@@ -91,7 +95,7 @@ class MQTT:
                 area = self.__areas[area_id]
                 if area['topic'] == msg.topic:
                     cur_area = self.__io_status.areas[area_id]
-                    cur_area["last_update"] = datetime.datetime.now().isoformat()
+                    cur_area["last_update"] = datetime.now().isoformat()
                     cur_area['temp_calibration'] = area['calibration']
                     temp = re.search(area['cur_temp_c_regex'], msg.payload.decode())
                     cur_temp_c = float(temp.group(1)) if temp else 999
@@ -117,30 +121,35 @@ class MQTT:
                       .replace('**TEMP**', str(req_temp_c))
                       .replace('**TEMP_CAL**', str(calibration)))
             if self.__connected:
-                self.__client.publish(topic, payload)
-                log_stdout('MQTT', 'Area: {} - Publish: req. temp.: {}, calibration: {}'.
-                           format(area['area_name'], req_temp_c, calibration), LOG_INFO)
-                published = True
+                if self.__client.publish(topic, payload).is_published():
+                    log_stdout('MQTT', 'Area: {} - Publish: req. temp.: {}, calibration: {}'.
+                            format(area['area_name'], req_temp_c, calibration), LOG_INFO)
+                    published = True
+                else:
+                    log_stdout('MQTT', '{} publish failed -> delaying {} mins'.
+                               format(topic, RETRY_MINUTES), LOG_WARN)
             else:
                 log_stdout('MQTT', 'Not connected - Publish SKIPPED {} -> ({})'.
-                           format(payload, topic, LOG_WARN))
+                           format(payload, topic), LOG_WARN)
         return published
 
     def update_areas(self):
-        # subscribe to topics
-        for area in self.__areas.values():
-            if not area['subscribed']:
-                if not self.__connect(): return
-                self.__subscribe(area['topic'])
-                area['subscribed'] = True
-                log_stdout('MQTT',
-                           'Area: {} - subscribe ({})'.format(area['area_name'], area['topic']), LOG_INFO)
-        # publish updates
-        for area_id in self.__io_status.areas.keys():
-            area = self.__io_status.areas[area_id]
-            if not area['published']:
-                if not self.__connect(): return
-                area['published'] = self.__publish(area_id, area['req_temp_c'], area['temp_calibration'])
+        global publish_time
+        if datetime.now() >= publish_time:
+            # subscribe to topics
+            for area in self.__areas.values():
+                if not area['subscribed']:
+                    if not self.__connect(): return
+                    self.__subscribe(area['topic'])
+                    area['subscribed'] = True
+                    log_stdout('MQTT',
+                            'Area: {} - subscribe ({})'.format(area['area_name'], area['topic']), LOG_INFO)
+            # publish updates
+            for area_id in self.__io_status.areas.keys():
+                area = self.__io_status.areas[area_id]
+                if not area['published']:
+                    if not self.__connect(): return
+                    area['published'] = self.__publish(area_id, area['req_temp_c'], area['temp_calibration'])
 
     def subscribe(self, area_id, area_name,
                   mqtt_name, cur_temp_c_regex, req_temp_c_regex, calibration,
