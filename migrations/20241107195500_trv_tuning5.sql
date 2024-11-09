@@ -42,10 +42,16 @@ INSERT INTO `gm_timetable_type_data` (`id`, `orderby`, `day_type_id`, `temp_id`,
 VALUES (31, 2, 8, 3, 500, 0);
 
 INSERT INTO `gm_timetable_type_data` (`id`, `orderby`, `day_type_id`, `temp_id`, `time_hhmm`, `delta_calc_mm`)
-VALUES (32, 3, 8, 3, 2030, 0);
+VALUES (32, 2, 8, 3, 0830, 0);
 
 INSERT INTO `gm_timetable_type_data` (`id`, `orderby`, `day_type_id`, `temp_id`, `time_hhmm`, `delta_calc_mm`)
-VALUES (33, 4, 8, 2, 2330, 0);
+VALUES (33, 3, 8, 3, 1130, 0);
+
+INSERT INTO `gm_timetable_type_data` (`id`, `orderby`, `day_type_id`, `temp_id`, `time_hhmm`, `delta_calc_mm`)
+VALUES (34, 3, 8, 3, 2030, 0);
+
+INSERT INTO `gm_timetable_type_data` (`id`, `orderby`, `day_type_id`, `temp_id`, `time_hhmm`, `delta_calc_mm`)
+VALUES (35, 4, 8, 2, 2330, 0);
 
 INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
 VALUES (260, 30, null, 2);
@@ -56,16 +62,29 @@ VALUES (270, 31, null, 3);
 INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
 VALUES (280, 32, 1, 3);
 INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
-VALUES (281, 32, 2, 3);
+VALUES (281, 32, 2, 2);
 INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
-VALUES (282, 32, 3, 2);
+VALUES (282, 32, 3, 3);
 INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
 VALUES (283, 32, 4, 2);
 
 INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
-VALUES (290, 33, null, 2);
+VALUES (290, 33, null, 3);
 
-UPDATE `gm_timetable` SET `description` = 'Smartworking', `tuesday` = 8, `wednesday` = 8, `friday` = 8
+INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
+VALUES (300, 34, 1, 3);
+INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
+VALUES (301, 34, 2, 3);
+INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
+VALUES (302, 34, 3, 2);
+INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
+VALUES (303, 34, 4, 2);
+
+INSERT INTO `gm_timetable_type_data_area` (`id`, `timetable_type_data_id`, `area_id`, `temp_id`)
+VALUES (310, 35, null, 2);
+
+UPDATE `gm_timetable` SET `description` = 'Smartworking',
+`monday` = 8, `tuesday` = 8, `wednesday` = 8, `thursday` = 8, `friday` = 8
 WHERE `id` = 5;
 
 PRAGMA foreign_keys=on;
