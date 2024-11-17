@@ -472,10 +472,10 @@ def compute_status():
     io_status.update(current_time)
     changed = io_status.last_change == current_time.isoformat()
     if changed:
-        if ext_cur_temp_c:
-            ext_cur_temp_c = 'Ext: ({}) -'.format(ext_cur_temp_c[:-2])
-        log_stdout('HOMPI', 'Req: {:.2f}° - Int: {:.2f}° - {} Thermo changed to: {}'.format(
-            io_status.req_temp_c, temp, ext_cur_temp_c, io_status.heating_status), LOG_INFO)
+        ext_cur_temp_c = 'Ext: ({}°) - '.format(ext_cur_temp_c[:-2]) if ext_cur_temp_c else ''
+        cur_temp_c = 'Int: {:.2f}° - '.format(temp) if temp else ''
+        log_stdout('HOMPI', 'Req: {:.2f}° - {}{}Thermo changed to: {}'.format(
+            io_status.req_temp_c, cur_temp_c, ext_cur_temp_c, io_status.heating_status), LOG_INFO)
 
     return changed
 
