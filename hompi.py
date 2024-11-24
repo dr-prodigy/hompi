@@ -82,7 +82,7 @@ task_every_secs = {
     'get_temp': 20.0,
     'get_meteo': 300.0,    #  5 mins
     'get_aphorism': 241.0, #  4 mins
-    'refresh': 1800.0,     # 30 mins (multiple of get_temp)
+    'refresh': 600.0,      # 10 mins (multiple of get_temp)
     'reiterate': 120.0,    #  2 mins
     'update_temp': 80.0,
     'update_io': 10.0,
