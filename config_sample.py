@@ -50,6 +50,7 @@ MQTT_BROKER = 'localhost'
 MQTT_PORT = 1883
 MQTT_BASE_TOPIC = 'zigbee2mqtt'
 TRV_DATA_EXPIRATION_SECS = 3600 # 1 hour
+TRV_CONFIG_REFRESH = True
 
 # LCD modes : NONE = 0, GPIO_CharLCD = 1, I2C = 2
 MODULE_LCD = 2

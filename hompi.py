@@ -82,7 +82,7 @@ task_every_secs = {
     'get_temp': 20.0,
     'get_meteo': 300.0,    #  5 mins
     'get_aphorism': 241.0, #  4 mins
-    'refresh': 1800.0,     # 30 mins (multiple of get_temp)
+    'refresh': 600.0,      # 10 mins (multiple of get_temp)
     'reiterate': 120.0,    #  2 mins
     'update_temp': 80.0,
     'update_io': 10.0,
@@ -602,7 +602,7 @@ def refresh_program(time_):
         # update io_status and MQTT subscriptions
         for row in rows:
             subscribed = True
-            if row[0] not in io_status.areas:
+            if row[0] not in io_status.areas or config.TRV_CONFIG_REFRESH:
                 io_status.areas[row[0]] = {}
                 subscribed = False
             area = io_status.areas[row[0]]
@@ -614,7 +614,8 @@ def refresh_program(time_):
             published = ("req_temp_c" in area.keys() and
                          "temp_calibration" in area.keys() and
                          area["req_temp_c"] == req_temp_c and
-                         area["temp_calibration"] == temp_calibration)
+                         area["temp_calibration"] == temp_calibration and
+                         not config.TRV_CONFIG_REFRESH)
             area["published"] = published
             area["req_temp_c"] = req_temp_c
             area["temp_calibration"] = temp_calibration
