@@ -97,4 +97,4 @@ SPEECH_COMMAND = 'espeak -vit+m3 -s150 -k10 "{}"'
 AMBIENT_TRANSITION_FRAMES = 100
 
 # API PRE-SHARED KEY
-API_KEY = 'change-me'
+# API_KEY = 'change-me'
