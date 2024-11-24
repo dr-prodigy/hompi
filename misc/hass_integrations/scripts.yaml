@@ -1,0 +1,43 @@
+hompi_gate:
+  alias: Hompi gate
+  sequence:
+  - service: rest_command.hompi_gate
+    data: {}
+    enabled: true
+  - service: notify.notify
+    metadata: {}
+    data:
+      message: Apertura cancello
+    enabled: false
+  mode: single
+  icon: mdi:gate
+announce:
+  alias: Announce
+  use_blueprint:
+    path: bp/announce-tts-on-media-player.yaml
+    input:
+      media_player:
+      - media_player.mediaplayer_casa
+      - media_player.sonos_camera
+      text_to_speech_engine: tts.google_en_com
+  description: ''
+announceit:
+  alias: AnnounceIT
+  use_blueprint:
+    path: bp/announce-tts-on-media-player.yaml
+    input:
+      text_to_speech_engine: tts.google_translate_it_com
+      media_player:
+      - media_player.mediaplayer_casa
+      - media_player.sonos_camera
+  description: ''
+announce_it_and_back:
+  alias: Announce IT and back
+  use_blueprint:
+    path: bp/announce-tts-on-media-player.yaml
+    input:
+      text_to_speech_engine: tts.google_translate_it_com
+      media_player:
+      - media_player.mediaplayer_casa
+      - media_player.sonos_camera
+  description: ''

@@ -1,0 +1,21 @@
+hompi_set_control:
+  url: !secret hompi_set_control_url
+  method: put
+  content_type: "application/json"
+  payload: '{"timetable_desc": "{{ value }}"}'
+hompi_set_temp:
+  url: !secret hompi_set_temp_url
+  method: put
+  content_type: "application/json"
+  payload: '{"temp_c": {{ value }}}'
+hompi_gate:
+  url: !secret hompi_gate_url
+hompi_ambient_xmas:
+  url: !secret hompi_ambient_xmas_url
+hompi_ambient_tvsim:
+  url: !secret hompi_ambient_tvsim_url
+hompi_command:
+  url: !secret hompi_command_url
+  method: put
+  content_type: "application/json"
+  payload: '{"command": "{{ command }}", "arg": "{{ arg }}", "value": "{{ value }}"}'

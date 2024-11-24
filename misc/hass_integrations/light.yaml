@@ -1,0 +1,41 @@
+- platform: template
+  lights:
+    hompi_ambient_light:
+      unique_id: "hompi_ambient_living"
+      friendly_name: "Hompi ambient light"
+      icon_template: "{{ state_attr('sensor.hompi_ambient_light', 'icon') }}"
+      value_template: "{{ state_attr('sensor.hompi_ambient_light', 'brightness')|int > 0 }}"
+      color_template: "{{ state_attr('sensor.hompi_ambient_light', 'hs_color') }}"
+      level_template: "{{ state_attr('sensor.hompi_ambient_light', 'brightness')|int }}"
+      effect_template: "{{ state_attr('sensor.hompi_ambient_light', 'effect') }}"
+      effect_list_template: "{{ state_attr('sensor.hompi_ambient_light', 'effect_list') }}"
+      turn_off:
+        service: rest_command.hompi_command
+        data:
+          command: "AMBIENT"
+          arg: "status"
+          value: "off"
+      turn_on:
+        service: rest_command.hompi_command
+        data:
+          command: "AMBIENT"
+          arg: "status"
+          value: "on"
+      set_color:
+        service: rest_command.hompi_command
+        data:
+          command: "AMBIENT"
+          arg: "color_hs"
+          value: "{{ hs }}"
+      set_level:
+        service: rest_command.hompi_command
+        data:
+          command: "AMBIENT"
+          arg: "brightness"
+          value: "{{ brightness }}"
+      set_effect:
+        service: rest_command.hompi_command
+        data:
+          command: "AMBIENT"
+          arg: "{{ effect }}"
+          value: "{{ 0.1 }}"

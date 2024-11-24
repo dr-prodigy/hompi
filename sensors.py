@@ -50,10 +50,15 @@ if config.MODULE_TEMP and config.HEATING_GPIO:
 reader = codecs.getreader("utf-8")
 
 # calculate API_KEY (MD5 hash)
-m = hashlib.md5()
-m.update(config.API_KEY.encode('utf-8'))
-API_KEY = m.hexdigest().upper()
-log_stdout('SENSORS', 'API_KEY: {}'.format(API_KEY))
+API_KEY = ''
+try:
+    if config.API_KEY:
+        m = hashlib.md5()
+        m.update(config.API_KEY.encode('utf-8'))
+        API_KEY = m.hexdigest().upper()
+        log_stdout('SENSORS', 'API_KEY: {}'.format(API_KEY))
+except:
+    pass
 
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False

@@ -1,0 +1,21 @@
+hompi_temp_economy_sel:
+  name: Economy
+  min: 15
+  max: 25
+  step: .5
+  icon: mdi:thermometer-chevron-down
+  unit_of_measurement: "°C"
+hompi_temp_comfort_sel:
+  name: Comfort
+  min: 15
+  max: 25
+  step: .5
+  icon: mdi:thermometer-chevron-up
+  unit_of_measurement: "°C"
+hompi_temp_manual_sel:
+  name: Manual
+  min: 15
+  max: 25
+  step: .5
+  icon: mdi:thermometer
+  unit_of_measurement: "°C"

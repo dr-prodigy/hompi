@@ -38,14 +38,18 @@ HOMPI_PROCNAME = 'bin/hompi'
 
 app = Flask(__name__)
 
-# calculate API_KEY (MD5 hash)
-m = hashlib.md5()
-m.update(config.API_KEY.encode('utf-8'))
-API_KEY = m.hexdigest().upper()
-
 print('HOMPI WS')
 print('========')
-print('API_KEY: {}'.format(API_KEY))
+API_KEY = ''
+try:
+    # calculate API_KEY (MD5 hash), if required
+    if config.API_KEY:
+        m = hashlib.md5()
+        m.update(config.API_KEY.encode('utf-8'))
+        API_KEY = m.hexdigest().upper()
+        print('API_KEY: {}'.format(API_KEY))
+except:
+    pass
 
 
 def _signal_server():
@@ -56,11 +60,14 @@ def _signal_server():
 
 
 def _check_sharedkey():
-    api_key = request.args.get('api_key', '').upper()
-    if api_key == API_KEY:
-        return True
+    if API_KEY:
+        api_key = request.args.get('api_key', '').upper()
+        if api_key == API_KEY:
+            return True
+        else:
+            return False
     else:
-        return False
+        return True
 
 
 def _get_remote_address(server):
