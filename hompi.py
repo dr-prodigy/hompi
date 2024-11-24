@@ -602,7 +602,7 @@ def refresh_program(time_):
         # update io_status and MQTT subscriptions
         for row in rows:
             subscribed = True
-            if row[0] not in io_status.areas:
+            if row[0] not in io_status.areas or config.TRV_CONFIG_REFRESH:
                 io_status.areas[row[0]] = {}
                 subscribed = False
             area = io_status.areas[row[0]]
@@ -614,7 +614,8 @@ def refresh_program(time_):
             published = ("req_temp_c" in area.keys() and
                          "temp_calibration" in area.keys() and
                          area["req_temp_c"] == req_temp_c and
-                         area["temp_calibration"] == temp_calibration)
+                         area["temp_calibration"] == temp_calibration and
+                         not config.TRV_CONFIG_REFRESH)
             area["published"] = published
             area["req_temp_c"] = req_temp_c
             area["temp_calibration"] = temp_calibration
