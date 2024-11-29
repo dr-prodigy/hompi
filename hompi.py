@@ -609,7 +609,8 @@ def refresh_program(time_):
             area["area"] = row[1]
             area["mqtt_temp_name"] = row[2]
             area["mqtt_trv_name"] = row[6]
-            req_temp_c = float(row[8])
+            # ignore area if no requested temperature regex available (=> temp sensor, not a TRV)
+            req_temp_c = float(row[8]) if row[4] else 0
             temp_calibration = float(row[5])
             published = ("req_temp_c" in area.keys() and
                          "temp_calibration" in area.keys() and
@@ -626,7 +627,8 @@ def refresh_program(time_):
             if not subscribed:
                 mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 
-            # Collect min and max area temperatures
+            # Collect min and max req. temperatures
+            if req_temp_c == 0: continue
             if req_temp_c < min_req_temp_c: min_req_temp_c = req_temp_c
             if req_temp_c > max_req_temp_c: max_req_temp_c = req_temp_c
 
