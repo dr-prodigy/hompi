@@ -613,13 +613,14 @@ def refresh_program(time_):
             area["mqtt_temp_name"] = row[2]
             area["mqtt_trv_name"] = row[6]
             # if program changed, (re)initialize req. temp and calibration from DB
+            # ignore area if no requested temperature regex available (=> temp sensor, not a TRV)
+            req_temp_c = float(row[8]) if row[4] else 0
+            temp_calibration = float(row[5])
             if is_program_changed:
-                # ignore area if no requested temperature regex available (=> temp sensor, not a TRV)
-                req_temp_c = float(row[8]) if row[4] else 0
-                temp_calibration = float(row[5])
                 # restore manual set flag
                 area["manual_set"] = False
             else:
+                area["manual_set"] = req_temp_c != area["req_temp_c"]
                 req_temp_c = area["req_temp_c"]
                 temp_calibration = area["temp_calibration"]
 
@@ -650,7 +651,7 @@ def refresh_program(time_):
         # Differentiated areas
         req_area_temps = ''
         if min_req_temp_c != max_req_temp_c:
-            req_area_temps += '{}{} / {}'.format('man - ' if manual_set else '', min_req_temp_c, max_req_temp_c)
+            req_area_temps += '{}{} / {}'.format('M - ' if manual_set else '', min_req_temp_c, max_req_temp_c)
         if req_area_temps != io_status.req_area_temps:
             io_status.req_area_temps = req_area_temps
             is_program_changed = True
