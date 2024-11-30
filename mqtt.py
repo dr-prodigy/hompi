@@ -102,7 +102,9 @@ class MQTT:
                     if area['req_temp_c_regex']:
                         temp = re.search(area['req_temp_c_regex'], msg.payload.decode())
                         req_temp_c = float(temp.group(1)) if temp else 0
-                        cur_area['req_temp_c'] = req_temp_c
+                        if cur_area['req_temp_c'] != req_temp_c:
+                            cur_area['req_temp_c'] = req_temp_c
+                            cur_area['manual_set'] = True
                     else:
                         req_temp_c = "-"
                     cur_area['cur_temp_c'] = cur_temp_c
@@ -151,9 +153,9 @@ class MQTT:
                     if not self.__connect(): return
                     area['published'] = self.__publish(area_id, area['req_temp_c'], area['temp_calibration'])
 
-    def subscribe(self, area_id, area_name,
-                  mqtt_name, cur_temp_c_regex, req_temp_c_regex, calibration,
-                  mqtt_trv_name, mqtt_trv_publish_payload):
+    def register(self, area_id, area_name,
+                 mqtt_name, cur_temp_c_regex, req_temp_c_regex, calibration,
+                 mqtt_trv_name, mqtt_trv_publish_payload):
         self.__areas[area_id] = \
             { 'area_name': area_name, 'mqtt_name': mqtt_name,
               'topic': '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_name),

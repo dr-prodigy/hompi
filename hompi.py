@@ -601,31 +601,43 @@ def refresh_program(time_):
         ).fetchall()
         # update io_status and MQTT subscriptions
         for row in rows:
-            subscribed = True
-            if row[0] not in io_status.areas or config.TRV_CONFIG_REFRESH:
+            registered = True
+            # if not yet registered or program changed => (re)initialize area
+            if row[0] not in io_status.areas or is_program_changed:
                 io_status.areas[row[0]] = {}
-                subscribed = False
+                registered = False
             area = io_status.areas[row[0]]
             area["area"] = row[1]
             area["mqtt_temp_name"] = row[2]
             area["mqtt_trv_name"] = row[6]
-            # ignore area if no requested temperature regex available (=> temp sensor, not a TRV)
-            req_temp_c = float(row[8]) if row[4] else 0
-            temp_calibration = float(row[5])
-            published = ("req_temp_c" in area.keys() and
-                         "temp_calibration" in area.keys() and
-                         area["req_temp_c"] == req_temp_c and
-                         area["temp_calibration"] == temp_calibration and
-                         not config.TRV_CONFIG_REFRESH)
-            area["published"] = published
+            # if program changed, (re)initialize req. temp and calibration from DB
+            if is_program_changed:
+                # ignore area if no requested temperature regex available (=> temp sensor, not a TRV)
+                req_temp_c = float(row[8]) if row[4] else 0
+                temp_calibration = float(row[5])
+                # restore manual set flag
+                area["manual_set"] = False
+            else:
+                req_temp_c = area["req_temp_c"]
+                temp_calibration = area["temp_calibration"]
+
+            # flag as published if no new data. force publishing if config.TRV_KEEPALIVE
+            area["published"] = \
+                ("req_temp_c" in area.keys() and "temp_calibration" in area.keys() and
+                 area["req_temp_c"] == req_temp_c and area["temp_calibration"] == temp_calibration and
+                 not config.TRV_KEEPALIVE)
+
+            # set req. temp and calibration
             area["req_temp_c"] = req_temp_c
             area["temp_calibration"] = temp_calibration
+
+            # foo temperature
             if not "cur_temp_c" in area.keys():
                 area["cur_temp_c"] = 999
 
-            # MQTT subscription
-            if not subscribed:
-                mqtt.subscribe(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+            # area registration
+            if not registered:
+                mqtt.register(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
 
             # Collect min and max req. temperatures
             if req_temp_c == 0: continue
