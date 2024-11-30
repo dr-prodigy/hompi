@@ -472,7 +472,7 @@ def compute_status():
     io_status.update(current_time)
     changed = io_status.last_change == current_time.isoformat()
     if changed:
-        ext_cur_temp_c = 'Ext: ({}°) - '.format(ext_cur_temp_c[:-2]) if ext_cur_temp_c else ''
+        ext_cur_temp_c = 'Ext: ({}) - '.format(ext_cur_temp_c[:-2]) if ext_cur_temp_c else ''
         cur_temp_c = 'Int: {:.2f}° - '.format(temp) if temp else ''
         log_stdout('HOMPI', 'Req: {:.2f}° - {}{}Thermo changed to: {}'.format(
             io_status.req_temp_c, cur_temp_c, ext_cur_temp_c, io_status.heating_status), LOG_INFO)
@@ -599,6 +599,8 @@ def refresh_program(time_):
                 WHERE timetable_type_data_id = {:d}
                 ORDER BY area.id""".format(tdtypedata_id)
         ).fetchall()
+
+        manual_set = False
         # update io_status and MQTT subscriptions
         for row in rows:
             registered = True
@@ -641,14 +643,14 @@ def refresh_program(time_):
 
             # Collect min and max req. temperatures
             if req_temp_c == 0: continue
+            manual_set |= area["manual_set"]
             if req_temp_c < min_req_temp_c: min_req_temp_c = req_temp_c
             if req_temp_c > max_req_temp_c: max_req_temp_c = req_temp_c
 
         # Differentiated areas
+        req_area_temps = ''
         if min_req_temp_c != max_req_temp_c:
-            req_area_temps = '{} / {}'.format(min_req_temp_c, max_req_temp_c)
-        else:
-            req_area_temps = ''
+            req_area_temps += '{}{} / {}'.format('man - ' if manual_set else '', min_req_temp_c, max_req_temp_c)
         if req_area_temps != io_status.req_area_temps:
             io_status.req_area_temps = req_area_temps
             is_program_changed = True
