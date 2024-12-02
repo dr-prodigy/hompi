@@ -43,6 +43,7 @@ class Status:
         # heating
         if config.MODULE_TEMP:
             self.int_temp_c = 0.0
+        # TRV
         if config.ENABLE_TRV_INTEGRATION:
             self.areas = {}
             self.req_area_temps = ''
@@ -128,7 +129,7 @@ class Status:
     def get_area_manual_set(self):
         is_manual_set = False
         if config.ENABLE_TRV_INTEGRATION:
-            for area in self.areas:
+            for area in self.areas.values():
                 if 'manual_set' in area:
                     is_manual_set |= area['manual_set']
         return is_manual_set
