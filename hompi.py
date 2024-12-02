@@ -600,7 +600,6 @@ def refresh_program(time_):
                 ORDER BY area.id""".format(tdtypedata_id)
         ).fetchall()
 
-        manual_set = False
         # update io_status and MQTT subscriptions
         for row in rows:
             registered = True
@@ -644,14 +643,13 @@ def refresh_program(time_):
 
             # Collect min and max req. temperatures
             if req_temp_c == 0: continue
-            manual_set |= area["manual_set"]
             if req_temp_c < min_req_temp_c: min_req_temp_c = req_temp_c
             if req_temp_c > max_req_temp_c: max_req_temp_c = req_temp_c
 
         # Differentiated areas
         req_area_temps = ''
         if min_req_temp_c != max_req_temp_c:
-            req_area_temps += '{}{} / {}'.format('M - ' if manual_set else '', min_req_temp_c, max_req_temp_c)
+            req_area_temps += '{} / {}'.format(min_req_temp_c, max_req_temp_c)
         if req_area_temps != io_status.req_area_temps:
             io_status.req_area_temps = req_area_temps
             is_program_changed = True

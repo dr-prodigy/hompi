@@ -77,9 +77,12 @@ def publish_status(io_status, io_system, ambient):
     if io_status.req_temp_desc != "Off":
         req_temp_desc = io_status.req_temp_desc
         req_temp_c = io_status.req_temp_c
-        if config.ENABLE_TRV_INTEGRATION and io_status.req_area_temps:
-            req_temp_desc = 'Zones'
-            req_temp_c = io_status.req_area_temps
+        if config.ENABLE_TRV_INTEGRATION:
+            if io_status.req_area_temps:
+                req_temp_desc = 'Zones'
+                req_temp_c = io_status.req_area_temps
+            if io_status.get_area_manual_set():
+                req_temp_desc += '+M'
         target = "{} ({} °C) until h. {:0>5.2f}".format(req_temp_desc, req_temp_c,
                                                         io_status.req_end_time / 100)
     else:

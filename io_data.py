@@ -125,6 +125,13 @@ class Status:
     def send_switch_command(self, switch):
         self.sw_sig[switch] = True
 
+    def get_area_manual_set(self):
+        is_manual_set = False
+        if config.ENABLE_TRV_INTEGRATION:
+            for area in self.areas:
+                if 'manual_set' in area:
+                    is_manual_set |= area['manual_set']
+        return is_manual_set
 
 class SystemInfo:
     def __init__(self):
