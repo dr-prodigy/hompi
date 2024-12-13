@@ -79,12 +79,12 @@ except Exception:
 task_every_secs = {
     'hompi_ext_refresh': 61.0,
     'update_lcd_content': 11.0,
-    'get_temp': 20.0,
+    'get_temp': 20.0 if config.TEST_MODE == 0 else 5.0,
     'get_meteo': 300.0,    #  5 mins
     'get_aphorism': 241.0, #  4 mins
     'refresh': 600.0,      # 10 mins (multiple of get_temp)
     'reiterate': 120.0,    #  2 mins
-    'update_temp': 80.0,
+    'update_temp': 80.0 if config.TEST_MODE == 0 else 20.0,
     'update_io': 10.0,
 }
 
@@ -190,9 +190,9 @@ def main():
             # update I/O: output, HASS and MQTT areas
             if secs_elapsed >= task_at_secs['update_io'] or is_status_changed or sighup_refresh:
                 update_output()
-                if config.ENABLE_TRV_INTEGRATION:
+                if config.MODULE_TRV:
                     mqtt.update_areas()
-                if config.ENABLE_HASS_INTEGRATION:
+                if config.MODULE_HASS:
                     hass.publish_status(io_status, io_system, ambient)
                 # after a sighup refresh, reschedule task forward
                 task_at_secs['update_io'] = secs_elapsed
@@ -300,7 +300,7 @@ def init():
         dbmgr = db.DatabaseManager()
         row = dbmgr.query("SELECT temp_c FROM gm_temp WHERE id = 1").fetchone()
         if row:
-            temp = row[0]
+            temp = row[0] - config.HEATING_THRESHOLD + .05
 
     initial_time = datetime.datetime.now()
 
@@ -396,63 +396,68 @@ def get_temperature():
 
 def compute_status():
     global sig_switch_timeout, io_status
-
     current_time = datetime.datetime.now()
-
     ext_cur_temp_c = ''
-    slave_heating_on = False
+    main_heating_on = slave_heating_on = trv_heating_on = False
+
+    # MAIN THERMOSTAT
+    if config.MODULE_TEMP:
+        if io_status.int_temp_c:
+            last_change = dateutil.parser.parse(io_status.last_change)
+            # print(current_time - last_change).total_seconds()
+            if config.THERMOSTAT_MODE & 1:
+                if io_status.heating_status in ['cooling', 'off']:
+                    main_heating_on = io_status.req_temp_c - io_status.int_temp_c >= config.HEATING_THRESHOLD
+                else:
+                    # *** stop heating on exact temp! ***
+                    main_heating_on = io_status.int_temp_c - io_status.req_temp_c <= 0
+        else:
+            io_status.int_temp_c = 0
+
+    # SLAVE HOMPIs
     for slave_id, slave in io_status.hompi_slaves.items():
         ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, slave['int_temp_c'])
-        slave_heating_on |= slave['heating_status'] == 'warming' or slave[
-            'heating_status'] == 'on'
+        if config.THERMOSTAT_MODE & 4:
+            slave_heating_on |= slave['heating_status'] == 'warming' or slave['heating_status'] == 'on'
 
-    trv_heating_on = False
-    if config.ENABLE_TRV_INTEGRATION:
+    # TRVs
+    if config.MODULE_TRV:
         for area in io_status.areas.values():
             # ignore expired TRV data
             if ('last_update' in area and
                 (current_time - dateutil.parser.parse(area['last_update'])).total_seconds() <
                     config.TRV_DATA_EXPIRATION_SECS):
                 ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, area['cur_temp_c'])
-                trv_heating_on |= area['req_temp_c'] - area['cur_temp_c'] >= config.HEATING_THRESHOLD
+                if config.THERMOSTAT_MODE & 2:
+                    if io_status.heating_status in ['cooling', 'off']:
+                        trv_heating_on |= area['req_temp_c'] - area['cur_temp_c'] >= config.HEATING_THRESHOLD
+                    else:
+                        # *** stop heating on exact temp! ***
+                        trv_heating_on |= area['cur_temp_c'] - area['req_temp_c'] <= 0
 
-    if config.MODULE_TEMP:
-        if io_status.int_temp_c:
-            last_change = dateutil.parser.parse(io_status.last_change)
-            # print(current_time - last_change).total_seconds()
-
-            if io_status.req_temp_c - io_status.int_temp_c >= config.HEATING_THRESHOLD \
-                    or slave_heating_on or trv_heating_on:
-                if io_status.heating_status == 'off' or \
-                        io_status.heating_status == 'cooling':
-                    # log_data('heating ON')
-                    io_status.last_change = current_time.isoformat()
-                    io_status.heating_status = 'warming'
-                    if config.TEST_MODE == 0:
-                        sensor.set_heating(True)
-                elif io_status.heating_status == 'warming' and \
-                        (current_time - last_change).total_seconds() / 60.0 > \
-                        config.THERMO_CHANGE_MINS:
-                    io_status.last_change = current_time.isoformat()
-                    io_status.heating_status = 'on'
-            # *** stop heating on exact temp! ***
-            if io_status.int_temp_c - io_status.req_temp_c >= 0 and \
-                    not slave_heating_on and \
-                    not trv_heating_on:
-                if io_status.heating_status == 'on' or \
-                        io_status.heating_status == 'warming':
-                    # log_data('heating OFF')
-                    io_status.last_change = current_time.isoformat()
-                    io_status.heating_status = 'cooling'
-                    if config.TEST_MODE == 0:
-                        sensor.set_heating(False)
-                elif io_status.heating_status == 'cooling' and \
-                        (current_time - last_change).total_seconds() / 60.0 > \
-                        config.THERMO_CHANGE_MINS:
-                    io_status.last_change = current_time.isoformat()
-                    io_status.heating_status = 'off'
-        else:
-            io_status.int_temp_c = 0
+    # heating status
+    if main_heating_on or slave_heating_on or trv_heating_on:
+        if io_status.heating_status in ['off', 'cooling']:
+            # log_data('heating ON')
+            io_status.last_change = current_time.isoformat()
+            io_status.heating_status = 'warming'
+            if config.TEST_MODE == 0:
+                sensor.set_heating(True)
+        elif io_status.heating_status == 'warming' and \
+            (current_time - last_change).total_seconds() / 60.0 > config.THERMO_CHANGE_MINS:
+            io_status.last_change = current_time.isoformat()
+            io_status.heating_status = 'on'
+    else:
+        if io_status.heating_status in ['on', 'warming']:
+            # log_data('heating OFF')
+            io_status.last_change = current_time.isoformat()
+            io_status.heating_status = 'cooling'
+            if config.TEST_MODE == 0:
+                sensor.set_heating(False)
+        elif io_status.heating_status == 'cooling' and \
+            (current_time - last_change).total_seconds() / 60.0 > config.THERMO_CHANGE_MINS:
+            io_status.last_change = current_time.isoformat()
+            io_status.heating_status = 'off'
 
     # switch management
     for sw in range(len(config.BUTTONS)):
@@ -584,7 +589,7 @@ def refresh_program(time_):
         ))
 
     # get MQTT areas (NULL area_id => all areas)
-    if config.ENABLE_TRV_INTEGRATION:
+    if config.MODULE_TRV:
         min_req_temp_c = max_req_temp_c = io_status.req_temp_c
         rows = dbmgr.query(
             """SELECT DISTINCT area.id, area.area_name,

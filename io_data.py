@@ -44,7 +44,7 @@ class Status:
         if config.MODULE_TEMP:
             self.int_temp_c = 0.0
         # TRV
-        if config.ENABLE_TRV_INTEGRATION:
+        if config.MODULE_TRV:
             self.areas = {}
             self.req_area_temps = ''
         self.mode_id = ''
@@ -128,7 +128,7 @@ class Status:
 
     def get_area_manual_set(self):
         is_manual_set = False
-        if config.ENABLE_TRV_INTEGRATION:
+        if config.MODULE_TRV:
             for area in self.areas.values():
                 if 'manual_set' in area:
                     is_manual_set |= area['manual_set']

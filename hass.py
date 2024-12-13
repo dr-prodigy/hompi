@@ -77,7 +77,7 @@ def publish_status(io_status, io_system, ambient):
     if io_status.req_temp_desc != "Off":
         req_temp_desc = io_status.req_temp_desc
         req_temp_c = io_status.req_temp_c
-        if config.ENABLE_TRV_INTEGRATION:
+        if config.MODULE_TRV:
             if io_status.req_area_temps:
                 req_temp_desc = 'Zones'
                 req_temp_c = io_status.req_area_temps
