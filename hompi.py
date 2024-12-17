@@ -399,11 +399,11 @@ def compute_status():
     current_time = datetime.datetime.now()
     ext_cur_temp_c = ''
     main_heating_on = slave_heating_on = trv_heating_on = False
+    last_change = dateutil.parser.parse(io_status.last_change)
 
     # MAIN THERMOSTAT
     if config.MODULE_TEMP:
         if io_status.int_temp_c:
-            last_change = dateutil.parser.parse(io_status.last_change)
             # print(current_time - last_change).total_seconds()
             if config.THERMOSTAT_MODE & 1:
                 if io_status.heating_status in ['cooling', 'off']:
