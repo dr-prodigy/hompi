@@ -602,6 +602,7 @@ def refresh_program(time_):
                 INNER JOIN gm_temp AS temp
                     ON temp.id = tdata_area.temp_id
                 WHERE timetable_type_data_id = {:d}
+                AND area.enabled = 1
                 ORDER BY area.id""".format(tdtypedata_id)
         ).fetchall()
 
