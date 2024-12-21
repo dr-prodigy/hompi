@@ -409,8 +409,8 @@ def compute_status():
                 if io_status.heating_status in ['cooling', 'off']:
                     main_heating_on = io_status.req_temp_c - io_status.int_temp_c >= config.HEATING_THRESHOLD
                 else:
-                    # *** stop heating on exact temp! ***
-                    main_heating_on = io_status.int_temp_c - io_status.req_temp_c <= 0
+                    # *** stop heating on exact temp ***
+                    main_heating_on = io_status.int_temp_c <= io_status.req_temp_c
         else:
             io_status.int_temp_c = 0
 
@@ -432,8 +432,8 @@ def compute_status():
                     if io_status.heating_status in ['cooling', 'off']:
                         trv_heating_on |= area['req_temp_c'] - area['cur_temp_c'] >= config.HEATING_THRESHOLD
                     else:
-                        # *** stop heating on exact temp! ***
-                        trv_heating_on |= area['cur_temp_c'] - area['req_temp_c'] <= 0
+                        # *** keep on heating until exact temp is reached ***
+                        trv_heating_on |= area['cur_temp_c'] < area['req_temp_c']
 
     # heating status
     if main_heating_on or slave_heating_on or trv_heating_on:
