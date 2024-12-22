@@ -158,8 +158,8 @@ def publish_status(io_status, io_system, ambient):
     if config.MODULE_TRV:
         for area in io_status.areas.values():
             area_name = "hompi_area_{}".format(area["area"]).lower()
-            if old_entity.get(area_name) != area:
-                old_entity[area_name] = area
+            if old_entity.get(area_name) != str(area):
+                old_entity[area_name] = str(area)
                 hass_entities.append(
                     {"entity_id": area_name,
                      "data": {"state": area["cur_temp_c"], "attributes": area}}
