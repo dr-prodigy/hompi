@@ -154,6 +154,17 @@ def publish_status(io_status, io_system, ambient):
                         {"effect": ambient.status_effect, "icon": HOMPI_AMBIENT_EFFECT_ICON})
             hass_entities.append(light_sensor)
 
+    # area entities
+    if config.MODULE_TRV:
+        for area in io_status.areas.values():
+            area_name = "hompi_area_{}".format(area["area"]).lower()
+            if old_entity.get(area_name) != area:
+                old_entity[area_name] = area
+                hass_entities.append(
+                    {"entity_id": area_name,
+                     "data": area}
+                )
+
     # temperature entities
     for temp in io_system.temperatures:
         description = str(temp["description"])
