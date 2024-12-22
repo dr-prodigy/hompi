@@ -173,7 +173,7 @@ def publish_status(io_status, io_system, ambient):
             if "last_update" in area:
                 entity_name = "{}_updated".format(area_name)
                 last_update = dateutil.parser.parse(area["last_update"])
-                updated = (now - last_update).total_seconds < config.TRV_DATA_EXPIRATION_SECS
+                updated = (now - last_update).total_seconds() < config.TRV_DATA_EXPIRATION_SECS
                 if old_entity.get(entity_name) != updated:
                     old_entity[entity_name] = updated
                     hass_entities.append(
