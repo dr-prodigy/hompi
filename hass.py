@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
+from math import isnan
+
 # Copyright (C)2018-24 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
@@ -40,6 +42,7 @@ HOMPI_HEATING_WARMING_ICON = "mdi:radiator-disabled"
 HOMPI_HEATING_ON_ICON = "mdi:fire"
 HOMPI_HEATING_COOLING_ICON = "mdi:radiator"
 HOMPI_TEMP_ICON = "mdi:thermometer"
+HOMPI_TEMP_ALERT_ICON = "mdi:thermometer-alert"
 HOMPI_UPDATE_ICON = "mdi:update"
 HOMPI_APHORISM_ICON = "mdi:comment-quote"
 HOMPI_AMBIENT_ICON = "mdi:television-ambient-light"
@@ -160,28 +163,27 @@ def publish_status(io_status, io_system, ambient):
     if config.MODULE_TRV:
         for area in io_status.areas.values():
             area_name = "hompi_area_{}".format(area["area"]).lower()
-            for ent in ["req_temp_c", "cur_temp_c"]:
-                entity_name = "{}_{}".format(area_name, ent)
-                if area[ent] != 0 and area[ent] != 999 and old_entity.get(entity_name) != area[ent]:
-                    old_entity[entity_name] = area[ent]
-                    hass_entities.append(
-                        {"entity_id": entity_name,
-                         "data": {"state": area[ent], "attributes":
-                             {"friendly_name": "Target" if ent == "req_temp_c" else "Temp", "icon": HOMPI_TEMP_ICON,
-                              "device_class": "temperature", "unit_of_measurement": "°C", "id": entity_name}}}
-                    )
+            update_change = False
+            icon = HOMPI_TEMP_ICON # default icon
             if "last_update" in area:
                 entity_name = "{}_updated".format(area_name)
-                last_update = dateutil.parser.parse(area["last_update"])
-                updated = (now - last_update).total_seconds() < config.TRV_DATA_EXPIRATION_SECS
+                updated = ((now - dateutil.parser.parse(area["last_update"])).total_seconds()
+                           < config.TRV_DATA_EXPIRATION_SECS)
                 if old_entity.get(entity_name) != updated:
                     old_entity[entity_name] = updated
-                    hass_entities.append(
-                        {"entity_id": entity_name,
-                         "data": {"state": updated, "attributes":
-                             {"friendly_name": "Updated", "icon": HOMPI_UPDATE_ICON,
-                              "device_class": "update", "id": entity_name}}}
-                    )
+                    icon = HOMPI_TEMP_ALERT_ICON if not updated else HOMPI_TEMP_ICON
+                    update_change = True
+
+            for ent in ["req_temp_c", "cur_temp_c"]:
+                entity_name = "{}_{}".format(area_name, ent)
+                if area[ent] != 0 and area[ent] != 999 and (old_entity.get(entity_name) != area[ent] or update_change):
+                        old_entity[entity_name] = area[ent]
+                        hass_entities.append(
+                            {"entity_id": entity_name,
+                             "data": {"state": area[ent], "attributes":
+                                 {"friendly_name": "Target" if ent == "req_temp_c" else "Temp", "icon": icon,
+                                  "device_class": "temperature", "unit_of_measurement": "°C", "id": entity_name}}}
+                        )
 
     # temperature entities
     for temp in io_system.temperatures:
