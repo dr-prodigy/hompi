@@ -40,6 +40,7 @@ HOMPI_HEATING_WARMING_ICON = "mdi:radiator-disabled"
 HOMPI_HEATING_ON_ICON = "mdi:fire"
 HOMPI_HEATING_COOLING_ICON = "mdi:radiator"
 HOMPI_TEMP_ICON = "mdi:thermometer"
+HOMPI_UPDATE_ICON = "mdi:update"
 HOMPI_APHORISM_ICON = "mdi:comment-quote"
 HOMPI_AMBIENT_ICON = "mdi:television-ambient-light"
 HOMPI_AMBIENT_EFFECT_ICON = "mdi:palette"
@@ -54,10 +55,11 @@ refresh_time = publish_time = datetime.now()
 def publish_status(io_status, io_system, ambient):
     global refresh_time, publish_time, old_entity
     hass_entities = []
+    now = datetime.now()
 
     # refresh time: cleanup old status
     if datetime.now() >= refresh_time:
-        refresh_time = datetime.now() + timedelta(minutes=REFRESH_MINUTES)
+        refresh_time = now + timedelta(minutes=REFRESH_MINUTES)
         old_entity = {}
 
     if old_entity.get("hompi_id") != io_status.id:
@@ -158,11 +160,25 @@ def publish_status(io_status, io_system, ambient):
     if config.MODULE_TRV:
         for area in io_status.areas.values():
             area_name = "hompi_area_{}".format(area["area"]).lower()
-            if old_entity.get(area_name) != str(area):
-                old_entity[area_name] = str(area)
+            for ent in ["req_temp_c", "cur_temp_c"]:
+                entity_name = "{}_{}".format(area_name, ent)
+                if old_entity.get(entity_name) != area[ent]:
+                    old_entity[entity_name] = area[ent]
+                    hass_entities.append(
+                        {"entity_id": area_name,
+                         "data": {"state": area[ent], "attributes":
+                             {"friendly_name": "Target" if ent == "req_temp_c" else "Temp", "icon": HOMPI_TEMP_ICON,
+                              "device_class": "temperature", "unit_of_measurement": "°C", "id": entity_name}}}
+                    )
+            entity_name = "{}_updated".format(area_name)
+            updated = (now - area["last_update"]).total_seconds < config.TRV_DATA_EXPIRATION_SECS
+            if old_entity.get(entity_name) != updated:
+                old_entity[entity_name] = updated
                 hass_entities.append(
                     {"entity_id": area_name,
-                     "data": {"state": area["cur_temp_c"], "attributes": area}}
+                     "data": {"state": updated, "attributes":
+                         {"friendly_name": "Updated", "icon": HOMPI_UPDATE_ICON,
+                          "device_class": "update", "id": entity_name}}}
                 )
 
     # temperature entities
@@ -179,7 +195,7 @@ def publish_status(io_status, io_system, ambient):
 
     entity_id = None
     try:
-        if len(hass_entities) > 0 and datetime.now() >= publish_time:
+        if len(hass_entities) > 0 and now >= publish_time:
             log_stdout('HASS', 'Publishing {} entities to HASS'.format(len(hass_entities)), LOG_INFO)
             for entity in hass_entities:
                 entity_id = entity["entity_id"]
@@ -189,4 +205,4 @@ def publish_status(io_status, io_system, ambient):
     except Exception as e:
         # error: cleanup old_entity and delay next publish for RETRY_MINUTES
         log_stderr('*HASS* ERR: PUBLISH ({}): {} -> delaying {} mins'.format(entity_id, e, RETRY_MINUTES))
-        publish_time = refresh_time = datetime.now() + timedelta(minutes=RETRY_MINUTES)
+        publish_time = refresh_time = now + timedelta(minutes=RETRY_MINUTES)
