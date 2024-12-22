@@ -162,7 +162,7 @@ def publish_status(io_status, io_system, ambient):
                 old_entity[area_name] = area
                 hass_entities.append(
                     {"entity_id": area_name,
-                     "data": area}
+                     "data": {"state": area["cur_temp_c"], "attributes": area}}
                 )
 
     # temperature entities
@@ -185,7 +185,7 @@ def publish_status(io_status, io_system, ambient):
                 entity_id = entity["entity_id"]
                 url = config.HASS_SERVER + STATUS_ENTITY_API_URL + entity_id
                 response = post(url, headers=headers, json=entity["data"], verify=config.HASS_CHECK_SSL_CERT)
-                log_stdout('HASS', 'PUBLISH ({}): {}'.format(entity_id, response.text))
+                log_stdout('HASS', 'PUBLISH ({}): {}'.format(entity_id, response.text), LOG_INFO)
     except Exception as e:
         # error: cleanup old_entity and delay next publish for RETRY_MINUTES
         log_stderr('*HASS* ERR: PUBLISH ({}): {} -> delaying {} mins'.format(entity_id, e, RETRY_MINUTES))
