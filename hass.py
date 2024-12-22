@@ -18,8 +18,8 @@ import json
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
 import config
-import traceback
 import urllib3
+import dateutil.parser
 
 from requests import post
 from utils import log_stdout, log_stderr
@@ -162,24 +162,26 @@ def publish_status(io_status, io_system, ambient):
             area_name = "hompi_area_{}".format(area["area"]).lower()
             for ent in ["req_temp_c", "cur_temp_c"]:
                 entity_name = "{}_{}".format(area_name, ent)
-                if old_entity.get(entity_name) != area[ent]:
+                if area[ent] != 0 and area[ent] != 999 and old_entity.get(entity_name) != area[ent]:
                     old_entity[entity_name] = area[ent]
                     hass_entities.append(
-                        {"entity_id": area_name,
+                        {"entity_id": entity_name,
                          "data": {"state": area[ent], "attributes":
                              {"friendly_name": "Target" if ent == "req_temp_c" else "Temp", "icon": HOMPI_TEMP_ICON,
                               "device_class": "temperature", "unit_of_measurement": "°C", "id": entity_name}}}
                     )
-            entity_name = "{}_updated".format(area_name)
-            updated = (now - area["last_update"]).total_seconds < config.TRV_DATA_EXPIRATION_SECS
-            if old_entity.get(entity_name) != updated:
-                old_entity[entity_name] = updated
-                hass_entities.append(
-                    {"entity_id": area_name,
-                     "data": {"state": updated, "attributes":
-                         {"friendly_name": "Updated", "icon": HOMPI_UPDATE_ICON,
-                          "device_class": "update", "id": entity_name}}}
-                )
+            if "last_update" in area:
+                entity_name = "{}_updated".format(area_name)
+                last_update = dateutil.parser.parse(area["last_update"])
+                updated = (now - last_update).total_seconds < config.TRV_DATA_EXPIRATION_SECS
+                if old_entity.get(entity_name) != updated:
+                    old_entity[entity_name] = updated
+                    hass_entities.append(
+                        {"entity_id": entity_name,
+                         "data": {"state": updated, "attributes":
+                             {"friendly_name": "Updated", "icon": HOMPI_UPDATE_ICON,
+                              "device_class": "update", "id": entity_name}}}
+                    )
 
     # temperature entities
     for temp in io_system.temperatures:
