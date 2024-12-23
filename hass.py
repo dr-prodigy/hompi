@@ -169,7 +169,7 @@ def publish_status(io_status, io_system, ambient):
                 entity_name = "{}_updated".format(area_name)
                 last_update = dateutil.parser.parse(area["last_update"])
                 updated = (now - last_update).total_seconds() < config.TRV_DATA_EXPIRATION_SECS \
-                            and last_update > io_status.last_update
+                            and last_update > dateutil.parser.parse(io_status.last_change)
                 if old_entity.get(entity_name) != updated:
                     old_entity[entity_name] = updated
                     icon = HOMPI_TEMP_ALERT_ICON if not updated else HOMPI_TEMP_ICON
