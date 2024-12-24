@@ -175,27 +175,29 @@ def publish_status(io_status, io_system, ambient):
                     icon = HOMPI_TEMP_ALERT_ICON if not updated else HOMPI_TEMP_ICON
                     update_change = True
 
-            for ent in ["req_temp_c", "cur_temp_c"]:
-                entity_name = "{}_{}".format(area_name, ent)
-                if area[ent] != 0 and area[ent] != 999 and (old_entity.get(entity_name) != area[ent] or update_change):
-                        old_entity[entity_name] = area[ent]
-                        hass_entities.append(
-                            {"entity_id": entity_name,
-                             "data": {"state": area[ent], "attributes":
-                                 {"friendly_name": "Target" if ent == "req_temp_c" else "Temp", "icon": icon,
-                                  "device_class": "temperature", "unit_of_measurement": "°C", "id": entity_name}}}
-                        )
+            for prop in [
+                    {"prop_id": "req_temp_c", "hass_id": "target", "hass_name": "Target"},
+                    {"prop_id": "cur_temp_c", "hass_id": "temperature", "hass_name": "Temperature"}]:
+                hass_id = "{}_{}".format(area_name, prop["hass_id"])
+                value = area[prop["prop_id"]]
+                if value != 0 and value != 999 and (old_entity.get(hass_id) != value or update_change):
+                    old_entity[hass_id] = value
+                    hass_entities.append(
+                        {"entity_id": hass_id, "data": {"state": value,
+                         "attributes": {"id": hass_id, "friendly_name": prop["hass_name"], "icon": icon,
+                                        "device_class": "temperature", "unit_of_measurement": "°C"}}}
+                    )
 
     # temperature entities
-    for temp in io_system.temperatures:
-        description = str(temp["description"])
-        if old_entity.get("hompi_temp_{}".format(description.lower())) != temp["id"]:
-            old_entity["hompi_temp_{}".format(description.lower())] = temp["id"]
+    for value in io_system.temperatures:
+        description = str(value["description"])
+        if old_entity.get("hompi_temp_{}".format(description.lower())) != value["id"]:
+            old_entity["hompi_temp_{}".format(description.lower())] = value["id"]
             hass_entities.append(
                 {"entity_id": "hompi_temp_{}".format(description.lower()),
-                 "data": {"state": temp["temp_c"], "attributes":
+                 "data": {"state": value["temp_c"], "attributes":
                      {"friendly_name": "Hompi temp {}".format(description.upper()), "icon": HOMPI_TEMP_ICON,
-                      "device_class": "temperature", "unit_of_measurement": "°C", "id": temp["id"]}}}
+                      "device_class": "temperature", "unit_of_measurement": "°C", "id": value["id"]}}}
             )
 
     entity_id = None
