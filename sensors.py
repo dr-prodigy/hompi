@@ -73,12 +73,7 @@ class Sensors:
     device_file = ''
 
     def __init__(self):
-        # DS18B20 thermometer
-        # initialize GPIO modules
-        os.system('sudo modprobe w1-gpio')
-        os.system('sudo modprobe w1-therm')
-
-        # initialize devices
+        # DS18B20 thermometer: initialize device file
         base_dir = '/sys/bus/w1/devices/'
         device_folders = glob.glob(base_dir + '28*')
         if device_folders:
