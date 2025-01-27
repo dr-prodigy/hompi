@@ -19,7 +19,6 @@
 import config
 import re
 import time
-import math
 
 from datetime import datetime, timedelta
 from utils import LOG_INFO, log_stdout, log_stderr, LOG_DEBUG, LOG_WARN
@@ -121,7 +120,7 @@ class MQTT:
         if area['mqtt_trv_name']:
             topic = '{}/{}/set'.format(config.MQTT_BASE_TOPIC, area['mqtt_trv_name'])
             payload = (area['mqtt_trv_publish_payload']
-                      .replace('**TEMP**', str(math.floor(req_temp_c)))
+                      .replace('**TEMP**', str(req_temp_c))
                       .replace('**TEMP_CAL**', str(calibration)))
             if self.__connected:
                 if self.__client.publish(topic, payload).is_published():

@@ -430,10 +430,10 @@ def compute_status():
                 ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, area['cur_temp_c'])
                 if config.THERMOSTAT_MODE & 2:
                     if io_status.heating_status in ['cooling', 'off']:
-                        trv_heating_on |= area['req_temp_c'] - area['cur_temp_c'] >= config.HEATING_THRESHOLD
+                        trv_heating_on |= area['req_temp_c'] - math.ceil(area['cur_temp_c']) >= config.HEATING_THRESHOLD
                     else:
                         # *** keep on heating until exact temp is reached ***
-                        trv_heating_on |= area['cur_temp_c'] < area['req_temp_c']
+                        trv_heating_on |= math.ceil(area['cur_temp_c']) < area['req_temp_c']
 
     # heating status
     if main_heating_on or slave_heating_on or trv_heating_on:
