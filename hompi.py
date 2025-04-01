@@ -401,39 +401,41 @@ def compute_status():
     main_heating_on = slave_heating_on = trv_heating_on = False
     last_change = dateutil.parser.parse(io_status.last_change)
 
-    # MAIN THERMOSTAT
-    if config.MODULE_TEMP:
-        if io_status.int_temp_c:
-            # print(current_time - last_change).total_seconds()
-            if config.THERMOSTAT_MODE & 1:
-                if io_status.heating_status in ['cooling', 'off']:
-                    main_heating_on = io_status.req_temp_c - io_status.int_temp_c >= config.HEATING_THRESHOLD
-                else:
-                    # *** stop heating on exact temp ***
-                    main_heating_on = io_status.int_temp_c <= io_status.req_temp_c
-        else:
-            io_status.int_temp_c = 0
-
-    # SLAVE HOMPIs
-    for slave_id, slave in io_status.hompi_slaves.items():
-        ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, slave['int_temp_c'])
-        if config.THERMOSTAT_MODE & 4:
-            slave_heating_on |= slave['heating_status'] == 'warming' or slave['heating_status'] == 'on'
-
-    # TRVs
-    if config.MODULE_TRV:
-        for area in io_status.areas.values():
-            # ignore expired TRV data
-            if ('last_update' in area and
-                (current_time - dateutil.parser.parse(area['last_update'])).total_seconds() <
-                    config.TRV_DATA_EXPIRATION_SECS):
-                ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, area['cur_temp_c'])
-                if config.THERMOSTAT_MODE & 2:
+    # WHEN OFF, SKIP EVERYTHING
+    if io_status.short_mode_desc != 'O':
+        # MAIN THERMOSTAT
+        if config.MODULE_TEMP:
+            if io_status.int_temp_c:
+                # print(current_time - last_change).total_seconds()
+                if config.THERMOSTAT_MODE & 1:
                     if io_status.heating_status in ['cooling', 'off']:
-                        trv_heating_on |= area['req_temp_c'] - math.ceil(area['cur_temp_c']) >= config.HEATING_THRESHOLD
+                        main_heating_on = io_status.req_temp_c - io_status.int_temp_c >= config.HEATING_THRESHOLD
                     else:
-                        # *** keep on heating until exact temp is reached ***
-                        trv_heating_on |= math.ceil(area['cur_temp_c']) < area['req_temp_c']
+                        # *** stop heating on exact temp ***
+                        main_heating_on = io_status.int_temp_c <= io_status.req_temp_c
+            else:
+                io_status.int_temp_c = 0
+
+        # SLAVE HOMPIs
+        for slave_id, slave in io_status.hompi_slaves.items():
+            ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, slave['int_temp_c'])
+            if config.THERMOSTAT_MODE & 4:
+                slave_heating_on |= slave['heating_status'] == 'warming' or slave['heating_status'] == 'on'
+
+        # TRVs
+        if config.MODULE_TRV:
+            for area in io_status.areas.values():
+                # ignore expired TRV data
+                if ('last_update' in area and
+                    (current_time - dateutil.parser.parse(area['last_update'])).total_seconds() <
+                        config.TRV_DATA_EXPIRATION_SECS):
+                    ext_cur_temp_c = '{}{:.2f}°, '.format(ext_cur_temp_c, area['cur_temp_c'])
+                    if config.THERMOSTAT_MODE & 2:
+                        if io_status.heating_status in ['cooling', 'off']:
+                            trv_heating_on |= area['req_temp_c'] - math.ceil(area['cur_temp_c']) >= config.HEATING_THRESHOLD
+                        else:
+                            # *** keep on heating until exact temp is reached ***
+                            trv_heating_on |= math.ceil(area['cur_temp_c']) < area['req_temp_c']
 
     # heating status
     if main_heating_on or slave_heating_on or trv_heating_on:
