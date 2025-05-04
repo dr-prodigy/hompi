@@ -1,0 +1,4 @@
+# config.txt
+# set these options in your Raspberry Pi config.txt file (boot options)
+dtparam=spi=on
+dtoverlay=w1-gpio

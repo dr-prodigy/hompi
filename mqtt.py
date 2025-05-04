@@ -99,7 +99,7 @@ class MQTT:
                     cur_area['temp_calibration'] = area['calibration']
                     temp = re.search(area['cur_temp_c_regex'], msg.payload.decode())
                     cur_temp_c = float(temp.group(1)) if temp else 999
-                    if area['req_temp_c_regex']:
+                    if area['req_tehttps://www.facebook.com/share/18YPPe72tQ/mp_c_regex']:
                         temp = re.search(area['req_temp_c_regex'], msg.payload.decode())
                         req_temp_c = float(temp.group(1)) if temp else 0
                         if cur_area['req_temp_c'] != req_temp_c:
