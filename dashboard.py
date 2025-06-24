@@ -436,11 +436,12 @@ class Dashboard:
                 # |A  20.6° > 19:30|
                 # +----------------+
                 # self.set_charset(CHARSET_SYMBOL) # change charset
-                self.line[0] = '{} {:02.0f}^{:02.0f}   {}'.format(
+                self.line[0] = ('{} {:02.0f}^{:02.0f}   {}'.format(
                     heating_icon,
                     datetime.datetime.now().hour,
                     datetime.datetime.now().minute,
                     '{:.1f}\xDFC'.format(io_status.int_temp_c) if config.MODULE_TEMP else '' )
+                                .center(LCD_COLUMNS))
                 if io_status.message != '':
                     self.line[1] = ' \xA5 \xA5 \xA5 ' + \
                                    io_status.message + ' \xA5 \xA5 \xA5'
