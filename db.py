@@ -19,8 +19,13 @@
 
 import caribou
 import sqlite3
+import shutil
+import os
 
-db_path = './db/hompi.sqlite'
+import config
+
+db_name = 'hompi.sqlite'
+db_path = f'./db/{db_name}'
 migrations_path = './migrations'
 
 
@@ -31,6 +36,14 @@ def migrate():
 
 class DatabaseManager(object):
     def __init__(self):
+        global db_path
+        if config.TMPFS_ENABLE:
+            # move db to temporary filesystem
+            tmp_db_path = f'{config.TMPFS_PATH}{db_name}'
+            if not os.path.exists(tmp_db_path):
+                shutil.copy(db_path, tmp_db_path)
+            db_path = tmp_db_path
+
         self.conn = sqlite3.connect(db_path)
         self.conn.execute('pragma foreign_keys = on')
         self.conn.commit()

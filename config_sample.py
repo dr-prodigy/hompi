@@ -21,6 +21,10 @@
 
 from utils import LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
 
+# TMP FILESYSTEM
+TMPFS_ENABLE = True
+TMPFS_PATH = '/tmp/'
+
 # ROOM NAME
 HOMPI_ID = 'Living'
 # HOMPI_SERVERS = ['http://hompi2_ip:5000','http://hompi3_ip:5000',]
