@@ -25,13 +25,33 @@ import os
 import config
 
 db_name = 'hompi.sqlite'
-db_path = f'./db/{db_name}'
+db_path = persistent_db_path = f'./db/{db_name}'
 migrations_path = './migrations'
 
+def __init__():
+    global db_path
+    if config.TMPFS_ENABLE:
+        # move db to temporary filesystem
+        tmp_db_path = f'{config.TMPFS_PATH}{db_name}'
+        if not os.path.exists(tmp_db_path):
+            print(f'Copying {db_path} to {tmp_db_path}')
+            shutil.copy2(db_path, tmp_db_path)
+        db_path = tmp_db_path
 
 def migrate():
+    print(f'Applying migrations to {db_path}')
     # upgrade to most recent version
     caribou.upgrade(db_path, migrations_path)
+
+def flush():
+    global db_path, persistent_db_path
+    if config.TMPFS_ENABLE:
+        # move db back to persistent filesystem
+        print(f'Restoring {db_path} to {persistent_db_path}')
+        if os.path.exists(persistent_db_path):
+            os.remove(persistent_db_path)
+        shutil.copy2(db_path, persistent_db_path)
+        os.remove(db_path)
 
 
 class DatabaseManager(object):
@@ -41,13 +61,14 @@ class DatabaseManager(object):
             # move db to temporary filesystem
             tmp_db_path = f'{config.TMPFS_PATH}{db_name}'
             if not os.path.exists(tmp_db_path):
-                shutil.copy(db_path, tmp_db_path)
+                shutil.copy2(db_path, tmp_db_path)
             db_path = tmp_db_path
 
         self.conn = sqlite3.connect(db_path)
         self.conn.execute('pragma foreign_keys = on')
         self.conn.commit()
         self.cur = self.conn.cursor()
+
 
     def query(self, command_, args=()):
         try:

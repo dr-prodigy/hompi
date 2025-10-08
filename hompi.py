@@ -268,6 +268,7 @@ def main():
                 ambient.reset()
                 io_status.set_ambient(ambient)
                 mqtt.cleanup()
+                db.flush()
                 raise
             except Exception:
                 # LCD I/O error: refresh LCD screen
