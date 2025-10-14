@@ -163,7 +163,7 @@ class Sensors:
                 if equals_pos != -1:
                     temp_string = lines[1][equals_pos + 2:]
                     temp_c = float(temp_string) / 1000.0
-                    return temp_c * config.TEMP_CORRECTION
+                    return temp_c + config.TEMP_CORRECTION
         return None
 
     # heating relay management
