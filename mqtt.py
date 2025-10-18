@@ -103,7 +103,7 @@ class MQTT:
                         temp = re.search(area['req_temp_c_regex'], msg.payload.decode())
                         # truncate requested temp
                         req_temp_c = int(temp.group(1)) if temp else 0
-                        if cur_area['req_temp_c'] != req_temp_c:
+                        if int(cur_area['req_temp_c']) != req_temp_c:
                             cur_area['req_temp_c'] = req_temp_c
                             cur_area['manual_set'] = True
                     else:
