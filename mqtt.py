@@ -154,11 +154,13 @@ class MQTT:
                 if not area['subscribed']:
                     if not self.__connect(): return
                     self.__subscribe(area['topic'])
-                    if 'topic2' in area.keys():
-                        self.__subscribe(area['topic2'])
-                    area['subscribed'] = True
                     log_stdout('MQTT',
                             'Area: {} - subscribe ({})'.format(area['area_name'], area['topic']), LOG_INFO)
+                    if 'topic2' in area.keys():
+                        self.__subscribe(area['topic2'])
+                        log_stdout('MQTT',
+                                'Area: {} - subscribe ({})'.format(area['area_name'], area['topic2']), LOG_INFO)
+                    area['subscribed'] = True
             # publish updates
             for area_id in self.__io_status.areas.keys():
                 area = self.__io_status.areas[area_id]
