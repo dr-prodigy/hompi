@@ -99,18 +99,20 @@ class MQTT:
                     cur_area['temp_calibration'] = area['calibration']
                     temp = re.search(area['cur_temp_c_regex'], msg.payload.decode())
                     cur_temp_c = float(temp.group(1)) if temp else 999
+                    req_temp_c = 0
+                    cur_area['cur_temp_c'] = cur_temp_c
                     if area['req_temp_c_regex']:
                         temp = re.search(area['req_temp_c_regex'], msg.payload.decode())
                         # truncate requested temp
-                        req_temp_c = int(temp.group(1)) if temp else 0
-                        if int(cur_area['req_temp_c']) != req_temp_c:
-                            cur_area['req_temp_c'] = req_temp_c
-                            cur_area['manual_set'] = True
-                    else:
+                        if temp:
+                            req_temp_c = int(temp.group(1))
+                            if int(cur_area['req_temp_c']) != req_temp_c:
+                                cur_area['req_temp_c'] = req_temp_c
+                                cur_area['manual_set'] = True
+                    if not req_temp_c:
                         req_temp_c = "-"
-                    cur_area['cur_temp_c'] = cur_temp_c
                     log_stdout('MQTT', '{} update - cur_temp_c: {} - req_temp_c: {}'.
-                               format(area['mqtt_name'], cur_temp_c, req_temp_c), LOG_INFO)
+                            format(area['mqtt_name'], cur_temp_c, req_temp_c), LOG_INFO)
 
         self.__client.subscribe(topic)
         self.__client.on_message = on_message
