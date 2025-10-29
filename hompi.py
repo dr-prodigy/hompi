@@ -672,6 +672,9 @@ def refresh_program(time_):
         for row in rows:
             io_system.temperatures.append(dict(id=row[0], description=row[1], temp_c=row[2]))
 
+    if is_program_changed:
+        io_data.last_program_change = datetime.datetime.now().isoformat()
+
 def update_lcd_content(change=False):
     if change:
         lcd.change_dashboard_program(io_status)
