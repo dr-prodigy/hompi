@@ -93,14 +93,18 @@ class MQTT:
             # topic decoding
             for area_id in self.__areas.keys():
                 area = self.__areas[area_id]
-                if area['topic'] == msg.topic:
+                # accept updates both from main and secondary MQTT device
+                if area['topic'] == msg.topic or \
+                    ('topic2' in area.keys() and area['topic2'] == msg_topic):
                     cur_area = self.__io_status.areas[area_id]
                     cur_area["last_update"] = datetime.now().isoformat()
                     cur_area['temp_calibration'] = area['calibration']
                     temp = re.search(area['cur_temp_c_regex'], msg.payload.decode())
                     cur_temp_c = float(temp.group(1)) if temp else 999
                     req_temp_c = 0
-                    cur_area['cur_temp_c'] = cur_temp_c
+                    # consider main MQTT device current temperature only
+                    if area['topic'] == msg.topic:
+                        cur_area['cur_temp_c'] = cur_temp_c
                     if area['req_temp_c_regex']:
                         temp = re.search(area['req_temp_c_regex'], msg.payload.decode())
                         # truncate requested temp
@@ -150,6 +154,8 @@ class MQTT:
                 if not area['subscribed']:
                     if not self.__connect(): return
                     self.__subscribe(area['topic'])
+                    if 'topic2' in area.keys():
+                        self.__subscribe(area['topic2'])
                     area['subscribed'] = True
                     log_stdout('MQTT',
                             'Area: {} - subscribe ({})'.format(area['area_name'], area['topic']), LOG_INFO)
@@ -170,6 +176,8 @@ class MQTT:
               'calibration': calibration, 'mqtt_trv_name': mqtt_trv_name,
               'mqtt_trv_publish_payload': mqtt_trv_publish_payload,
               'subscribed': False }
+        if mqtt_trv_name and mqtt_trv_name != mqtt_name:
+            self.__areas[area_id]['topic2'] = '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_trv_name)
 
     def cleanup(self):
         log_stdout('MQTT', 'Cleanup', LOG_INFO)
