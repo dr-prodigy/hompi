@@ -101,8 +101,9 @@ class MQTT:
                     cur_temp_c = float(temp.group(1)) if temp else 999
                     if area['req_temp_c_regex']:
                         temp = re.search(area['req_temp_c_regex'], msg.payload.decode())
-                        req_temp_c = float(temp.group(1)) if temp else 0
-                        if cur_area['req_temp_c'] != req_temp_c:
+                        # truncate requested temp
+                        req_temp_c = int(temp.group(1)) if temp else 0
+                        if int(cur_area['req_temp_c']) != req_temp_c:
                             cur_area['req_temp_c'] = req_temp_c
                             cur_area['manual_set'] = True
                     else:
@@ -120,9 +121,10 @@ class MQTT:
         # publish only to areas with a TRV
         if area['mqtt_trv_name'] and area['mqtt_trv_publish_payload']:
             topic = '{}/{}/set'.format(config.MQTT_BASE_TOPIC, area['mqtt_trv_name'])
+            # set temperatures (truncate to int)
             payload = (area['mqtt_trv_publish_payload']
-                      .replace('**TEMP**', str(req_temp_c))
-                      .replace('**TEMP_CAL**', str(calibration)))
+                      .replace('**TEMP**', str(int(req_temp_c)))
+                      .replace('**TEMP_CAL**', str(int(calibration))))
             if self.__connected:
                 if self.__client.publish(topic, payload).is_published():
                     log_stdout('MQTT', 'Area: {} - Publish: req. temp.: {}, calibration: {}'.
