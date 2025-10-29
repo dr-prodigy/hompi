@@ -621,13 +621,15 @@ def refresh_program(time_):
             area["mqtt_temp_name"] = row[2]
             area["mqtt_trv_name"] = row[6]
             # if program changed, (re)initialize req. temp and calibration from DB
-            # ignore area if no requested temperature regex available (=> temp sensor, not a TRV)
-            req_temp_c = float(row[8]) if row[4] else 0
+            # ignore area if no TRV name or no requested temperature regex available
+            # (= no TRV, temp sensor only)
+            req_temp_c = float(row[8]) if row[4] and row[6] else 0
             temp_calibration = float(row[5])
             if is_program_changed:
-                # restore manual set flag
+                # program change: back to non-manual
                 area["manual_set"] = False
             else:
+                # no program change: keep TRV settings
                 area["manual_set"] = req_temp_c != area["req_temp_c"]
                 req_temp_c = area["req_temp_c"]
                 temp_calibration = area["temp_calibration"]

@@ -117,7 +117,8 @@ class MQTT:
     def __publish(self, area_id, req_temp_c, calibration):
         published = False
         area = self.__areas[area_id]
-        if area['mqtt_trv_name']:
+        # publish only to areas with a TRV
+        if area['mqtt_trv_name'] and area['mqtt_trv_publish_payload']:
             topic = '{}/{}/set'.format(config.MQTT_BASE_TOPIC, area['mqtt_trv_name'])
             payload = (area['mqtt_trv_publish_payload']
                       .replace('**TEMP**', str(req_temp_c))
