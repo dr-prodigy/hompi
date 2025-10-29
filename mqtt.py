@@ -116,6 +116,7 @@ class MQTT:
         self.__client.on_message = on_message
 
     def __publish(self, area_id, req_temp_c, calibration):
+        global publish_time
         published = False
         area = self.__areas[area_id]
         # publish only to areas with a TRV
@@ -133,6 +134,7 @@ class MQTT:
                 else:
                     log_stdout('MQTT', '{} publish failed -> delaying {} mins'.
                                format(topic, RETRY_MINUTES), LOG_WARN)
+                    publish_time = datetime.now() + timedelta(minutes=RETRY_MINUTES)
             else:
                 log_stdout('MQTT', 'Not connected - Publish SKIPPED {} -> ({})'.
                            format(payload, topic), LOG_WARN)
