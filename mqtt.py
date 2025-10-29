@@ -116,7 +116,7 @@ class MQTT:
                     if not req_temp_c:
                         req_temp_c = "-"
                     log_stdout('MQTT', '{} update - cur_temp_c: {} - req_temp_c: {}'.
-                            format(area['mqtt_name'], cur_temp_c, req_temp_c), LOG_INFO)
+                            format(area['area_name'], cur_area['cur_temp_c'], cur_area['req_temp_c']), LOG_INFO)
 
         self.__client.subscribe(topic)
         self.__client.on_message = on_message
