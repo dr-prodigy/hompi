@@ -200,8 +200,11 @@ def main():
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
                 if config.MODULE_TEMP:
-                    io_status.int_temp_c = round(
-                        log_temp_avg_accu / log_temp_avg_sum, 2)
+                    io_status.int_temp_c = round(log_temp_avg_accu / log_temp_avg_sum, 2)
+                    if config.MODULE_TRV:
+                        for area in io_status.areas.values():
+                            if area['mqtt_temp_name'] == '**INTERNAL**':
+                                area['cur_temp_c'] = io_status.int_temp_c
                     log_temp_avg_accu = log_temp_avg_counter = log_temp_avg_sum = 0
                 log_data('refreshing' if sighup_refresh else '.')
 

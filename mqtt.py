@@ -153,9 +153,10 @@ class MQTT:
             for area in self.__areas.values():
                 if not area['subscribed']:
                     if not self.__connect(): return
-                    self.__subscribe(area['topic'])
-                    log_stdout('MQTT',
-                            'Area: {} - subscribe ({})'.format(area['area_name'], area['topic']), LOG_INFO)
+                    if area['mqtt_temp_name'] != '**INTERNAL**':
+                        self.__subscribe(area['topic'])
+                        log_stdout('MQTT',
+                                'Area: {} - subscribe ({})'.format(area['area_name'], area['topic']), LOG_INFO)
                     if 'topic2' in area.keys():
                         self.__subscribe(area['topic2'])
                         log_stdout('MQTT',
@@ -169,16 +170,16 @@ class MQTT:
                     area['published'] = self.__publish(area_id, area['req_temp_c'], area['temp_calibration'])
 
     def register(self, area_id, area_name,
-                 mqtt_name, cur_temp_c_regex, req_temp_c_regex, calibration,
+                 mqtt_temp_name, cur_temp_c_regex, req_temp_c_regex, calibration,
                  mqtt_trv_name, mqtt_trv_publish_payload):
         self.__areas[area_id] = \
-            { 'area_name': area_name, 'mqtt_name': mqtt_name,
-              'topic': '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_name),
+            { 'area_name': area_name, 'mqtt_temp_name': mqtt_temp_name,
+              'topic': '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_temp_name),
               'cur_temp_c_regex': cur_temp_c_regex, 'req_temp_c_regex': req_temp_c_regex,
               'calibration': calibration, 'mqtt_trv_name': mqtt_trv_name,
               'mqtt_trv_publish_payload': mqtt_trv_publish_payload,
               'subscribed': False }
-        if mqtt_trv_name and mqtt_trv_name != mqtt_name:
+        if mqtt_trv_name and mqtt_trv_name != mqtt_temp_name:
             self.__areas[area_id]['topic2'] = '{}/{}'.format(config.MQTT_BASE_TOPIC, mqtt_trv_name)
 
     def cleanup(self):
