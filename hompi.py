@@ -168,7 +168,7 @@ def main():
             if secs_elapsed >= task_at_secs['update_temp']:
                 # save new temperature (if valid)
                 if temp_avg_sum != 0:
-                    io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 2)
+                    io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 1)
                 # reset temp sampling
                 temp_avg_accu = temp_avg_counter = temp_avg_sum = 0
             # OPERATIONS NOT DONE ON REFRESH - END
