@@ -168,7 +168,7 @@ def main():
             if secs_elapsed >= task_at_secs['update_temp']:
                 # save new temperature (if valid)
                 if temp_avg_sum != 0:
-                    io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 1)
+                    io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 2)
                 # reset temp sampling
                 temp_avg_accu = temp_avg_counter = temp_avg_sum = 0
             # OPERATIONS NOT DONE ON REFRESH - END
@@ -204,7 +204,7 @@ def main():
                     if config.MODULE_TRV:
                         for area in io_status.areas.values():
                             if area['mqtt_temp_name'] == '**INTERNAL**':
-                                area['cur_temp_c'] = io_status.int_temp_c
+                                area['cur_temp_c'] = round(io_status.int_temp_c, 1)
                     log_temp_avg_accu = log_temp_avg_counter = log_temp_avg_sum = 0
                 log_data('refreshing' if sighup_refresh else '.')
 
