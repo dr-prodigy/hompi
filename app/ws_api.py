@@ -22,17 +22,18 @@ from flask import request
 from flask import send_file
 from werkzeug import exceptions
 
+import sys
+import os
 import traceback
 import json
 import signal
 import hashlib
-import os
 import urllib.request
-from PIL import Image
 
+sys.path.append("/data")
 import db
-import config
 import io_data
+import config
 
 HOMPI_PROCNAME = 'bin/hompi'
 
@@ -241,33 +242,6 @@ def get_list2(server, list, key=None):
             ).read()
     except Exception:
         print("get_list2({},{},{}): error".format(server, list, key))
-        print(traceback.format_exc())
-        return "Error", 500  # INTERNAL_SERVER_ERROR
-
-
-@app.route('/hompi/_get_image/<image_name>', methods = ['GET'])
-def get_image(image_name):
-    if not _check_sharedkey():
-        return "Forbidden", 403
-
-    try:
-        filename = '{}/{}'.format(
-            os.path.dirname(os.path.abspath(config.IMAGE_PATH)), image_name)
-        thumb_filename = '{}/thumbs/{}'.format(
-            os.path.dirname(os.path.abspath(config.IMAGE_PATH)), image_name)
-        if not os.path.isfile(thumb_filename):
-            try:
-                image = Image.open(filename)
-                image.thumbnail(config.THUMB_SIZE, Image.ANTIALIAS)
-                image.save(thumb_filename, 'JPEG')
-            except Exception:
-                print("get_image({}): error".format(image_name))
-                print(traceback.format_exc())
-                return "Error", 500  # INTERNAL_SERVER_ERROR
-
-        return send_file(thumb_filename)
-    except Exception:
-        print("get_image({}): error".format(image_name))
         print(traceback.format_exc())
         return "Error", 500  # INTERNAL_SERVER_ERROR
 

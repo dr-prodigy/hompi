@@ -1,0 +1,6 @@
+Adafruit-PureIO
+Adafruit_GPIO
+Adafruit_WS2801
+RPi.GPIO
+smbus
+spidev

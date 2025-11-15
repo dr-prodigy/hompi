@@ -41,7 +41,8 @@ PIXEL_COUNT = 32
 
 # Configure transition timings
 try:
-    import config
+    from app.data import config
+
     if config and config.AMBIENT_TRANSITION_FRAMES:
         AMBIENT_TRANSITION_FRAMES = float(config.AMBIENT_TRANSITION_FRAMES)
     else:

@@ -25,7 +25,7 @@ import os
 import config
 
 db_name = 'hompi.sqlite'
-db_path = persistent_db_path = f'./db/{db_name}'
+db_path = persistent_db_path = f'/data/{db_name}'
 migrations_path = './migrations'
 
 def __init__():

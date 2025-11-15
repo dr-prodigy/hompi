@@ -6,7 +6,7 @@ Open-source home automation project for Raspberry Pi
 
 Description
 -----------
-**hompi** (*'hom-pee'*) is a lightweight Python 2 / 3 software developed
+**hompi** (*'hom-pee'*) is a lightweight Python software developed
 for Raspberry Pi to provide a native reliable home automation engine
 to control heating, gates, ambient LED lights, etc...
 
@@ -68,8 +68,12 @@ Wiring
 
 Please refer to `misc/gpio.txt`__ file for wiring details.
 
-Usage
------
+Usage via docker (recommended)
+-------------------------------
+
+
+Usage - core mode(deprecated)
+-------------------------------
 After cloning repository
 
 .. code-block:: bash
@@ -82,25 +86,10 @@ Run
 
     $ ./scripts/install.sh
     
-or, for Python3:
-
-.. code-block:: bash
-
-    $ ./scripts/install_py3.sh
-
-Upon completion, copy *config_sample.py* to *config.py*, and modify as needed.
-
 .. code-block:: bash
 
     $ cp config_sample.sh config.py
     $ vi config.py
-
-(Optional) - To run ambient module ( *MODULE_AMBIENT = True* ) on non GPIO-capable devices
-(ie: Linux, MacOS, Win..), you need to stub *spidev.py* library using command
-
-.. code-block:: bash
-
-    $ ln -s ./stubs/spidev.py .
 
 Start server in debug mode with
 
@@ -130,7 +119,6 @@ To Do
 - Web API documentation
 - Config files documentation
 - Pictures, demo vids (homesite?)
-- Travis CI/CD completion
 
 Contributions
 -------------

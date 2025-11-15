@@ -26,9 +26,12 @@ TMPFS_ENABLE = True
 TMPFS_PATH = '/tmp/'
 
 # ROOM NAME
-HOMPI_ID = 'Living'
-# HOMPI_SERVERS = ['http://hompi2_ip:5000','http://hompi3_ip:5000',]
+HOMPI_ID = 'hompi'
+# HOMPI_SERVERS: list of external hompi servers
+# example: HOMPI_SERVERS = ['http://hompi2_ip:5000', 'http://hompi3_ip:5000', ...,]
 HOMPI_SERVERS = []
+# HOMPI_SERVERS: list of external temperature sensors
+# example: #HOMPI_EXT_SENSORS = ['http://sensor_ip', ...,]
 HOMPI_EXT_SENSORS = []
 
 # ENABLED MODULES
@@ -42,42 +45,44 @@ MODULE_AMBIENT = False
 ENABLE_TELEGRAM = False
 
 # HASS INTEGRATION
-MODULE_HASS = True
+MODULE_HASS = False
 HASS_SERVER = 'http://localhost:8123/'
 HASS_CHECK_SSL_CERT = False
 HASS_TOKEN = 'abc123'
 
 # CLIMATE INTEGRATION
 MODULE_TEMP = True
-MODULE_TRV = True
+MODULE_TRV = False
 MQTT_BROKER = 'localhost'
 MQTT_PORT = 1883
 MQTT_BASE_TOPIC = 'zigbee2mqtt'
 TRV_DATA_EXPIRATION_SECS = 3600 # 1 hour
 TRV_KEEPALIVE = True
 # Thermostat modes (OR): NONE = 0, Main = 1, TRV = 2, External servers = 4
-THERMOSTAT_MODE = 1|2
+# example: THERMOSTAT_MODE = 1|2 = control thermostat based on both Main and TRV temperature sensors
+THERMOSTAT_MODE = 1
 
-# LCD modes : NONE = 0, GPIO_CharLCD = 1, I2C = 2
+# LCD DISPLAY INTEGRATION
+# LCD integration mode : NONE = 0, GPIO_CharLCD = 1, I2C = 2
 MODULE_LCD = 2
 I2C_BUS = 1  # i2c bus (0 -- original Pi, 1 -- Rev 2 Pi)
 I2C_ADDRESS = 0x27
 LCD_COLUMNS = 16
 LCD_ROWS = 2
 
-# RELAY MODE
+# GPIO RELAYS
+# COMMAND MODE: True = HI/LOW, False = OUT/IN
 RELAY_HILOW_MODE = False
 
-# HEATING RELAY
+# HEATING RELAY GPIO no.
 HEATING_GPIO = 17
 
-# PUSH-BUTTON RELAYS (GPIO, NAME)
+# PUSH-BUTTON RELAYS (GPIO no., NAME)
 BUTTONS = [
     [18, 'Gate'],
-    [22, 'Living'],
-    [23, 'Bedroom'],
+    [22, 'Garage'],
 ]
-BUTTON_DURATION_SECS = 1
+BUTTON_DURATION_SECS = .5
 
 # AMBIENT LED
 LED_RIGHT_TO_LEFT = False
@@ -104,4 +109,4 @@ SPEECH_COMMAND = 'espeak -vit+m3 -s150 -k10 "{}"'
 AMBIENT_TRANSITION_FRAMES = 100
 
 # API PRE-SHARED KEY
-# API_KEY = 'change-me'
+API_KEY = 'change-me'

@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import ssl
 import glob
 import json
@@ -29,7 +28,7 @@ import time
 import datetime
 import dateutil.parser
 
-from utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+from utils import log_stdout, log_stderr, LOG_WARN
 
 # GPIO import
 try:

@@ -25,9 +25,17 @@ import dateutil.parser
 import math
 import traceback
 import os
+import shutil
 import holidays
 
-import config
+sys.path.append("/data")
+try:
+    import config
+except Exception:
+    print("WARN: config.py not available, copying from config_sample.py")
+    shutil.copy2("./config_sample.py", "/data/config.py")
+    import config
+
 import db
 import hass
 import io_data
@@ -37,12 +45,11 @@ import resources
 import ambient
 import random
 import mqtt
-
 import socket
 
-from tendo import singleton
 from utils import os_async_command
-from utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+from utils import log_stdout, log_stderr, LOG_INFO, LOG_WARN
+from tendo import singleton
 
 io_status = io_data.Status()
 io_system = io_data.SystemInfo()

@@ -1,0 +1,10 @@
+caribou
+Flask
+holidays
+python-dateutil
+requests
+six
+tendo
+urllib3
+paho-mqtt
+uwsgi

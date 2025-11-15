@@ -1,5 +1,4 @@
 config.py
-/spidev.py
 *.pyc
 *.sqlite*
 .idea

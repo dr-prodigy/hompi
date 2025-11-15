@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import json
-from math import isnan
 
 # Copyright (C)2018-24 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>.
@@ -26,7 +24,7 @@ import dateutil.parser
 from requests import post
 from utils import log_stdout, log_stderr
 from datetime import datetime, timedelta
-from utils import LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+from utils import LOG_INFO
 
 if not config.HASS_CHECK_SSL_CERT:
     urllib3.disable_warnings()
@@ -169,7 +167,7 @@ def publish_status(io_status, io_system, ambient):
                 entity_name = "{}_updated".format(area_name)
                 last_update = dateutil.parser.parse(area["last_update"])
                 updated = (now - last_update).total_seconds() < config.TRV_DATA_EXPIRATION_SECS \
-                            and last_update > dateutil.parser.parse(io_status.last_change)
+                          and last_update > dateutil.parser.parse(io_status.last_change)
                 if old_entity.get(entity_name) != updated:
                     old_entity[entity_name] = updated
                     icon = HOMPI_TEMP_ALERT_ICON if not updated else HOMPI_TEMP_ICON

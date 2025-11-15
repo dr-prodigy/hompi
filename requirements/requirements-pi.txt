@@ -1,6 +1,0 @@
-Adafruit-PureIO==1.1.11
-Adafruit_GPIO==1.0.3
-Adafruit_WS2801==1.0.1
-RPi.GPIO==0.7.1
-smbus==1.1.post2
-spidev==3.6
