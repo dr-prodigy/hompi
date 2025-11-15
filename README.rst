@@ -70,7 +70,7 @@ Please refer to `misc/gpio.txt`__ file for wiring details.
 
 Usage via docker (recommended)
 -------------------------------
-
+WIP
 
 Usage - core mode(deprecated)
 -------------------------------
