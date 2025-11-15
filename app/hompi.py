@@ -28,6 +28,7 @@ import os
 import shutil
 import holidays
 
+# add /data as config path
 sys.path.append("/data")
 try:
     import config

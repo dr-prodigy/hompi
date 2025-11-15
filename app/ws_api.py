@@ -30,7 +30,9 @@ import signal
 import hashlib
 import urllib.request
 
+# add /data as config path
 sys.path.append("/data")
+
 import db
 import io_data
 import config

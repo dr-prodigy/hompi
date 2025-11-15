@@ -25,6 +25,9 @@ import signal
 import datetime
 import random
 
+# add /data as config path
+sys.path.append("/data")
+
 # GPIO import
 try:
     import RPi.GPIO as GPIO
@@ -41,7 +44,7 @@ PIXEL_COUNT = 32
 
 # Configure transition timings
 try:
-    from app.data import config
+    import config
 
     if config and config.AMBIENT_TRANSITION_FRAMES:
         AMBIENT_TRANSITION_FRAMES = float(config.AMBIENT_TRANSITION_FRAMES)
