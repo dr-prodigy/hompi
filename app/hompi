@@ -1,5 +1,3 @@
 #!/bin/bash
-uwsgi --http-socket :5000 --daemonize /dev/stdout \
-      --enable-threads --wsgi ws_api:app --logto /dev/stdout
-# --plugins python3
+waitress-serve --port=5000 ws_api:app &
 python hompi.py

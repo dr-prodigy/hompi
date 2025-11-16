@@ -7,4 +7,4 @@ six
 tendo
 urllib3
 paho-mqtt
-uwsgi
+waitress
