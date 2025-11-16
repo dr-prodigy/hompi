@@ -1,10 +1,9 @@
+tendo
 caribou
-Flask
 holidays
 python-dateutil
-requests
-six
-tendo
-urllib3
 paho-mqtt
+urllib3
+requests
+Flask
 waitress
