@@ -200,8 +200,11 @@ def main():
             # log data (check task_at_mins)
             if (datetime.datetime.now().minute == task_at_mins['log'] or sighup_refresh) and log_temp_avg_sum > 0:
                 if config.MODULE_TEMP:
-                    io_status.int_temp_c = round(
-                        log_temp_avg_accu / log_temp_avg_sum, 2)
+                    io_status.int_temp_c = round(log_temp_avg_accu / log_temp_avg_sum, 2)
+                    if config.MODULE_TRV:
+                        for area in io_status.areas.values():
+                            if area['mqtt_temp_name'] == '**INTERNAL**':
+                                area['cur_temp_c'] = round(io_status.int_temp_c, 1)
                     log_temp_avg_accu = log_temp_avg_counter = log_temp_avg_sum = 0
                 log_data('refreshing' if sighup_refresh else '.')
 
@@ -671,6 +674,9 @@ def refresh_program(time_):
         io_system.temperatures.clear()
         for row in rows:
             io_system.temperatures.append(dict(id=row[0], description=row[1], temp_c=row[2]))
+
+    if is_program_changed:
+        io_data.last_program_change = datetime.datetime.now().isoformat()
 
 def update_lcd_content(change=False):
     if change:

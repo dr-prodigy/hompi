@@ -36,8 +36,8 @@ class Status:
         global hide_message_time
         # general
         self.id = config.HOMPI_ID
-        self.last_update = datetime.datetime.now().isoformat()
-        self.last_change = datetime.datetime.now().isoformat()
+        self.last_update = self.last_program_change = self.last_change = \
+            datetime.datetime.now().isoformat()
         self.hompi_slaves = {}
         self.hompi_ext_sensors = {}
         # heating
