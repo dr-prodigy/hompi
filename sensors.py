@@ -40,7 +40,7 @@ except ImportError:
 
 import config
 
-if config.MODULE_TEMP and config.HEATING_GPIO:
+if config.MODULE_HEATING and config.HEATING_GPIO:
     try:
         HEATING_GPIO = int(config.HEATING_GPIO)
     except Exception:
@@ -86,7 +86,7 @@ class Sensors:
 
         # relay control type
         if config.RELAY_HILOW_MODE:
-            if config.MODULE_TEMP:
+            if config.MODULE_HEATING and config.HEATING_GPIO:
                 GPIO.setup(HEATING_GPIO, GPIO.OUT)
             for sw in config.BUTTONS:
                 GPIO.setup(sw[0], GPIO.OUT)
@@ -169,7 +169,7 @@ class Sensors:
     # heating relay management
     @staticmethod
     def set_heating(status):
-        if config.MODULE_TEMP:
+        if config.MODULE_HEATING:
             log_stdout('SENSORS', 'HEATING={}'.format(status))
             if config.RELAY_HILOW_MODE:
                 GPIO.output(HEATING_GPIO, GPIO.LOW if status else GPIO.HIGH)
