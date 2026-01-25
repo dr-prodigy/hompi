@@ -166,7 +166,7 @@ def main():
                 get_temperature()
 
             # update temperature
-            if secs_elapsed >= task_at_secs['update_temp']:
+            if config.MODULE_TEMP and secs_elapsed >= task_at_secs['update_temp']:
                 # save new temperature (if valid)
                 if temp_avg_sum != 0:
                     io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 2)
@@ -422,8 +422,8 @@ def compute_status():
                     else:
                         # *** stop heating on exact temp ***
                         main_heating_on = io_status.int_temp_c <= io_status.req_temp_c
-        else:
-            io_status.int_temp_c = 0
+            else:
+                io_status.int_temp_c = 0
 
         # SLAVE HOMPIs
         for slave_id, slave in io_status.hompi_slaves.items():
