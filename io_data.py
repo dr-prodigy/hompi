@@ -40,9 +40,7 @@ class Status:
             datetime.datetime.now().isoformat()
         self.hompi_slaves = {}
         self.hompi_ext_sensors = {}
-        # heating
-        if config.MODULE_TEMP:
-            self.int_temp_c = 0.0
+        self.int_temp_c = 0.0
         # TRV
         if config.MODULE_TRV:
             self.areas = {}
