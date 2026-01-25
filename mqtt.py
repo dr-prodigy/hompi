@@ -105,6 +105,11 @@ class MQTT:
                     # consider main MQTT device current temperature only
                     if area['topic'] == msg.topic:
                         cur_area['cur_temp_c'] = cur_temp_c
+
+                    # update main area current temperature
+                    if area_id == self.__io_status.main_area_id:
+                        self.__io_status.int_temp_c = cur_temp_c
+
                     if area['req_temp_c_regex']:
                         temp = re.search(area['req_temp_c_regex'], msg.payload.decode())
                         # truncate requested temp

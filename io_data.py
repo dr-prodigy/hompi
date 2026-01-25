@@ -48,6 +48,7 @@ class Status:
             self.areas = {}
             self.req_area_temps = ''
         self.mode_id = ''
+        self.main_area_id = 0
         self.mode_desc = ''
         self.short_mode_desc = ''
         self.timetable_desc = ''

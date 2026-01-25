@@ -54,7 +54,7 @@ MODULE_TRV = True
 MQTT_BROKER = 'localhost'
 MQTT_PORT = 1883
 MQTT_BASE_TOPIC = 'zigbee2mqtt'
-TRV_DATA_EXPIRATION_SECS = 3600 # 1 hour
+TRV_DATA_EXPIRATION_SECS = 1800 # 30 mins
 TRV_KEEPALIVE = True
 # Thermostat modes (OR): NONE = 0, Main = 1, TRV = 2, External servers = 4
 THERMOSTAT_MODE = 1|2

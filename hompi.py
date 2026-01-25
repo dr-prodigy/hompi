@@ -422,8 +422,8 @@ def compute_status():
                     else:
                         # *** stop heating on exact temp ***
                         main_heating_on = io_status.int_temp_c <= io_status.req_temp_c
-            else:
-                io_status.int_temp_c = 0
+        else:
+            io_status.int_temp_c = 0
 
         # SLAVE HOMPIs
         for slave_id, slave in io_status.hompi_slaves.items():
@@ -518,7 +518,7 @@ def refresh_program(time_):
         """SELECT
             ttb.id, ttb.description, ttb.short_description,
             monday, tuesday, wednesday, thursday, friday, saturday, sunday,
-            pre_holiday, holiday
+            pre_holiday, holiday, main_area_id
         FROM gm_control AS ctl
         INNER JOIN gm_timetable AS ttb ON ttb.id = ctl.timetable_id""")\
         .fetchone()
@@ -533,6 +533,8 @@ def refresh_program(time_):
     else:
         # normal day
         day_type = row[datetime.datetime.today().weekday() + 3]
+
+    io_status.main_area_id = row[12] if row[12] else 0
 
     if io_status.mode_id != row[0]:
         io_status.mode_id = row[0]
@@ -932,7 +934,7 @@ def log_data(event):
             # remove last ; and add quotes
             description = "'{}'".format(description[:-1])
 
-        int_temp_c = io_status.int_temp_c if config.MODULE_TEMP else 0
+        int_temp_c = io_status.int_temp_c
         ext_temp_c = io_status.ext_temp_c if config.MODULE_METEO else 0
         dbmgr = db.DatabaseManager()
         dbmgr.query("""
