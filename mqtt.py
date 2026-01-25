@@ -107,7 +107,7 @@ class MQTT:
                         cur_area['cur_temp_c'] = cur_temp_c
 
                     # update main area current temperature
-                    if int(area_id) == int(self.__io_status.main_area_id):
+                    if int(area_id) == int(self.__io_status.main_area_id) and cur_temp_c != 999:
                         log_stdout('MQTT', 'New main temperature: {}'.format(cur_temp_c), LOG_DEBUG)
                         self.__io_status.int_temp_c = cur_temp_c
 
