@@ -80,10 +80,11 @@ task_every_secs = {
     'hompi_ext_refresh': 61.0,
     'update_lcd_content': 11.0,
     'get_temp': 20.0 if config.TEST_MODE == 0 else 5.0,
-    'get_meteo': 300.0,    #  5 mins
-    'get_aphorism': 241.0, #  4 mins
-    'refresh': 600.0,      # 10 mins (multiple of get_temp)
-    'reiterate': 120.0,    #  2 mins
+    'get_meteo': 300.0,      #  5 mins
+    'get_aphorism': 241.0,   #  4 mins
+    'refresh': 600.0,        # 10 mins (multiple of get_temp)
+    'trv_keepalive': 1200.0, # 20 mins
+    'reiterate': 120.0,      #  2 mins
     'update_temp': 80.0 if config.TEST_MODE == 0 else 20.0,
     'update_io': 10.0,
 }
@@ -183,6 +184,10 @@ def main():
                 refresh_program(current_time)
                 # after a sighup refresh, reschedule task forward
                 task_at_secs['refresh'] = secs_elapsed
+
+            # TRV keepalive
+            if config.MODULE_TRV and (config.TRV_KEEPALIVE and secs_elapsed >= task_at_secs['trv_keepalive'] or sighup_refresh):
+                trv_keepalive()
 
             # compute status (heating, switches, ...)
             is_status_changed |= compute_status()
@@ -637,11 +642,10 @@ def refresh_program(time_):
                 req_temp_c = area["req_temp_c"]
                 temp_calibration = area["temp_calibration"]
 
-            # flag as published if no new data. force publishing if config.TRV_KEEPALIVE
+            # flag as published if no new data
             area["published"] = \
                 ("req_temp_c" in area.keys() and "temp_calibration" in area.keys() and
-                 area["req_temp_c"] == req_temp_c and area["temp_calibration"] == temp_calibration and
-                 not config.TRV_KEEPALIVE)
+                 area["req_temp_c"] == req_temp_c and area["temp_calibration"] == temp_calibration)
 
             # set req. temp and calibration
             area["req_temp_c"] = req_temp_c
@@ -677,6 +681,14 @@ def refresh_program(time_):
 
     if is_program_changed:
         io_data.last_program_change = datetime.datetime.now().isoformat()
+
+
+def trv_keepalive():
+    global io_status
+    log_stdout('HOMPI', 'TRV keepalive')
+    for area in io_status.areas.values():
+       area["published"] = False
+
 
 def update_lcd_content(change=False):
     if change:
