@@ -8,7 +8,7 @@ version: 20260125102900
 
 def upgrade(connection):
     sql = """
-        ALTER TABLE `gm_control` ADD COLUMN `main_area_id` INTEGER DEFAULT 0
+        ALTER TABLE `gm_control` ADD COLUMN `main_area_id` INTEGER DEFAULT NULL
         REFERENCES `gm_area`(`id`)
     """
     connection.execute(sql)
