@@ -134,7 +134,7 @@ def main():
                 last_update_min = datetime.datetime.today().minute
                 sighup_refresh = True
 
-            # OPERATIONS NOT DONE ON REFRESH - START
+            # *** OPERATIONS NOT DONE ON REFRESH *** - START
             # update external hompis / sensors
             if secs_elapsed >= task_at_secs['hompi_ext_refresh']:
                 sensor.hompi_slaves_refresh(io_status.hompi_slaves)
@@ -166,13 +166,17 @@ def main():
                 get_temperature()
 
             # update temperature
-            if config.MODULE_TEMP and secs_elapsed >= task_at_secs['update_temp']:
+            if secs_elapsed >= task_at_secs['update_temp']:
                 # save new temperature (if valid)
-                if temp_avg_sum != 0:
+                if config.MODULE_TEMP and temp_avg_sum != 0:
                     io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 2)
+                elif io_status.main_area_id and io_status.main_area_id in io_status.areas.keys() and \
+                    io_status.areas[io_status.main_area_id]['cur_temp_c'] != 999:
+                    # update temperature using main area
+                    io_status.int_temp_c = io_status.areas[io_status.main_area_id]['cur_temp_c']
                 # reset temp sampling
                 temp_avg_accu = temp_avg_counter = temp_avg_sum = 0
-            # OPERATIONS NOT DONE ON REFRESH - END
+            # *** OPERATIONS NOT DONE ON REFRESH *** - END
 
             # update I/O (ack occurring here gets ambient control)
             if secs_elapsed >= task_at_secs['update_io'] or sighup_refresh:
