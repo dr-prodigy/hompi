@@ -157,7 +157,19 @@ To Do
 - Web API documentation
 - Config files documentation
 - Pictures, demo vids (homesite?)
-- Travis CI/CD completion
+
+Development
+-----------
+Install with test extras and run the suite:
+
+.. code-block:: bash
+
+    $ pip install -e ".[dev]"
+    $ cp config.sample.yaml config.yaml
+    $ pytest
+    $ flake8 src
+
+CI runs on GitHub Actions (``.github/workflows/ci.yml``) for Python 3.10–3.13.
 
 Contributions
 -------------

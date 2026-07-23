@@ -10,7 +10,7 @@ certifi==2024.8.30
 charset-normalizer==3.4.0
 click==8.1.7
 Flask==3.0.3
-holidays==0.59
+holidays==0.101
 idna==3.10
 importlib_metadata==8.5.0
 itsdangerous==2.2.0

@@ -13,3 +13,6 @@ config.yml
 .eggs/
 dist/
 build/
+.pytest_cache/
+.coverage
+htmlcov/
