@@ -47,6 +47,7 @@ dependencies = [
     "six==1.16.0",
     "tendo==0.3.0",
     "urllib3==2.2.3",
+    "uWSGI==2.0.31",
     "Werkzeug==3.1.0",
     "zipp==3.20.2",
 ]

@@ -129,11 +129,20 @@ or:
 
     $ python -m hompi
 
-The Flask HTTP API entry point is:
+The Flask HTTP API entry point (development) is:
 
 .. code-block:: bash
 
     $ hompi-api
+
+For production, serve ``hompi.ws_api:app`` with uWSGI (see ``uwsgi.ini``):
+
+.. code-block:: bash
+
+    $ mkdir -p logs
+    $ uwsgi --ini uwsgi.ini
+
+API listens on ``127.0.0.1:3031`` (uwsgi protocol) by default.
 
 or, for automatic daemon operation, schedule
 

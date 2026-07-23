@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
-# Set to true if flask debugger is run as web server (localhost:5000)
-# (for production purposes better rely on a WSGI server)
+# Production API: uWSGI (uwsgi.ini). Dev-only Flask debugger is opt-in.
+run_uwsgi=true
 run_flask_debugger=false
 
 # set HOMPI_HOME to default, if not yet set
@@ -29,22 +29,40 @@ echo Killing hompi server..
 kill $(ps aux |grep '[v]env/bin/hompi' |grep -v 'hompi-api' | awk '{print $2}') 2>/dev/null
 kill $(ps aux |grep '[b]in/hompi' |grep -v 'hompi-api' | awk '{print $2}') 2>/dev/null
 
+echo Moving to $HOMPI_HOME..
+cd "$HOMPI_HOME"
+
+# Enable virtualenv early so uwsgi stop/start use the venv binary
+echo Enabling virtualenv..
+# shellcheck disable=SC1091
+. venv/bin/activate
+
+export HOMPI_HOME
+mkdir -p logs
+
+if [ "$run_uwsgi" = true ] ; then
+  echo Stopping uWSGI API..
+  if [ -f logs/uwsgi-hompi-api.pid ] ; then
+    uwsgi --stop logs/uwsgi-hompi-api.pid 2>/dev/null || true
+  fi
+  kill $(ps aux |grep '[u]wsgi.*uwsgi.ini' | awk '{print $2}') 2>/dev/null || true
+fi
+
 if [ "$run_flask_debugger" = true ] ; then
   echo Killing flask debugger
   kill $(ps aux |grep '[v]env/bin/hompi-api' | awk '{print $2}') 2>/dev/null
   kill $(ps aux |grep '[h]ompi.ws_api' | awk '{print $2}') 2>/dev/null
 fi
 
-echo Moving to $HOMPI_HOME..
-cd "$HOMPI_HOME"
-
 # *** restart ***
-echo Enabling virtualenv..
-# shellcheck disable=SC1091
-. venv/bin/activate
-
 echo Daemonizing hompi..
 nohup hompi >/dev/null 2>>~/hompi_error.log&
+
+if [ "$run_uwsgi" = true ] ; then
+  echo Starting uWSGI API..
+  # daemonize/pidfile/log are set in uwsgi.ini
+  uwsgi --ini uwsgi.ini
+fi
 
 if [ "$run_flask_debugger" = true ] ; then
   echo Starting flask debugger..
