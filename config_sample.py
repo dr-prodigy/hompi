@@ -19,7 +19,11 @@
 
 # **** Copy me to config.py and modify me as needed ****
 
-from utils import LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+# Log levels (keep in sync with hompi.utils; avoid importing the package here)
+LOG_DEBUG = 1
+LOG_INFO = 2
+LOG_WARN = 3
+LOG_ERROR = 4
 
 # TMP FILESYSTEM
 TMPFS_ENABLE = True

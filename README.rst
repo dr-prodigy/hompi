@@ -92,21 +92,27 @@ Upon completion, copy *config_sample.py* to *config.py*, and modify as needed.
 
 .. code-block:: bash
 
-    $ cp config_sample.sh config.py
+    $ cp config_sample.py config.py
     $ vi config.py
 
 (Optional) - To run ambient module ( *MODULE_AMBIENT = True* ) on non GPIO-capable devices
-(ie: Linux, MacOS, Win..), you need to stub *spidev.py* library using command
+(ie: Linux, MacOS, Win..), stub the *spidev* module (Adafruit SPI still imports the top-level name):
 
 .. code-block:: bash
 
-    $ ln -s ./stubs/spidev.py .
+    $ ln -s ./src/hompi/stubs/spidev.py ./spidev.py
 
 Start server in debug mode with
 
 .. code-block:: bash
 
     $ ./hompi
+
+or equivalently:
+
+.. code-block:: bash
+
+    $ PYTHONPATH=src:. python -m hompi
 
 or, for automatic daemon operation, schedule
 
@@ -119,11 +125,11 @@ at boot time.
 When run interactively from command line (debug mode), **hompi** displays
 internal status updates and emulates LCD on screen.
 
-When flask debugger is enabled (see code in *hompi.sh*) web API is
+When flask debugger is enabled (see code in *daemonize_hompi.sh*) web API is
 available at *http://[Raspberry IP]:5000/hompi/....*
 
 In case of WSGI server adoption (recommended for production), please refer to
-specific documentation about setup and usage.
+specific documentation about setup and usage. The API module is ``hompi.ws_api``.
 
 To Do
 -----

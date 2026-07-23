@@ -19,5 +19,8 @@
 # a shortcut to running the command line program for
 # dev purposes only
 
+ROOT="$(cd "$(dirname "$0")" && pwd)"
 export PYTHONIOENCODING=utf-8
-PYTHONPATH=.:$PYTHONPATH bin/hompi $*
+# ``src`` exposes the ``hompi`` package; project root keeps ``config.py`` importable
+export PYTHONPATH="${ROOT}/src:${ROOT}${PYTHONPATH:+:$PYTHONPATH}"
+exec "${ROOT}/bin/hompi" "$@"

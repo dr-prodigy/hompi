@@ -18,6 +18,6 @@
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import hompi
+from hompi.app import main
 
-hompi.main()
+main()

@@ -20,6 +20,6 @@ install:
 before_script:
 
 script:
-    - flake8 *.py
+    - flake8 src
 
 after_success:
