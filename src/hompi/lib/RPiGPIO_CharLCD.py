@@ -28,7 +28,7 @@ try:
     import RPi.GPIO as GPIO
 except ImportError:
     print('WARN: RPi.GPIO missing - loading stub library')
-    import stubs.RPi.GPIO as GPIO
+    from ..stubs.RPi import GPIO
 
 # Commands
 LCD_CLEARDISPLAY        = 0x01

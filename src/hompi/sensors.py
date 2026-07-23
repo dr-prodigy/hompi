@@ -29,14 +29,14 @@ import time
 import datetime
 import dateutil.parser
 
-from utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+from .utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
 
 # GPIO import
 try:
     import RPi.GPIO as GPIO
 except ImportError:
     log_stdout('SENSORS', 'WARN: RPi.GPIO missing - loading stub library', LOG_WARN)
-    import stubs.RPi.GPIO as GPIO
+    from .stubs.RPi import GPIO
 
 import config
 

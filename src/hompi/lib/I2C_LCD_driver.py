@@ -43,7 +43,7 @@ try:
     import smbus
 except ImportError:
     print ('WARN: smbus missing - loading stub library')
-    import stubs.smbus as smbus
+    from ..stubs import smbus
 from time import sleep
 
 

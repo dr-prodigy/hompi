@@ -17,10 +17,10 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
-# **** Copy / symlink me to project root directory to enable stubbing ****
+# **** Prefer importing via ``hompi.stubs.spidev`` (no root symlink needed) ****
 
 import config
-from utils import log_stdout
+from ..utils import log_stdout
 
 class SpiDev:
     @staticmethod

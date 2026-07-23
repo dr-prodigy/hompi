@@ -21,9 +21,10 @@ import re
 import time
 
 from datetime import datetime, timedelta
-from utils import LOG_INFO, log_stdout, log_stderr, LOG_DEBUG, LOG_WARN
 from paho.mqtt import client as mqtt_client
 from paho.mqtt.enums import CallbackAPIVersion
+
+from .utils import LOG_INFO, log_stdout, log_stderr, LOG_DEBUG, LOG_WARN
 
 CONNECT_TIMEOUT_SECS = 5
 RETRY_MINUTES = 2

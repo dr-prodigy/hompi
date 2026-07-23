@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+from ...utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
 
 # stubs
 BOARD = 1

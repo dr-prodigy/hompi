@@ -30,7 +30,7 @@ try:
     import RPi.GPIO as GPIO
 except ImportError:
     print("WARN: RPi.GPIO missing - loading stub library")
-    import stubs.RPi.GPIO as GPIO
+    from .stubs.RPi import GPIO
 
 # Import the WS2801 module.
 import Adafruit_WS2801

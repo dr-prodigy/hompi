@@ -25,7 +25,7 @@ from time import strftime
 
 import config
 
-from utils import log_stderr
+from .utils import log_stderr
 
 NONE = 0
 GPIO_CharLCD = 1
@@ -40,9 +40,9 @@ except Exception:
     pass
 
 if DISPLAY_TYPE == GPIO_CharLCD:
-    from lib.RPiGPIO_CharLCD import RPiGPIO_CharLCD
+    from .lib.RPiGPIO_CharLCD import RPiGPIO_CharLCD
 elif DISPLAY_TYPE == I2C_LCD:
-    from lib import I2C_LCD_driver
+    from .lib import I2C_LCD_driver
 else:
     DISPLAY_TYPE = NONE
 

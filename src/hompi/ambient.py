@@ -25,11 +25,11 @@ import colorsys
 
 import config
 
-from utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+from .utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
 
 LED_STRIP_ELEMENTS = 32
 
-AMBIENT_MODULE_CMD = 'python ws2801_program.py '
+AMBIENT_MODULE_CMD = '{} -m hompi.ws2801_program '.format(sys.executable)
 AMBIENT_CLEAR_COMMAND = 'clear'
 AMBIENT_SET_COLOR_COMMAND = 'set_color {} {}'
 AMBIENT_CROSSFADE_COMMAND = 'crossfade {} {} {}'

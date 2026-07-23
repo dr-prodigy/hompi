@@ -30,9 +30,10 @@ import os
 import urllib.request
 from PIL import Image
 
-import db
 import config
-import io_data
+
+from . import db
+from . import io_data
 
 HOMPI_PROCNAME = 'bin/hompi'
 

@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
-from utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+from ..utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
 
 class SMBus:
     def __init__(self, port):
