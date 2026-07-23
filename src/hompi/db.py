@@ -23,10 +23,12 @@ import shutil
 import os
 
 from .config import config
+from . import paths
 
 db_name = 'hompi.sqlite'
-db_path = persistent_db_path = f'./db/{db_name}'
-migrations_path = './migrations'
+db_path = persistent_db_path = str(paths.db_file(db_name))
+migrations_path = str(paths.migrations_dir())
+
 
 def __init__():
     global db_path
@@ -38,13 +40,23 @@ def __init__():
             shutil.copy2(db_path, tmp_db_path)
         db_path = tmp_db_path
 
+
 def migrate():
+    global migrations_path, db_path, persistent_db_path
+    # Refresh paths in case HOMPI_HOME / cwd changed after import
+    persistent_db_path = str(paths.db_file(db_name))
+    if not config.TMPFS_ENABLE or db_path == persistent_db_path or not os.path.exists(db_path):
+        db_path = persistent_db_path
+    migrations_path = str(paths.migrations_dir())
+    # Ensure parent exists for a brand-new DB
+    os.makedirs(os.path.dirname(db_path) or '.', exist_ok=True)
     print(f'Applying migrations to {db_path}')
-    # upgrade to most recent version
     caribou.upgrade(db_path, migrations_path)
+
 
 def flush():
     global db_path, persistent_db_path
+    persistent_db_path = str(paths.db_file(db_name))
     if config.TMPFS_ENABLE:
         # move db back to persistent filesystem
         print(f'Restoring {db_path} to {persistent_db_path}')
@@ -56,19 +68,22 @@ def flush():
 
 class DatabaseManager(object):
     def __init__(self):
-        global db_path
+        global db_path, persistent_db_path
+        persistent_db_path = str(paths.db_file(db_name))
         if config.TMPFS_ENABLE:
             # move db to temporary filesystem
             tmp_db_path = f'{config.TMPFS_PATH}{db_name}'
             if not os.path.exists(tmp_db_path):
-                shutil.copy2(db_path, tmp_db_path)
+                src = db_path if os.path.exists(db_path) else persistent_db_path
+                shutil.copy2(src, tmp_db_path)
             db_path = tmp_db_path
+        else:
+            db_path = persistent_db_path
 
         self.conn = sqlite3.connect(db_path)
         self.conn.execute('pragma foreign_keys = on')
         self.conn.commit()
         self.cur = self.conn.cursor()
-
 
     def query(self, command_, args=()):
         try:

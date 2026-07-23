@@ -3,7 +3,7 @@
 
 """Allow ``python -m hompi`` to start the main process."""
 
-from .app import main
+from .service import main
 
 if __name__ == '__main__':
     main()

@@ -25,12 +25,7 @@ import signal
 import datetime
 import random
 
-# GPIO import
-try:
-    import RPi.GPIO as GPIO
-except ImportError:
-    print("WARN: RPi.GPIO missing - loading stub library")
-    from .stubs.RPi import GPIO
+import RPi.GPIO as GPIO
 
 # Import the WS2801 module.
 import Adafruit_WS2801

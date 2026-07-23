@@ -40,9 +40,9 @@ except Exception:
     pass
 
 if DISPLAY_TYPE == GPIO_CharLCD:
-    from .lib.RPiGPIO_CharLCD import RPiGPIO_CharLCD
+    from .drivers.RPiGPIO_CharLCD import RPiGPIO_CharLCD
 elif DISPLAY_TYPE == I2C_LCD:
-    from .lib import I2C_LCD_driver
+    from .drivers import I2C_CharLCD
 else:
     DISPLAY_TYPE = NONE
 
@@ -285,7 +285,7 @@ class Dashboard:
                                                LCD_BACKLIGHT)
             elif DISPLAY_TYPE == I2C_LCD:
                 # initialize display
-                self.lcd = I2C_LCD_driver.lcd(I2C_ADDRESS, I2C_BUS)
+                self.lcd = I2C_CharLCD.lcd(I2C_ADDRESS, I2C_BUS)
             # load symbol font data
             self._load_charset()
 

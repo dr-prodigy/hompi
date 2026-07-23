@@ -93,7 +93,8 @@ def _looks_like_project_root(root):
         'config.yaml',
         'config.yml',
         'config.sample.yaml',
-        'migrations',
         'pyproject.toml',
+        'db',
+        'res',
     )
     return any(os.path.exists(os.path.join(root, marker)) for marker in markers)

@@ -34,6 +34,7 @@ from .config import config
 
 from . import db
 from . import io_data
+from . import paths
 
 HOMPI_PROCNAME = 'bin/hompi'  # matches ``venv/bin/hompi`` console script (not hompi-api)
 
@@ -255,10 +256,9 @@ def get_image(image_name):
         return "Forbidden", 403
 
     try:
-        filename = '{}/{}'.format(
-            os.path.dirname(os.path.abspath(config.IMAGE_PATH)), image_name)
-        thumb_filename = '{}/thumbs/{}'.format(
-            os.path.dirname(os.path.abspath(config.IMAGE_PATH)), image_name)
+        image_dir = str(paths.resolve_under_data(config.IMAGE_PATH).parent)
+        filename = '{}/{}'.format(image_dir, image_name)
+        thumb_filename = '{}/thumbs/{}'.format(image_dir, image_name)
         if not os.path.isfile(thumb_filename):
             try:
                 image = Image.open(filename)

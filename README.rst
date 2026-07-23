@@ -106,14 +106,14 @@ Upon completion, copy *config.sample.yaml* to *config.yaml*, and modify as neede
     $ vi config.yaml
 
 You can also point ``HOMPI_CONFIG`` at any YAML file, and ``HOMPI_HOME`` at the
-project data directory (``db/``, ``migrations/``, ``res/``).
+project data directory (``db/``, ``res/``, optional override ``migrations/``).
+Packaged DB migrations live inside the ``hompi`` package; place a custom
+``migrations/`` folder under ``HOMPI_HOME`` only if you need to override them.
 
-(Optional) - To run ambient module ( *MODULE_AMBIENT = True* ) on non GPIO-capable devices
-(ie: Linux, MacOS, Win..), stub the *spidev* module (Adafruit SPI still imports the top-level name):
+On non-Pi hosts, missing GPIO/SPI libraries are stubbed automatically
+(no ``spidev.py`` symlink required). Install real drivers with::
 
-.. code-block:: bash
-
-    $ ln -s ./src/hompi/stubs/spidev.py ./spidev.py
+    $ pip install -e ".[pi]"
 
 Start server in debug mode (venv activated, from the project root or with
 ``HOMPI_HOME`` set):

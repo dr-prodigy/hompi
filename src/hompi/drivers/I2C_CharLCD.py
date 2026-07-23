@@ -39,11 +39,7 @@ I2CBUS = 1
 # LCD Address
 ADDRESS = 0x27
 
-try:
-    import smbus
-except ImportError:
-    print ('WARN: smbus missing - loading stub library')
-    from ..stubs import smbus
+import smbus
 from time import sleep
 
 

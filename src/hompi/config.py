@@ -77,7 +77,7 @@ _DEFAULTS = {
     'TEMP_CORRECTION': 0,
     'THERMO_CHANGE_MINS': 5,
     'PLACE': 'milan',
-    'IMAGE_PATH': './res/images/*.jpg',
+    'IMAGE_PATH': './res/images/*.jpg',  # resolved under HOMPI_HOME / data dir
     'THUMB_SIZE': [800, 800],
     'HOLIDAYS_COUNTRY': 'IT',
     'SPEECH_COMMAND': 'espeak -vit+m3 -s150 -k10 "{}"',
