@@ -75,18 +75,28 @@ After cloning repository
 .. code-block:: bash
 
     $ git clone https://github.com/dr-prodigy/hompi.git
+    $ cd hompi
 
-Run
+Create a virtualenv and install the package (editable):
 
 .. code-block:: bash
 
     $ ./scripts/install.sh
-    
-or, for Python3:
+
+On a Raspberry Pi, also install GPIO / SPI extras:
 
 .. code-block:: bash
 
-    $ ./scripts/install_py3.sh
+    $ ./scripts/install.sh --pi
+
+Or manually:
+
+.. code-block:: bash
+
+    $ python3 -m venv venv
+    $ . venv/bin/activate
+    $ pip install -e .
+    $ pip install -e ".[pi]"   # Pi hosts only
 
 Upon completion, copy *config_sample.py* to *config.py*, and modify as needed.
 
@@ -108,11 +118,17 @@ Start server in debug mode with
 
     $ ./hompi
 
-or equivalently:
+or, with the venv activated:
 
 .. code-block:: bash
 
-    $ PYTHONPATH=src:. python -m hompi
+    $ hompi
+
+The Flask HTTP API entry point is:
+
+.. code-block:: bash
+
+    $ hompi-api
 
 or, for automatic daemon operation, schedule
 

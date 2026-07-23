@@ -3,23 +3,15 @@
 language: python
 
 python:
-    - 2.7
-    - 3.4
-    - 3.5
-    - 3.6
-    - 3.7
-    - pypy
-    - pypy3
-
-env:
+    - "3.10"
+    - "3.11"
+    - "3.12"
+    - "3.13"
 
 install:
-    - ./scripts/install.py
-    - pip install flake8
-
-before_script:
+    - pip install -U pip setuptools wheel
+    - pip install -e ".[dev]"
 
 script:
     - flake8 src
-
-after_success:
+    - python -c "import hompi; from hompi.app import main; from hompi.ws_api import main as api_main; print(hompi.__version__)"

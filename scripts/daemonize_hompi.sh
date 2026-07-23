@@ -26,9 +26,11 @@ export HOMPI_HOME=/home/pi/hompi
 # *** kill running daemons ***
 echo Killing hompi server..
 kill $(ps aux |grep '[b]in/hompi' | awk '{print $2}') 2>/dev/null
+kill $(ps aux |grep '[v]env/bin/hompi' | awk '{print $2}') 2>/dev/null
 
 if [ "$run_flask_debugger" = true ] ; then
   echo Killing flask debugger
+  kill $(ps aux |grep '[v]env/bin/hompi-api' | awk '{print $2}') 2>/dev/null
   kill $(ps aux |grep '[h]ompi.ws_api' | awk '{print $2}') 2>/dev/null
   kill $(ps aux |grep '[w]s_api' | awk '{print $2}') 2>/dev/null
 fi
@@ -36,8 +38,8 @@ fi
 echo Moving to $HOMPI_HOME..
 cd $HOMPI_HOME
 
-# Package on PYTHONPATH; project root keeps config.py importable
-export PYTHONPATH="${HOMPI_HOME}/src:${HOMPI_HOME}${PYTHONPATH:+:$PYTHONPATH}"
+# Project root keeps config.py importable when console scripts run
+export PYTHONPATH="${HOMPI_HOME}${PYTHONPATH:+:$PYTHONPATH}"
 
 # *** restart ***
 # Enable virtualenv
@@ -50,5 +52,5 @@ nohup ./hompi >/dev/null 2>>~/hompi_error.log&
 
 if [ "$run_flask_debugger" = true ] ; then
   echo Starting flask debugger..
-  nohup python -m hompi.ws_api >/dev/null&
+  nohup hompi-api >/dev/null&
 fi

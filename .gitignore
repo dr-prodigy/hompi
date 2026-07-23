@@ -8,3 +8,7 @@ config.py
 *.jpg
 *.jpeg
 /venv*
+*.egg-info/
+.eggs/
+dist/
+build/

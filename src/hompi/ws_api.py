@@ -35,7 +35,7 @@ import config
 from . import db
 from . import io_data
 
-HOMPI_PROCNAME = 'bin/hompi'
+HOMPI_PROCNAME = 'bin/hompi'  # matches ``bin/hompi`` and ``venv/bin/hompi`` console script
 
 app = Flask(__name__)
 
@@ -485,5 +485,10 @@ def refresh():
         return "Error", 400  # BAD_REQUEST
     return "Ok"
 
-if __name__ == "__main__":
+def main():
+    """Console entry point for ``hompi-api`` / ``python -m hompi.ws_api``."""
     app.run(host='0.0.0.0', debug=True)
+
+
+if __name__ == "__main__":
+    main()

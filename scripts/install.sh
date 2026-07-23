@@ -16,18 +16,27 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
-## install prerequisites - 20250703 - not required
-## sudo apt-get install python3-pip
-## sudo pip3 install virtualenv
+# Install hompi into a local venv (editable).
+# Usage:
+#   ./scripts/install.sh           # runtime deps only (safe on non-Pi hosts)
+#   ./scripts/install.sh --pi      # also install Raspberry Pi / GPIO extras
 
-# move to script directory
-cd $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# move up
-cd ..
-# create virtualenv, activate it, setup requirements
-## 20250703 - replaced with venv
-## python3 -m virtualenv venv
+set -euo pipefail
+
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.."
+
 python3 -m venv venv
+# shellcheck disable=SC1091
 . venv/bin/activate
-pip install -r requirements/requirements.txt
-pip install -r requirements/requirements-pi.txt
+
+python -m pip install -U pip setuptools wheel
+python -m pip install -e .
+
+if [[ "${1:-}" == "--pi" ]]; then
+  python -m pip install -e ".[pi]"
+fi
+
+echo
+echo "Installed hompi $(python -c 'import hompi; print(hompi.__version__)')"
+echo "Next: cp config_sample.py config.py && ./hompi"
+echo "Console scripts: hompi, hompi-api (from the activated venv)"

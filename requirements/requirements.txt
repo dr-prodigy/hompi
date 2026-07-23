@@ -1,5 +1,11 @@
+# Install runtime dependencies via the package (preferred):
+#   pip install -e .
+#
+# This file mirrors known-good pins from pyproject.toml for audit / freeze use.
+# Prefer installing through pyproject.toml rather than this file directly.
+
 blinker==1.8.2
-caribou==0.4.1
+caribou==0.6.0
 certifi==2024.8.30
 charset-normalizer==3.4.0
 click==8.1.7
