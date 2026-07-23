@@ -117,7 +117,7 @@ def publish_status(io_status, io_system, ambient):
         )
 
     # thermometer entities
-    if config.MODULE_TEMP and old_entity.get("hompi_temperature") != io_status.int_temp_c:
+    if io_status.int_temp_c and old_entity.get("hompi_temperature") != io_status.int_temp_c:
         old_entity["hompi_temperature"] = io_status.int_temp_c
         hass_entities.append(
             {"entity_id": "hompi_temperature",
