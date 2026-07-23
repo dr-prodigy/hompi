@@ -21,34 +21,30 @@
 run_flask_debugger=false
 
 # set HOMPI_HOME to default, if not yet set
-export HOMPI_HOME=/home/pi/hompi
+export HOMPI_HOME="${HOMPI_HOME:-/home/pi/hompi}"
 
 # *** kill running daemons ***
 echo Killing hompi server..
-kill $(ps aux |grep '[b]in/hompi' | awk '{print $2}') 2>/dev/null
-kill $(ps aux |grep '[v]env/bin/hompi' | awk '{print $2}') 2>/dev/null
+# Console script from the venv (and legacy bin/hompi if still present)
+kill $(ps aux |grep '[v]env/bin/hompi' |grep -v 'hompi-api' | awk '{print $2}') 2>/dev/null
+kill $(ps aux |grep '[b]in/hompi' |grep -v 'hompi-api' | awk '{print $2}') 2>/dev/null
 
 if [ "$run_flask_debugger" = true ] ; then
   echo Killing flask debugger
   kill $(ps aux |grep '[v]env/bin/hompi-api' | awk '{print $2}') 2>/dev/null
   kill $(ps aux |grep '[h]ompi.ws_api' | awk '{print $2}') 2>/dev/null
-  kill $(ps aux |grep '[w]s_api' | awk '{print $2}') 2>/dev/null
 fi
 
 echo Moving to $HOMPI_HOME..
-cd $HOMPI_HOME
-
-# Project root keeps config.py importable when console scripts run
-export PYTHONPATH="${HOMPI_HOME}${PYTHONPATH:+:$PYTHONPATH}"
+cd "$HOMPI_HOME"
 
 # *** restart ***
-# Enable virtualenv
 echo Enabling virtualenv..
+# shellcheck disable=SC1091
 . venv/bin/activate
 
-# Daemonize hompi (suppress logging)
 echo Daemonizing hompi..
-nohup ./hompi >/dev/null 2>>~/hompi_error.log&
+nohup hompi >/dev/null 2>>~/hompi_error.log&
 
 if [ "$run_flask_debugger" = true ] ; then
   echo Starting flask debugger..

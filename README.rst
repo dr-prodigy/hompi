@@ -98,12 +98,15 @@ Or manually:
     $ pip install -e .
     $ pip install -e ".[pi]"   # Pi hosts only
 
-Upon completion, copy *config_sample.py* to *config.py*, and modify as needed.
+Upon completion, copy *config.sample.yaml* to *config.yaml*, and modify as needed.
 
 .. code-block:: bash
 
-    $ cp config_sample.py config.py
-    $ vi config.py
+    $ cp config.sample.yaml config.yaml
+    $ vi config.yaml
+
+You can also point ``HOMPI_CONFIG`` at any YAML file, and ``HOMPI_HOME`` at the
+project data directory (``db/``, ``migrations/``, ``res/``).
 
 (Optional) - To run ambient module ( *MODULE_AMBIENT = True* ) on non GPIO-capable devices
 (ie: Linux, MacOS, Win..), stub the *spidev* module (Adafruit SPI still imports the top-level name):
@@ -112,17 +115,19 @@ Upon completion, copy *config_sample.py* to *config.py*, and modify as needed.
 
     $ ln -s ./src/hompi/stubs/spidev.py ./spidev.py
 
-Start server in debug mode with
+Start server in debug mode (venv activated, from the project root or with
+``HOMPI_HOME`` set):
 
 .. code-block:: bash
 
-    $ ./hompi
-
-or, with the venv activated:
-
-.. code-block:: bash
-
+    $ . venv/bin/activate
     $ hompi
+
+or:
+
+.. code-block:: bash
+
+    $ python -m hompi
 
 The Flask HTTP API entry point is:
 

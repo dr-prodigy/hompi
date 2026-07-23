@@ -20,7 +20,7 @@
 import json
 import datetime
 
-import config
+from .config import config
 
 hide_message_time = None
 

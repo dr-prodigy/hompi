@@ -23,7 +23,7 @@ import datetime
 import traceback
 import colorsys
 
-import config
+from .config import config
 
 from .utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
 

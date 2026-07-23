@@ -38,7 +38,7 @@ except ImportError:
     log_stdout('SENSORS', 'WARN: RPi.GPIO missing - loading stub library', LOG_WARN)
     from .stubs.RPi import GPIO
 
-import config
+from .config import config
 
 if config.MODULE_HEATING and config.HEATING_GPIO:
     try:

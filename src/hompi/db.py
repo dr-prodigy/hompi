@@ -22,7 +22,7 @@ import sqlite3
 import shutil
 import os
 
-import config
+from .config import config
 
 db_name = 'hompi.sqlite'
 db_path = persistent_db_path = f'./db/{db_name}'

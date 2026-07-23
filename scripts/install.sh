@@ -38,5 +38,5 @@ fi
 
 echo
 echo "Installed hompi $(python -c 'import hompi; print(hompi.__version__)')"
-echo "Next: cp config_sample.py config.py && ./hompi"
-echo "Console scripts: hompi, hompi-api (from the activated venv)"
+echo "Next: cp config.sample.yaml config.yaml && . venv/bin/activate && hompi"
+echo "Console scripts: hompi, hompi-api"

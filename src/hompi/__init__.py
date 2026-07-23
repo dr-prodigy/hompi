@@ -3,4 +3,8 @@
 
 """hompi home automation package."""
 
+from ._path import ensure_runtime_paths
+
+ensure_runtime_paths()
+
 __version__ = "2.0.0a1"

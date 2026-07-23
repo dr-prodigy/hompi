@@ -41,13 +41,13 @@ PIXEL_COUNT = 32
 
 # Configure transition timings
 try:
-    import config
+    from hompi.config import config
     if config and config.AMBIENT_TRANSITION_FRAMES:
         AMBIENT_TRANSITION_FRAMES = float(config.AMBIENT_TRANSITION_FRAMES)
     else:
         AMBIENT_TRANSITION_FRAMES = 100.0
-except ImportError:
-    print("WARN: config.py missing - loading defaults")
+except Exception:
+    print("WARN: config missing - loading defaults")
     AMBIENT_TRANSITION_FRAMES = 100.0
 
 AMBIENT_FRAME_DURATION = 1.0 / AMBIENT_TRANSITION_FRAMES

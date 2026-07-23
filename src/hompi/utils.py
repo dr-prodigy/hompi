@@ -20,7 +20,7 @@
 import os
 import sys
 import datetime
-import config
+from .config import config
 
 LOG_GPIO = 0
 LOG_DEBUG = 1

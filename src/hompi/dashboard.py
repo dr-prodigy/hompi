@@ -23,7 +23,7 @@ import traceback
 import math
 from time import strftime
 
-import config
+from .config import config
 
 from .utils import log_stderr
 

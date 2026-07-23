@@ -30,12 +30,12 @@ import os
 import urllib.request
 from PIL import Image
 
-import config
+from .config import config
 
 from . import db
 from . import io_data
 
-HOMPI_PROCNAME = 'bin/hompi'  # matches ``bin/hompi`` and ``venv/bin/hompi`` console script
+HOMPI_PROCNAME = 'bin/hompi'  # matches ``venv/bin/hompi`` console script (not hompi-api)
 
 app = Flask(__name__)
 
@@ -54,7 +54,10 @@ except:
 
 
 def _signal_server():
-    for line in os.popen("ps ax | grep " + HOMPI_PROCNAME + " | grep -v grep"):
+    # Match the main process console script; exclude hompi-api.
+    for line in os.popen(
+            "ps ax | grep " + HOMPI_PROCNAME +
+            " | grep -v grep | grep -v hompi-api"):
         fields = line.split()
         pid = fields[0]
         os.kill(int(pid), signal.SIGHUP)

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
-import config
+from .config import config
 import re
 import time
 

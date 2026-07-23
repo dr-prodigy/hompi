@@ -17,9 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
-# **** Prefer importing via ``hompi.stubs.spidev`` (no root symlink needed) ****
+# Prefer ``from hompi.config import config`` (HW_LOG lives in config.yaml)
 
-import config
+from hompi.config import config
 from ..utils import log_stdout
 
 class SpiDev:

@@ -1,4 +1,5 @@
-config.py
+config.yaml
+config.yml
 /spidev.py
 *.pyc
 *.sqlite*

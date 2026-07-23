@@ -30,7 +30,7 @@ import holidays
 import random
 import socket
 
-import config
+from .config import config
 from tendo import singleton
 
 from . import ambient
