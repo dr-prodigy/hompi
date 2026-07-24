@@ -23,11 +23,20 @@ run_flask_debugger=false
 # set HOMPI_HOME to default, if not yet set
 export HOMPI_HOME="${HOMPI_HOME:-/home/pi/hompi}"
 
+_kill_pidfile() {
+  local pidfile="$1"
+  if [ -f "$pidfile" ]; then
+    kill "$(cat "$pidfile")" 2>/dev/null || true
+    rm -f "$pidfile"
+  fi
+}
+
 # *** kill running daemons ***
 echo Killing hompi server..
-# Console script from the venv (and legacy bin/hompi if still present)
-kill $(ps aux |grep '[v]env/bin/hompi' |grep -v 'hompi-api' | awk '{print $2}') 2>/dev/null
-kill $(ps aux |grep '[b]in/hompi' |grep -v 'hompi-api' | awk '{print $2}') 2>/dev/null
+_kill_pidfile "$HOMPI_HOME/run/hompi.pid"
+# Legacy fallbacks (pre-PID-file installs)
+kill $(ps aux |grep '[v]env/bin/hompi' |grep -v 'hompi-api' | awk '{print $2}') 2>/dev/null || true
+kill $(ps aux |grep '[b]in/hompi' |grep -v 'hompi-api' | awk '{print $2}') 2>/dev/null || true
 
 echo Moving to $HOMPI_HOME..
 cd "$HOMPI_HOME"
@@ -38,7 +47,7 @@ echo Enabling virtualenv..
 . venv/bin/activate
 
 export HOMPI_HOME
-mkdir -p logs
+mkdir -p logs run
 
 if [ "$run_uwsgi" = true ] ; then
   echo Stopping uWSGI API..
@@ -50,8 +59,8 @@ fi
 
 if [ "$run_flask_debugger" = true ] ; then
   echo Killing flask debugger
-  kill $(ps aux |grep '[v]env/bin/hompi-api' | awk '{print $2}') 2>/dev/null
-  kill $(ps aux |grep '[h]ompi.ws_api' | awk '{print $2}') 2>/dev/null
+  kill $(ps aux |grep '[v]env/bin/hompi-api' | awk '{print $2}') 2>/dev/null || true
+  kill $(ps aux |grep '[h]ompi.ws_api' | awk '{print $2}') 2>/dev/null || true
 fi
 
 # *** restart ***
@@ -60,7 +69,7 @@ nohup hompi >/dev/null 2>>~/hompi_error.log&
 
 if [ "$run_uwsgi" = true ] ; then
   echo Starting uWSGI API..
-  # daemonize/pidfile/log are set in uwsgi.ini
+  # daemonize/pidfile/log/socket/virtualenv are set in uwsgi.ini
   uwsgi --ini uwsgi.ini
 fi
 

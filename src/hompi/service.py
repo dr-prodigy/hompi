@@ -40,6 +40,7 @@ from . import hass
 from . import io_data
 from . import mqtt as mqtt_mod
 from . import paths
+from . import pidfile
 from . import resources
 from . import sensors
 from .utils import os_async_command
@@ -109,6 +110,7 @@ def run_loop():
 
     # will sys.exit(-1) if other instance is running
     singleton.SingleInstance()
+    pidfile.install_daemon_pidfile()
 
     # first initializations
     init()
@@ -506,6 +508,7 @@ def sighup_handler(signal, frame):
 def sigterm_handler(signal, frame):
     log_stdout('HOMPI', 'got SIGTERM - exiting.', LOG_INFO)
     log_data('stop')
+    pidfile.remove_pid(pidfile.daemon_pid_path())
     sys.exit(0)
 
 

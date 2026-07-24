@@ -31,6 +31,8 @@ import RPi.GPIO as GPIO
 import Adafruit_WS2801
 import Adafruit_GPIO.SPI as SPI
 
+from hompi import pidfile
+
 # Configure the count of pixels:
 PIXEL_COUNT = 32
 
@@ -50,13 +52,6 @@ AMBIENT_FRAME_DURATION = 1.0 / AMBIENT_TRANSITION_FRAMES
 # Alternatively specify a hardware SPI connection on /dev/spidev0.0:
 SPI_PORT = 0
 SPI_DEVICE = 0
-
-# Kill currently running commands
-for line in os.popen("ps ax | grep " + sys.argv[0] +
-                     "| grep python | grep -v " + str(os.getpid())):
-    fields = line.split()
-    pid = fields[0]
-    os.kill(int(pid), signal.SIGKILL)
 
 
 def clear():
@@ -353,6 +348,9 @@ if __name__ == "__main__":
         func = switcher.get(sys.argv[1].lower())
 
         if func:
+            # Stop any previous ambient effect, then claim this process
+            pidfile.replace_pidfile(pidfile.ambient_pid_path(), signal.SIGKILL)
+
             # Initialize led strip
             pixels = Adafruit_WS2801.WS2801Pixels(
                 PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)

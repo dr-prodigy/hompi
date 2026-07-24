@@ -35,8 +35,7 @@ from .config import config
 from . import db
 from . import io_data
 from . import paths
-
-HOMPI_PROCNAME = 'bin/hompi'  # matches ``venv/bin/hompi`` console script (not hompi-api)
+from . import pidfile
 
 app = Flask(__name__)
 
@@ -49,19 +48,17 @@ try:
         m = hashlib.md5()
         m.update(config.API_KEY.encode('utf-8'))
         API_KEY = m.hexdigest().upper()
-        print('API_KEY: {}'.format(API_KEY))
-except:
+except Exception:
     pass
 
 
 def _signal_server():
-    # Match the main process console script; exclude hompi-api.
-    for line in os.popen(
-            "ps ax | grep " + HOMPI_PROCNAME +
-            " | grep -v grep | grep -v hompi-api"):
-        fields = line.split()
-        pid = fields[0]
-        os.kill(int(pid), signal.SIGHUP)
+    """Ask the control daemon to refresh (SIGHUP via PID file)."""
+    try:
+        if not pidfile.signal_pidfile(pidfile.daemon_pid_path(), signal.SIGHUP):
+            print('_signal_server(): hompi daemon PID file missing or stale')
+    except OSError as exc:
+        print('_signal_server(): {}'.format(exc))
 
 
 def _check_sharedkey():
