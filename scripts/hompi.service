@@ -1,0 +1,17 @@
+[Unit]
+Description=Hompi home automation (daemon + uWSGI API)
+Documentation=https://github.com/dr-prodigy/hompi
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=HOMPI_HOME=@HOMPI_HOME@
+WorkingDirectory=@HOMPI_HOME@
+ExecStart=@HOMPI_HOME@/scripts/hompid.sh start
+ExecStop=@HOMPI_HOME@/scripts/hompid.sh stop
+# systemctl --user restart hompi.service runs ExecStop then ExecStart
+
+[Install]
+WantedBy=default.target

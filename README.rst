@@ -75,38 +75,74 @@ After cloning repository
 .. code-block:: bash
 
     $ git clone https://github.com/dr-prodigy/hompi.git
+    $ cd hompi
 
-Run
+Create a virtualenv and install the package (editable):
 
 .. code-block:: bash
 
     $ ./scripts/install.sh
-    
-or, for Python3:
+
+On a Raspberry Pi, also install GPIO / SPI extras:
 
 .. code-block:: bash
 
-    $ ./scripts/install_py3.sh
+    $ ./scripts/install.sh --pi
 
-Upon completion, copy *config_sample.py* to *config.py*, and modify as needed.
-
-.. code-block:: bash
-
-    $ cp config_sample.sh config.py
-    $ vi config.py
-
-(Optional) - To run ambient module ( *MODULE_AMBIENT = True* ) on non GPIO-capable devices
-(ie: Linux, MacOS, Win..), you need to stub *spidev.py* library using command
+Or manually:
 
 .. code-block:: bash
 
-    $ ln -s ./stubs/spidev.py .
+    $ python3 -m venv venv
+    $ . venv/bin/activate
+    $ pip install -e .
+    $ pip install -e ".[pi]"   # Pi hosts only
 
-Start server in debug mode with
+Upon completion, copy *config.sample.yaml* to *config.yaml*, and modify as needed.
 
 .. code-block:: bash
 
-    $ ./hompi
+    $ cp config.sample.yaml config.yaml
+    $ vi config.yaml
+
+You can also point ``HOMPI_CONFIG`` at any YAML file, and ``HOMPI_HOME`` at the
+project data directory (``db/``, ``res/``, optional override ``migrations/``).
+Packaged DB migrations live inside the ``hompi`` package; place a custom
+``migrations/`` folder under ``HOMPI_HOME`` only if you need to override them.
+
+On non-Pi hosts, missing GPIO/SPI libraries are stubbed automatically
+(no ``spidev.py`` symlink required). Install real drivers with::
+
+    $ pip install -e ".[pi]"
+
+Start server in debug mode (venv activated, from the project root or with
+``HOMPI_HOME`` set):
+
+.. code-block:: bash
+
+    $ . venv/bin/activate
+    $ hompi
+
+or:
+
+.. code-block:: bash
+
+    $ python -m hompi
+
+The Flask HTTP API entry point (development) is:
+
+.. code-block:: bash
+
+    $ hompi-api
+
+For production, serve ``hompi.ws_api:app`` with uWSGI (see ``uwsgi.ini``):
+
+.. code-block:: bash
+
+    $ mkdir -p logs
+    $ uwsgi --ini uwsgi.ini
+
+API listens on ``127.0.0.1:3031`` (uwsgi protocol) by default.
 
 or, for automatic daemon operation, schedule
 
@@ -119,18 +155,30 @@ at boot time.
 When run interactively from command line (debug mode), **hompi** displays
 internal status updates and emulates LCD on screen.
 
-When flask debugger is enabled (see code in *hompi.sh*) web API is
+When flask debugger is enabled (see code in *daemonize_hompi.sh*) web API is
 available at *http://[Raspberry IP]:5000/hompi/....*
 
 In case of WSGI server adoption (recommended for production), please refer to
-specific documentation about setup and usage.
+specific documentation about setup and usage. The API module is ``hompi.ws_api``.
 
 To Do
 -----
 - Web API documentation
 - Config files documentation
 - Pictures, demo vids (homesite?)
-- Travis CI/CD completion
+
+Development
+-----------
+Install with test extras and run the suite:
+
+.. code-block:: bash
+
+    $ pip install -e ".[dev]"
+    $ cp config.sample.yaml config.yaml
+    $ pytest
+    $ flake8 src
+
+CI runs on GitHub Actions (``.github/workflows/ci.yml``) for Python 3.10–3.13.
 
 Contributions
 -------------

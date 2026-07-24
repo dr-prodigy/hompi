@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hompi"
+version = "2.0.0a1"
+description = "Lightweight Raspberry Pi home automation engine"
+readme = "README.rst"
+license = { text = "GPL-3.0-or-later" }
+requires-python = ">=3.10"
+authors = [
+    { name = "Maurizio Montel", email = "maurizio.montel@gmail.com" },
+]
+keywords = ["home-automation", "raspberry-pi", "mqtt", "flask"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Home Automation",
+]
+dependencies = [
+    "blinker==1.9.0",
+    "caribou==0.6.0",
+    "certifi==2026.7.22",
+    "charset-normalizer==3.4.9",
+    "click==8.4.2",
+    "Flask==3.1.3",
+    "holidays==0.101",
+    "idna==3.18",
+    "importlib_metadata==9.0.0",
+    "itsdangerous==2.2.0",
+    "Jinja2==3.1.6",
+    "MarkupSafe==3.0.3",
+    "paho-mqtt==2.1.0",
+    "pbr==7.0.3",
+    "pillow==12.3.0",
+    "PyMeeus==0.5.12",
+    "python-dateutil==2.9.0.post0",
+    "pytz==2026.2",
+    "PyYAML==6.0.3",
+    "requests==2.34.2",
+    "six==1.17.0",
+    "tendo==0.3.0",
+    "urllib3==2.7.0",
+    "uWSGI==2.0.31",
+    "Werkzeug==3.1.8",
+    "zipp==4.1.0",
+]
+
+[project.optional-dependencies]
+pi = [
+    "Adafruit-PureIO==1.1.11",
+    "Adafruit_GPIO==1.0.3",
+    "Adafruit_WS2801==1.0.1",
+    "RPi.GPIO==0.7.1",
+    "smbus==1.1.post2",
+    "spidev==3.8",
+]
+dev = [
+    "flake8==7.3.0",
+    "pytest==9.1.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/dr-prodigy/hompi"
+Repository = "https://github.com/dr-prodigy/hompi"
+Issues = "https://github.com/dr-prodigy/hompi/issues"
+
+[project.scripts]
+hompi = "hompi.app:main"
+hompi-api = "hompi.ws_api:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+hompi = ["migrations/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
