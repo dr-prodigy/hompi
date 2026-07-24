@@ -85,7 +85,7 @@ def _get_remote_address(server):
 
 
 # READER METHODS (GET)
-@app.route('/hompi/_get_system_info', methods = ['GET'])
+@app.route('/_get_system_info', methods = ['GET'])
 def get_system_info():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -93,7 +93,7 @@ def get_system_info():
     return io_data.SystemInfo().get_output()
 
 
-@app.route('/hompi/_get_status', methods = ['GET'])
+@app.route('/_get_status', methods = ['GET'])
 def get_status():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -107,8 +107,8 @@ def get_status():
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/hompi/_get_list/<data_list>', methods = ['GET'])
-@app.route('/hompi/_get_list/<data_list>/<key>', methods = ['GET'])
+@app.route('/_get_list/<data_list>', methods = ['GET'])
+@app.route('/_get_list/<data_list>/<key>', methods = ['GET'])
 def get_list(data_list, key=None):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -167,7 +167,7 @@ def get_list(data_list, key=None):
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/hompi/_get_temp_chart', methods = ['GET'])
+@app.route('/_get_temp_chart', methods = ['GET'])
 def get_temp_chart():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -198,7 +198,7 @@ def get_temp_chart():
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/hompi/_get_server_list', methods = ['GET'])
+@app.route('/_get_server_list', methods = ['GET'])
 def get_server_list():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -214,8 +214,8 @@ def get_server_list():
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/hompi/_get_list2/<server>/<list>', methods = ['GET'])
-@app.route('/hompi/_get_list2/<server>/<list>/<key>', methods = ['GET'])
+@app.route('/_get_list2/<server>/<list>', methods = ['GET'])
+@app.route('/_get_list2/<server>/<list>/<key>', methods = ['GET'])
 def get_list2(server, list, key=None):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -230,14 +230,14 @@ def get_list2(server, list, key=None):
 
         if key:
             return urllib.request.urlopen(
-                "{}/hompi/_get_list/{}/{}?api_key={}".format(address,
+                "{}/_get_list/{}/{}?api_key={}".format(address,
                                                              list, key,
                                                              api_key),
                 timeout=2
             ).read()
         else:
             return urllib.request.urlopen(
-                "{}/hompi/_get_list/{}?api_key={}".format(address, list,
+                "{}/_get_list/{}?api_key={}".format(address, list,
                                                           api_key),
                 timeout=2
             ).read()
@@ -247,7 +247,7 @@ def get_list2(server, list, key=None):
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/hompi/_get_image/<image_name>', methods = ['GET'])
+@app.route('/_get_image/<image_name>', methods = ['GET'])
 def get_image(image_name):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -274,8 +274,8 @@ def get_image(image_name):
 
 
 # UPDATE METHODS (GET/PUT)
-@app.route('/hompi/_send_command', methods=['PUT'])
-@app.route('/hompi/_send_command/<command>', methods=['GET'])
+@app.route('/_send_command', methods=['PUT'])
+@app.route('/_send_command/<command>', methods=['GET'])
 def send_command(command = None):
     _data = ''
     if not _check_sharedkey():
@@ -308,8 +308,8 @@ def send_command(command = None):
         return "Error", 400  # BAD_REQUEST
 
 
-@app.route('/hompi/_set_control', methods=['PUT'])
-@app.route('/hompi/_set_control/<data>', methods=['GET'])
+@app.route('/_set_control', methods=['PUT'])
+@app.route('/_set_control/<data>', methods=['GET'])
 def set_control(data = None):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -347,7 +347,7 @@ def set_control(data = None):
         return "Error", 400  # BAD_REQUEST
 
 
-@app.route('/hompi/_set_temp/<data>', methods=['PUT','GET'])
+@app.route('/_set_temp/<data>', methods=['PUT','GET'])
 def set_temp(data):
     _id = _temp_c = 0
     if not _check_sharedkey():
@@ -377,7 +377,7 @@ def set_temp(data):
         return "Error", 400  # BAD_REQUEST
 
 
-@app.route('/hompi/_set_temp2/<server>/<data>', methods=['PUT','GET'])
+@app.route('/_set_temp2/<server>/<data>', methods=['PUT','GET'])
 def set_temp2(server, data = None):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -400,7 +400,7 @@ def set_temp2(server, data = None):
         address = _get_remote_address(server)
 
         return urllib.request.urlopen(
-            "{}/hompi/_set_temp/{}?api_key={}".format(address, data,
+            "{}/_set_temp/{}?api_key={}".format(address, data,
                                                       api_key), timeout=2
         ).read()
         return "Ok", 200
@@ -413,7 +413,7 @@ def set_temp2(server, data = None):
 
 
 # TO DO
-@app.route('/hompi/_set_timetable/<data_json>')
+@app.route('/_set_timetable/<data_json>')
 def set_timetable(data_json):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -442,7 +442,7 @@ def set_timetable(data_json):
     return "Ok"
 
 
-@app.route('/hompi/_set_timetable_data/<data_json>')
+@app.route('/_set_timetable_data/<data_json>')
 def set_timetable_data(data_json):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -473,7 +473,7 @@ def set_timetable_data(data_json):
     return "Ok"
 
 
-@app.route('/hompi/_refresh', methods=['GET'])
+@app.route('/_refresh', methods=['GET'])
 def refresh():
     try:
         if not _check_sharedkey():

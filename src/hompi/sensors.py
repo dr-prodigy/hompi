@@ -109,8 +109,7 @@ class Sensors:
             log_stdout('SENSORS', 'WARNING: meteo not available.', LOG_WARN)
         except Exception:
             log_stderr(traceback.format_exc())
-        finally:
-            return meteo
+        return meteo
 
     # aphorisms
     def get_aphorism(self):
@@ -127,8 +126,7 @@ class Sensors:
         except Exception:
             # don't echo errors to stderr
             log_stdout('SENSORS', 'ERROR fetching aphorism', LOG_WARN)
-        finally:
-            return aphorism
+        return aphorism
 
     # temperature sensor
     def _read_temp_raw(self):
