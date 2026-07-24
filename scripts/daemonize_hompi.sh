@@ -47,12 +47,12 @@ echo Enabling virtualenv..
 . venv/bin/activate
 
 export HOMPI_HOME
-mkdir -p logs run
+mkdir -p "$HOMPI_HOME/logs" "$HOMPI_HOME/run"
 
 if [ "$run_uwsgi" = true ] ; then
   echo Stopping uWSGI API..
-  if [ -f logs/uwsgi-hompi-api.pid ] ; then
-    uwsgi --stop logs/uwsgi-hompi-api.pid 2>/dev/null || true
+  if [ -f "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" ] ; then
+    uwsgi --stop "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" 2>/dev/null || true
   fi
   kill $(ps aux |grep '[u]wsgi.*uwsgi.ini' | awk '{print $2}') 2>/dev/null || true
 fi
@@ -69,8 +69,10 @@ nohup hompi >/dev/null 2>>~/hompi_error.log&
 
 if [ "$run_uwsgi" = true ] ; then
   echo Starting uWSGI API..
+  # Ensure log dir exists before uWSGI opens daemonize= (it does not mkdir).
+  mkdir -p "$HOMPI_HOME/logs"
   # daemonize/pidfile/log/socket/virtualenv are set in uwsgi.ini
-  uwsgi --ini uwsgi.ini
+  uwsgi --ini "$HOMPI_HOME/uwsgi.ini"
 fi
 
 if [ "$run_flask_debugger" = true ] ; then

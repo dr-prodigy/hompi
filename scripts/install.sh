@@ -24,6 +24,9 @@
 set -euo pipefail
 
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.."
+export HOMPI_HOME="${HOMPI_HOME:-$(pwd)}"
+
+mkdir -p "$HOMPI_HOME/logs" "$HOMPI_HOME/run"
 
 python3 -m venv venv
 # shellcheck disable=SC1091
@@ -38,5 +41,6 @@ fi
 
 echo
 echo "Installed hompi $(python -c 'import hompi; print(hompi.__version__)')"
+echo "Runtime dirs: $HOMPI_HOME/logs , $HOMPI_HOME/run"
 echo "Next: cp config.sample.yaml config.yaml && . venv/bin/activate && hompi"
 echo "Console scripts: hompi, hompi-api"
