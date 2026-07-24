@@ -72,7 +72,7 @@ do_start() {
   _activate
 
   echo "Starting hompi.."
-  nohup hompi >/dev/null 2>>"${HOME}/hompi_error.log" &
+  nohup hompi >/dev/null 2>>"$HOMPI_HOME/logs/hompi_error.log" &
 
   if [ "$run_uwsgi" = true ] ; then
     echo "Starting uWSGI API.."
