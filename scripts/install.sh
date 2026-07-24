@@ -28,6 +28,16 @@ export HOMPI_HOME="${HOMPI_HOME:-$(pwd)}"
 
 mkdir -p "$HOMPI_HOME/logs" "$HOMPI_HOME/run"
 
+SYSTEMD_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
+mkdir -p "$SYSTEMD_USER_DIR"
+sed "s|@HOMPI_HOME@|${HOMPI_HOME}|g" \
+  "$HOMPI_HOME/scripts/hompi.service" \
+  > "$SYSTEMD_USER_DIR/hompi.service"
+echo "Installed user unit: $SYSTEMD_USER_DIR/hompi.service"
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl --user daemon-reload || true
+fi
+
 python3 -m venv venv
 # shellcheck disable=SC1091
 . venv/bin/activate
@@ -42,5 +52,6 @@ fi
 echo
 echo "Installed hompi $(python -c 'import hompi; print(hompi.__version__)')"
 echo "Runtime dirs: $HOMPI_HOME/logs , $HOMPI_HOME/run"
+echo "systemd (user): systemctl --user enable --now hompi.service"
 echo "Next: cp config.sample.yaml config.yaml && . venv/bin/activate && hompi"
 echo "Console scripts: hompi, hompi-api"
