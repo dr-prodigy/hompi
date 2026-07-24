@@ -69,8 +69,6 @@ nohup hompi >/dev/null 2>>~/hompi_error.log&
 
 if [ "$run_uwsgi" = true ] ; then
   echo Starting uWSGI API..
-  # Ensure log dir exists before uWSGI opens daemonize= (it does not mkdir).
-  mkdir -p "$HOMPI_HOME/logs"
   # daemonize/pidfile/log/socket/virtualenv are set in uwsgi.ini
   uwsgi --ini "$HOMPI_HOME/uwsgi.ini"
 fi
