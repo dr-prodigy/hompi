@@ -10,7 +10,7 @@ readme = "README.rst"
 license = { text = "GPL-3.0-or-later" }
 requires-python = ">=3.10"
 authors = [
-    { name = "Maurizio Montel", email = "maurizio.montel@gmail.com" },
+    { name = "Maurizio Montel", email = "dr.prodigy.github@gmail.com" },
 ]
 keywords = ["home-automation", "raspberry-pi", "mqtt", "flask"]
 classifiers = [
