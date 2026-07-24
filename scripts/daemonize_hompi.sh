@@ -55,6 +55,11 @@ if [ "$run_uwsgi" = true ] ; then
     uwsgi --stop "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" 2>/dev/null || true
   fi
   kill $(ps aux |grep '[u]wsgi.*uwsgi.ini' | awk '{print $2}') 2>/dev/null || true
+  # wait until pid file is gone (or pid no longer exists)
+  while [ -e "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" ]; do
+    sleep 0.2
+  done
+  echo "uWSGI fully stopped"
 fi
 
 if [ "$run_flask_debugger" = true ] ; then
