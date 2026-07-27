@@ -29,7 +29,7 @@ from .utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WA
 
 LED_STRIP_ELEMENTS = 32
 
-AMBIENT_MODULE_CMD = '{} -m hompi.ws2801_program '.format(sys.executable)
+AMBIENT_MODULE_CMD = '{} -m hompi.led_effects '.format(sys.executable)
 AMBIENT_CLEAR_COMMAND = 'clear'
 AMBIENT_SET_COLOR_COMMAND = 'set_color {} {}'
 AMBIENT_CROSSFADE_COMMAND = 'crossfade {} {} {}'

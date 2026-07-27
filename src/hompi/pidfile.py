@@ -17,7 +17,7 @@ from pathlib import Path
 from .paths import data_dir
 
 _DAEMON_NAME = 'hompi.pid'
-_AMBIENT_NAME = 'ws2801.pid'
+_AMBIENT_NAME = 'led_effects.pid'
 
 
 def run_dir():
