@@ -64,7 +64,7 @@ do_stop() {
   if [ "$run_flask_debugger" = true ] ; then
     echo "Stopping flask debugger.."
     kill $(ps aux |grep '[v]env/bin/hompi-api' | awk '{print $2}') 2>/dev/null || true
-    kill $(ps aux |grep '[h]ompi.ws_api' | awk '{print $2}') 2>/dev/null || true
+    kill $(ps aux |grep '[h]ompi.api' | awk '{print $2}') 2>/dev/null || true
   fi
 }
 

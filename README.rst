@@ -135,7 +135,7 @@ The Flask HTTP API entry point (development) is:
 
     $ hompi-api
 
-For production, serve ``hompi.ws_api:app`` with uWSGI (see ``uwsgi.ini``):
+For production, serve ``hompi.api:app`` with uWSGI (see ``uwsgi.ini``):
 
 .. code-block:: bash
 
@@ -159,7 +159,7 @@ When flask debugger is enabled (see code in *daemonize_hompi.sh*) web API is
 available at *http://[Raspberry IP]:5000/hompi/....*
 
 In case of WSGI server adoption (recommended for production), please refer to
-specific documentation about setup and usage. The API module is ``hompi.ws_api``.
+specific documentation about setup and usage. The API module is ``hompi.api``.
 
 To Do
 -----
