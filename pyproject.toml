@@ -75,14 +75,14 @@ Repository = "https://github.com/dr-prodigy/hompi"
 Issues = "https://github.com/dr-prodigy/hompi/issues"
 
 [project.scripts]
-hompi = "hompi.app:main"
+hompi = "hompi.cli:main"
 hompi-api = "hompi.api:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-hompi = ["migrations/*"]
+hompi = ["migrations/*", "data/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

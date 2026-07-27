@@ -1,9 +1,9 @@
 # Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>
 
-"""Console entry module — delegates to :mod:`hompi.service`."""
+"""Console entry module — ``hompi`` / ``hompi init``."""
 
-from .service import main
+from .cli import main
 
 __all__ = ['main']
 
