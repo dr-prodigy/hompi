@@ -51,11 +51,16 @@ do_stop() {
 
   if [ "$run_uwsgi" = true ] ; then
     echo "Stopping uWSGI API.."
+    if [ -f "$HOMPI_HOME/run/uwsgi-hompi-api.pid" ] ; then
+      uwsgi --stop "$HOMPI_HOME/run/uwsgi-hompi-api.pid" 2>/dev/null || true
+    fi
+    # Legacy pid location (pre-run/ move)
     if [ -f "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" ] ; then
       uwsgi --stop "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" 2>/dev/null || true
     fi
     kill $(ps aux |grep '[u]wsgi.*uwsgi.ini' | awk '{print $2}') 2>/dev/null || true
-    while [ -e "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" ]; do
+    while [ -e "$HOMPI_HOME/run/uwsgi-hompi-api.pid" ] || \
+          [ -e "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" ]; do
       sleep 0.2
     done
     echo "uWSGI fully stopped"
