@@ -1,8 +1,5 @@
 # Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>
-#
-# Template for source trees; ``hompi init`` installs a rendered copy into
-# ~/.config/systemd/user/hompi.service from package data.
 
 [Unit]
 Description=Hompi home automation (daemon + uWSGI API)
@@ -18,6 +15,7 @@ Environment=HOMPI_VENV=@HOMPI_VENV@
 WorkingDirectory=@HOMPI_HOME@
 ExecStart=@HOMPI_HOME@/scripts/hompid.sh start
 ExecStop=@HOMPI_HOME@/scripts/hompid.sh stop
+# systemctl --user restart hompi.service runs ExecStop then ExecStart
 
 [Install]
 WantedBy=default.target

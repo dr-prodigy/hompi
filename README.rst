@@ -73,26 +73,41 @@ Please refer to `misc/gpio.txt`__ file for wiring details.
 
 Usage
 -----
-After cloning repository
+Hompi separates the **Python package** (code + dependencies) from the
+**instance** (config, ``db/``, ``logs/``, ``run/``, systemd). Bootstrap the
+instance with ``hompi init`` after the package is installed.
+
+Install from a clone (venv + editable package + init)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
     $ git clone https://github.com/dr-prodigy/hompi.git
     $ cd hompi
+    $ ./scripts/install.sh          # or: ./scripts/install.sh --pi
 
-Create a virtualenv and install the package (editable):
+``install.sh`` creates ``./venv``, runs ``pip install -e .`` (or ``.[pi]``),
+then ``hompi init`` for the current directory (``HOMPI_HOME``).
+
+Install without cloning (venv + pip + init)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
-    $ ./scripts/install.sh
+    $ python3 -m venv ~/venvs/hompi
+    $ . ~/venvs/hompi/bin/activate
+    $ pip install "hompi[pi]"    # or: pip install "git+https://github.com/dr-prodigy/hompi.git#egg=hompi[pi]"
+    $ mkdir -p ~/hompi && cd ~/hompi
+    $ hompi init --home "$PWD" --venv "$VIRTUAL_ENV"
 
-On a Raspberry Pi, also install GPIO / SPI extras:
+``hompi init`` creates runtime dirs, writes ``config.yaml`` from the packaged
+sample (unless one already exists), installs ``scripts/hompid.sh`` and
+``uwsgi.ini``, and installs a systemd **user** unit
+(``~/.config/systemd/user/hompi.service``). Use ``--no-systemd`` to skip the
+unit, and ``--force`` to overwrite config/uWSGI files.
 
-.. code-block:: bash
-
-    $ ./scripts/install.sh --pi
-
-Or manually:
+Manual editable install (same as install.sh steps)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -100,23 +115,16 @@ Or manually:
     $ . venv/bin/activate
     $ pip install -e .
     $ pip install -e ".[pi]"   # Pi hosts only
-
-Upon completion, copy *config.sample.yaml* to *config.yaml*, and modify as needed.
-
-.. code-block:: bash
-
-    $ cp config.sample.yaml config.yaml
+    $ hompi init --home "$PWD" --venv "$VIRTUAL_ENV"
     $ vi config.yaml
 
 You can also point ``HOMPI_CONFIG`` at any YAML file, and ``HOMPI_HOME`` at the
-project data directory (``db/``, ``res/``, optional override ``migrations/``).
+instance data directory (``db/``, ``res/``, optional override ``migrations/``).
 Packaged DB migrations live inside the ``hompi`` package; place a custom
 ``migrations/`` folder under ``HOMPI_HOME`` only if you need to override them.
 
 On non-Pi hosts, missing GPIO/SPI libraries are stubbed automatically
-(no ``spidev.py`` symlink required). Install real drivers with::
-
-    $ pip install -e ".[pi]"
+(no ``spidev.py`` symlink required). Install real drivers with ``.[pi]``.
 
 Start server in debug mode (venv activated, from the project root or with
 ``HOMPI_HOME`` set):
@@ -147,18 +155,17 @@ For production, serve ``hompi.api:app`` with uWSGI (see ``uwsgi.ini``):
 
 API listens on ``127.0.0.1:3031`` (uwsgi protocol) by default.
 
-or, for automatic daemon operation, schedule
+or, for automatic daemon operation:
 
 .. code-block:: bash
 
-    $ ./scripts/daemonize_hompi.sh
-
-at boot time.
+    $ systemctl --user enable --now hompi.service
+    # or: ./scripts/hompid.sh start
 
 When run interactively from command line (debug mode), **hompi** displays
 internal status updates and emulates LCD on screen.
 
-When flask debugger is enabled (see code in *daemonize_hompi.sh*) web API is
+When flask debugger is enabled (see ``run_flask_debugger`` in *hompid.sh*) web API is
 available at *http://[Raspberry IP]:5000/hompi/....*
 
 In case of WSGI server adoption (recommended for production), please refer to
@@ -177,7 +184,7 @@ Install with test extras and run the suite:
 .. code-block:: bash
 
     $ pip install -e ".[dev]"
-    $ cp config.sample.yaml config.yaml
+    $ hompi init --home "$PWD" --no-systemd
     $ pytest
     $ flake8 src
 
