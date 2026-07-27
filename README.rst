@@ -174,11 +174,14 @@ specific documentation about setup and usage. The API module is ``hompi.api``.
 Web API documentation is in `docs/API.rst`__ (endpoints, authentication,
 command formats, multi-hompi proxying, Home Assistant examples).
 
+Configuration reference is in `docs/CONFIG.rst`__ (``config.yaml`` keys,
+defaults, module flags, GPIO, MQTT, logging).
+
 .. __: docs/API.rst
+.. __: docs/CONFIG.rst
 
 To Do
 -----
-- Config files documentation
 - Pictures, demo vids (homesite?)
 
 Development
