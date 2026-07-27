@@ -524,7 +524,7 @@ app.register_blueprint(api)
 
 def main():
     """Console entry point for ``hompi-api`` / ``python -m hompi.api``."""
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='127.0.0.1', debug=True)
 
 
 if __name__ == "__main__":
