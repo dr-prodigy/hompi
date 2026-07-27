@@ -63,8 +63,7 @@ ssl_context.verify_mode = ssl.CERT_NONE
 class Sensors:
     METEO_URL = 'http://api.openweathermap.org/data/2.5/weather?' + \
                 'q=[place]&units=metric&appid=6913ade53fd71e3c428b17a11807a6bf'
-    APHORISM_URL = 'http://api.forismatic.com/api/1.0/?' + \
-                   'method=getQuote&lang=en&format=json'
+    APHORISM_URL = 'https://api.api-ninjas.com/v2/randomquotes?categories=inspirational,success,wisdom'
     device_file = ''
 
     def __init__(self):
@@ -116,16 +115,14 @@ class Sensors:
         aphorism = None
         try:
             req = request.Request(self.APHORISM_URL, None,
-                                  {'User-Agent': 'Mozilla/5.0'})
-            aphorism = json.load(reader(request.urlopen(req, timeout=5)))
-            log_stdout('SENSORS', u'{} - {}'.format(
-                aphorism['quoteText'], aphorism['quoteAuthor']).encode(
-                'utf-8'))
+                                  {'User-Agent': 'Mozilla/5.0',
+                                  'X-Api-Key': config.APHORISM_KEY if config.APHORISM_KEY else ''})
+            aphorism = json.load(reader(request.urlopen(req, timeout=5)))[0]
+            log_stdout('SENSORS', u'{} - {}'.format(aphorism['quote'], aphorism['author']).encode('utf-8'))
         except request.URLError:
             log_stdout('SENSORS', 'WARNING: aphorism not available: skipped.', LOG_WARN)
         except Exception:
-            # don't echo errors to stderr
-            log_stdout('SENSORS', 'ERROR fetching aphorism', LOG_WARN)
+            log_stderr(traceback.format_exc())
         return aphorism
 
     # temperature sensor
@@ -201,7 +198,7 @@ class Sensors:
                 log_stdout('SENSORS', traceback.format_exc(), LOG_WARN)
                 log_stdout('SENSORS', 'WARNING: {} server not available.'.format(url), LOG_WARN)
             except Exception:
-                log_stderr.write(traceback.format_exc())
+                log_stderr(traceback.format_exc())
 
     @staticmethod
     def hompi_ext_sensors_refresh(hompi_ext_sensors):
@@ -215,7 +212,7 @@ class Sensors:
                 log_stdout('SENSORS', traceback.format_exc(), LOG_WARN)
                 log_stdout('SENSORS', 'WARNING: {} ext sensor not available.'.format(sensor_url), LOG_WARN)
             except Exception:
-                log_stderr.write(traceback.format_exc())
+                log_stderr(traceback.format_exc())
 
     # forward command to hompi slaves
     @staticmethod

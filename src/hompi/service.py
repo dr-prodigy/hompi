@@ -174,7 +174,7 @@ def run_loop():
                 # save new temperature (if valid)
                 if config.MODULE_TEMP and temp_avg_sum != 0:
                     io_status.int_temp_c = round(temp_avg_accu / temp_avg_sum, 2)
-                elif io_status.main_area_id and io_status.main_area_id in io_status.areas.keys() and \
+                elif config.MODULE_TRV and io_status.main_area_id and io_status.main_area_id in io_status.areas.keys() and \
                     io_status.areas[io_status.main_area_id]['cur_temp_c'] != 999:
                     # update temperature using main area
                     io_status.int_temp_c = io_status.areas[io_status.main_area_id]['cur_temp_c']
@@ -365,8 +365,8 @@ def aphorism():
     aphorism_data = sensor.get_aphorism()
     try:
         if aphorism_data:
-            io_status.aphorism_text = aphorism_data['quoteText'].strip()
-            io_status.aphorism_author = aphorism_data['quoteAuthor'].strip()
+            io_status.aphorism_text = aphorism_data['quote'].strip()
+            io_status.aphorism_author = aphorism_data['author'].strip()
         else:
             # just show a small mark on app (DISABLED!)
             if False and io_status.aphorism_text \

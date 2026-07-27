@@ -36,6 +36,7 @@ _DEFAULTS = {
     'HOMPI_EXT_SENSORS': [],
     'MODULE_METEO': True,
     'MODULE_APHORISM': True,
+    'APHORISM_KEY': None,
     'MODULE_DB_LOG': False,
     'MODULE_SPEECH': False,
     'MODULE_AMBIENT': False,

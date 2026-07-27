@@ -20,10 +20,13 @@ HOMPI_EXT_SENSORS: []
 
 # --- Feature modules ---
 MODULE_METEO: true
-MODULE_APHORISM: true
 MODULE_DB_LOG: false
 MODULE_SPEECH: false
 MODULE_AMBIENT: false
+
+# --- Aphorism ---
+MODULE_APHORISM: true
+APHORISM_KEY: null
 
 # --- Telegram ---
 ENABLE_TELEGRAM: false
