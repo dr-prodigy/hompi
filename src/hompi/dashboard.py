@@ -583,7 +583,7 @@ class Dashboard:
             replace_chars = ['*', '+', '=', 'A', 'M', '?', '?', '?', '>', '°',
                              '?', '.']
         else:
-            replace_chars = ['*', '+', '=', 'A', 'M', '▀', '▃', '=', '>', '°',
+            replace_chars = ['*', '+', '=', 'A', 'M', '▀', '▃', ' ̲̅', '>', '°',
                              '█', '.']
 
         print(' ' * (LCD_COLUMNS + 4))
