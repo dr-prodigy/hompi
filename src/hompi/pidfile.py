@@ -1,5 +1,5 @@
-# Copyright (C)2018-24 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
-# This file is part of hompi <https://github.com/dr-prodigy/hompi>.
+# Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
+# This file is part of hompi <https://github.com/dr-prodigy/hompi>
 
 """PID-file helpers for daemon / ambient process coordination.
 
@@ -17,7 +17,7 @@ from pathlib import Path
 from .paths import data_dir
 
 _DAEMON_NAME = 'hompi.pid'
-_AMBIENT_NAME = 'ws2801.pid'
+_AMBIENT_NAME = 'led_effects.pid'
 
 
 def run_dir():

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Copyright (C) Maurizio Montel (dr-prodigy)
-# This file is part of hompi <https://github.com/dr-prodigy/hompi>.
+# Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
+# This file is part of hompi <https://github.com/dr-prodigy/hompi>
 #
 # Foreground entrypoint for a single container: control daemon + uWSGI API.
 # Both share HOMPI_HOME (SQLite + PID files under run/).

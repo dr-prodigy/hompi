@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Copyright (C) 2018 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com> <maurizio.montel@gmail.com>
-# This file is part of hompi <https://github.com/dr-prodigy/hompi>.
+# Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
+# This file is part of hompi <https://github.com/dr-prodigy/hompi>
 #
 # hompi is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.."
 export HOMPI_HOME="${HOMPI_HOME:-$(pwd)}"
 
 mkdir -p "$HOMPI_HOME/logs" "$HOMPI_HOME/run"
+# logs/: uWSGI / daemon stderr logs; run/: process PID files (hompi, uWSGI, LED)
 
 SYSTEMD_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 mkdir -p "$SYSTEMD_USER_DIR"

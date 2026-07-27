@@ -1,5 +1,5 @@
-# Copyright (C)2018-24 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
-# This file is part of hompi <https://github.com/dr-prodigy/hompi>.
+# Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
+# This file is part of hompi <https://github.com/dr-prodigy/hompi>
 
 """Package smoke tests."""
 
@@ -27,7 +27,7 @@ def test_console_scripts_registered():
 def test_main_entrypoints_callable():
     from hompi.app import main
     from hompi.service import HompiService, main as service_main
-    from hompi.ws_api import main as api_main
+    from hompi.api import main as api_main
 
     assert callable(main)
     assert callable(service_main)

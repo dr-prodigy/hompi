@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C)2018-24 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
-# This file is part of hompi <https://github.com/dr-prodigy/hompi>.
+# Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
+# This file is part of hompi <https://github.com/dr-prodigy/hompi>
 #
 # hompi is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ from .utils import log_stdout, log_stderr, LOG_GPIO, LOG_DEBUG, LOG_INFO, LOG_WA
 
 LED_STRIP_ELEMENTS = 32
 
-AMBIENT_MODULE_CMD = '{} -m hompi.ws2801_program '.format(sys.executable)
+AMBIENT_MODULE_CMD = '{} -m hompi.led_effects '.format(sys.executable)
 AMBIENT_CLEAR_COMMAND = 'clear'
 AMBIENT_SET_COLOR_COMMAND = 'set_color {} {}'
 AMBIENT_CROSSFADE_COMMAND = 'crossfade {} {} {}'

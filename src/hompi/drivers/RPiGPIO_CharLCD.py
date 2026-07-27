@@ -1,9 +1,9 @@
 #!/usr/bin/env/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) Maurizio Montel (dr-prodigy)
+# Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
+# This file is part of hompi <https://github.com/dr-prodigy/hompi>
 # Adapted from Adafruit code
-# This file is part of hompi <https://github.com/dr-prodigy/hompi>.
 #
 # hompi is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

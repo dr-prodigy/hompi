@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Copyright (C) Maurizio Montel (dr-prodigy)
-# This file is part of hompi <https://github.com/dr-prodigy/hompi>.
+# Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
+# This file is part of hompi <https://github.com/dr-prodigy/hompi>
 #
 # hompi is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -51,11 +51,16 @@ do_stop() {
 
   if [ "$run_uwsgi" = true ] ; then
     echo "Stopping uWSGI API.."
+    if [ -f "$HOMPI_HOME/run/uwsgi-hompi-api.pid" ] ; then
+      uwsgi --stop "$HOMPI_HOME/run/uwsgi-hompi-api.pid" 2>/dev/null || true
+    fi
+    # Legacy pid location (pre-run/ move)
     if [ -f "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" ] ; then
       uwsgi --stop "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" 2>/dev/null || true
     fi
     kill $(ps aux |grep '[u]wsgi.*uwsgi.ini' | awk '{print $2}') 2>/dev/null || true
-    while [ -e "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" ]; do
+    while [ -e "$HOMPI_HOME/run/uwsgi-hompi-api.pid" ] || \
+          [ -e "$HOMPI_HOME/logs/uwsgi-hompi-api.pid" ]; do
       sleep 0.2
     done
     echo "uWSGI fully stopped"
@@ -64,7 +69,7 @@ do_stop() {
   if [ "$run_flask_debugger" = true ] ; then
     echo "Stopping flask debugger.."
     kill $(ps aux |grep '[v]env/bin/hompi-api' | awk '{print $2}') 2>/dev/null || true
-    kill $(ps aux |grep '[h]ompi.ws_api' | awk '{print $2}') 2>/dev/null || true
+    kill $(ps aux |grep '[h]ompi.api' | awk '{print $2}') 2>/dev/null || true
   fi
 }
 

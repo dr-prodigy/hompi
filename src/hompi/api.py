@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C)2018-24 Maurizio Montel (dr-prodigy) <maurizio.montel@gmail.com>
-# This file is part of hompi <https://github.com/dr-prodigy/hompi>.
+# Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
+# This file is part of hompi <https://github.com/dr-prodigy/hompi>
 #
 # hompi is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
+from flask import Blueprint
 from flask import Flask
 from flask import request
 from flask import send_file
@@ -37,7 +38,39 @@ from . import io_data
 from . import paths
 from . import pidfile
 
+# Public URL prefix (same for Flask debug and lighttpd/nginx → uWSGI).
+API_PREFIX = '/hompi'
+
 app = Flask(__name__)
+api = Blueprint('api', __name__, url_prefix=API_PREFIX)
+
+
+class RestoreMountPrefixMiddleware:
+    """Fold proxy mount prefix back into PATH_INFO for Blueprint routing.
+
+    Front ends that mount at ``/hompi`` (lighttpd ``scgi.server``, nginx
+    ``location /hompi``) often pass ``SCRIPT_NAME=/hompi`` and
+    ``PATH_INFO=/_get_status``. Routes live under ``url_prefix=/hompi``, so
+    rewrite to ``PATH_INFO=/hompi/_get_status`` and clear ``SCRIPT_NAME``.
+    Standalone debug (full path already in PATH_INFO) is unchanged.
+    """
+
+    def __init__(self, wsgi_app, prefix=API_PREFIX):
+        self.app = wsgi_app
+        self.prefix = prefix.rstrip('/') or '/'
+
+    def __call__(self, environ, start_response):
+        script = (environ.get('SCRIPT_NAME') or '').rstrip('/')
+        path = environ.get('PATH_INFO') or ''
+        if script == self.prefix and not path.startswith(self.prefix):
+            if not path.startswith('/'):
+                path = '/' + path
+            environ['PATH_INFO'] = self.prefix + path
+            environ['SCRIPT_NAME'] = ''
+        return self.app(environ, start_response)
+
+
+app.wsgi_app = RestoreMountPrefixMiddleware(app.wsgi_app)
 
 print('HOMPI WS')
 print('========')
@@ -85,7 +118,7 @@ def _get_remote_address(server):
 
 
 # READER METHODS (GET)
-@app.route('/_get_system_info', methods = ['GET'])
+@api.route('/_get_system_info', methods=['GET'])
 def get_system_info():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -93,7 +126,7 @@ def get_system_info():
     return io_data.SystemInfo().get_output()
 
 
-@app.route('/_get_status', methods = ['GET'])
+@api.route('/_get_status', methods=['GET'])
 def get_status():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -107,8 +140,8 @@ def get_status():
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/_get_list/<data_list>', methods = ['GET'])
-@app.route('/_get_list/<data_list>/<key>', methods = ['GET'])
+@api.route('/_get_list/<data_list>', methods=['GET'])
+@api.route('/_get_list/<data_list>/<key>', methods=['GET'])
 def get_list(data_list, key=None):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -167,7 +200,7 @@ def get_list(data_list, key=None):
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/_get_temp_chart', methods = ['GET'])
+@api.route('/_get_temp_chart', methods=['GET'])
 def get_temp_chart():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -198,7 +231,7 @@ def get_temp_chart():
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/_get_server_list', methods = ['GET'])
+@api.route('/_get_server_list', methods=['GET'])
 def get_server_list():
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -214,8 +247,8 @@ def get_server_list():
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/_get_list2/<server>/<list>', methods = ['GET'])
-@app.route('/_get_list2/<server>/<list>/<key>', methods = ['GET'])
+@api.route('/_get_list2/<server>/<list>', methods=['GET'])
+@api.route('/_get_list2/<server>/<list>/<key>', methods=['GET'])
 def get_list2(server, list, key=None):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -225,19 +258,19 @@ def get_list2(server, list, key=None):
         if server == "local":
             return get_list(list, key)
 
-        api_key = urllib.request.args.get('api_key', '').upper()
+        api_key = request.args.get('api_key', '').upper()
         address = _get_remote_address(server)
 
         if key:
             return urllib.request.urlopen(
-                "{}/_get_list/{}/{}?api_key={}".format(address,
+                "{}/hompi/_get_list/{}/{}?api_key={}".format(address,
                                                              list, key,
                                                              api_key),
                 timeout=2
             ).read()
         else:
             return urllib.request.urlopen(
-                "{}/_get_list/{}?api_key={}".format(address, list,
+                "{}/hompi/_get_list/{}?api_key={}".format(address, list,
                                                           api_key),
                 timeout=2
             ).read()
@@ -247,7 +280,7 @@ def get_list2(server, list, key=None):
         return "Error", 500  # INTERNAL_SERVER_ERROR
 
 
-@app.route('/_get_image/<image_name>', methods = ['GET'])
+@api.route('/_get_image/<image_name>', methods=['GET'])
 def get_image(image_name):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -274,9 +307,9 @@ def get_image(image_name):
 
 
 # UPDATE METHODS (GET/PUT)
-@app.route('/_send_command', methods=['PUT'])
-@app.route('/_send_command/<command>', methods=['GET'])
-def send_command(command = None):
+@api.route('/_send_command', methods=['PUT'])
+@api.route('/_send_command/<command>', methods=['GET'])
+def send_command(command=None):
     _data = ''
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -308,9 +341,9 @@ def send_command(command = None):
         return "Error", 400  # BAD_REQUEST
 
 
-@app.route('/_set_control', methods=['PUT'])
-@app.route('/_set_control/<data>', methods=['GET'])
-def set_control(data = None):
+@api.route('/_set_control', methods=['PUT'])
+@api.route('/_set_control/<data>', methods=['GET'])
+def set_control(data=None):
     if not _check_sharedkey():
         return "Forbidden", 403
     try:
@@ -347,7 +380,7 @@ def set_control(data = None):
         return "Error", 400  # BAD_REQUEST
 
 
-@app.route('/_set_temp/<data>', methods=['PUT','GET'])
+@api.route('/_set_temp/<data>', methods=['PUT', 'GET'])
 def set_temp(data):
     _id = _temp_c = 0
     if not _check_sharedkey():
@@ -377,8 +410,8 @@ def set_temp(data):
         return "Error", 400  # BAD_REQUEST
 
 
-@app.route('/_set_temp2/<server>/<data>', methods=['PUT','GET'])
-def set_temp2(server, data = None):
+@api.route('/_set_temp2/<server>/<data>', methods=['PUT', 'GET'])
+def set_temp2(server, data=None):
     if not _check_sharedkey():
         return "Forbidden", 403
 
@@ -396,11 +429,11 @@ def set_temp2(server, data = None):
         if server == "local":
             return set_temp(data)
 
-        api_key = urllib.request.args.get('api_key', '').upper()
+        api_key = request.args.get('api_key', '').upper()
         address = _get_remote_address(server)
 
         return urllib.request.urlopen(
-            "{}/_set_temp/{}?api_key={}".format(address, data,
+            "{}/hompi/_set_temp/{}?api_key={}".format(address, data,
                                                       api_key), timeout=2
         ).read()
         return "Ok", 200
@@ -413,7 +446,7 @@ def set_temp2(server, data = None):
 
 
 # TO DO
-@app.route('/_set_timetable/<data_json>')
+@api.route('/_set_timetable/<data_json>')
 def set_timetable(data_json):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -442,7 +475,7 @@ def set_timetable(data_json):
     return "Ok"
 
 
-@app.route('/_set_timetable_data/<data_json>')
+@api.route('/_set_timetable_data/<data_json>')
 def set_timetable_data(data_json):
     if not _check_sharedkey():
         return "Forbidden", 403
@@ -473,7 +506,7 @@ def set_timetable_data(data_json):
     return "Ok"
 
 
-@app.route('/_refresh', methods=['GET'])
+@api.route('/_refresh', methods=['GET'])
 def refresh():
     try:
         if not _check_sharedkey():
@@ -485,8 +518,12 @@ def refresh():
         return "Error", 400  # BAD_REQUEST
     return "Ok"
 
+
+app.register_blueprint(api)
+
+
 def main():
-    """Console entry point for ``hompi-api`` / ``python -m hompi.ws_api``."""
+    """Console entry point for ``hompi-api`` / ``python -m hompi.api``."""
     app.run(host='0.0.0.0', debug=True)
 
 
