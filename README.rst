@@ -171,9 +171,13 @@ available at *http://[Raspberry IP]:5000/hompi/....*
 In case of WSGI server adoption (recommended for production), please refer to
 specific documentation about setup and usage. The API module is ``hompi.api``.
 
+Web API documentation is in `docs/API.rst`__ (endpoints, authentication,
+command formats, multi-hompi proxying, Home Assistant examples).
+
+.. __: docs/API.rst
+
 To Do
 -----
-- Web API documentation
 - Config files documentation
 - Pictures, demo vids (homesite?)
 
