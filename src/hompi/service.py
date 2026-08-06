@@ -84,7 +84,7 @@ task_every_secs = {
     'update_lcd_content': 11.0,
     'get_temp': 20.0 if config.TEST_MODE == 0 else 5.0,
     'get_meteo': 300.0,      #  5 mins
-    'get_aphorism': 241.0,   #  4 mins
+    'get_aphorism': 1801.0,  # 30 mins
     'refresh': 600.0,        # 10 mins (multiple of get_temp)
     'trv_keepalive': 1200.0, # 20 mins
     'reiterate': 120.0,      #  2 mins
