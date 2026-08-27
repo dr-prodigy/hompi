@@ -161,6 +161,7 @@ class Sensors:
     def set_heating(status):
         if config.MODULE_HEATING:
             log_stdout('SENSORS', 'HEATING={}'.format(status))
+            GPIO.setmode(GPIO.BCM)
             if config.RELAY_HILOW_MODE:
                 GPIO.output(HEATING_GPIO, GPIO.LOW if status else GPIO.HIGH)
             else:
@@ -170,6 +171,7 @@ class Sensors:
     @staticmethod
     def set_switch(gpio, status):
         log_stdout('SENSORS', 'SWITCH({})={}'.format(gpio, status))
+        GPIO.setmode(GPIO.BCM)
         if config.RELAY_HILOW_MODE:
             GPIO.output(gpio, GPIO.LOW if status else GPIO.HIGH)
         else:
