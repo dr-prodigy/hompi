@@ -29,6 +29,18 @@ db_name = 'hompi.sqlite'
 db_path = persistent_db_path = str(paths.db_file(db_name))
 migrations_path = str(paths.migrations_dir())
 
+# Daemon and uWSGI open the same file concurrently; wait instead of failing fast.
+SQLITE_TIMEOUT_SEC = 5.0
+
+
+def _connect(path):
+    """Open SQLite with shared-access settings (timeout + WAL)."""
+    conn = sqlite3.connect(path, timeout=SQLITE_TIMEOUT_SEC)
+    conn.execute('pragma foreign_keys = on')
+    conn.execute('pragma journal_mode = wal')
+    conn.commit()
+    return conn
+
 
 def __init__():
     global db_path
@@ -80,9 +92,7 @@ class DatabaseManager(object):
         else:
             db_path = persistent_db_path
 
-        self.conn = sqlite3.connect(db_path)
-        self.conn.execute('pragma foreign_keys = on')
-        self.conn.commit()
+        self.conn = _connect(db_path)
         self.cur = self.conn.cursor()
 
     def query(self, command_, args=()):
