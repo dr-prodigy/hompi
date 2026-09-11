@@ -905,7 +905,7 @@ def show_message(lcd_message, telegram_message=""):
             telegram_message = "{}: {}".format(
                 socket.gethostname(), telegram_message)
             os_async_command(
-                'telegram -token {} -chatid {} "{}"'.format(
+                'telegram -t {} -c {} "{}"'.format(
                     config.TELEGRAM_TOKEN,
                     config.TELEGRAM_CHATID,
                     telegram_message,
