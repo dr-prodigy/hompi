@@ -41,6 +41,8 @@ _DEFAULTS = {
     'MODULE_SPEECH': False,
     'MODULE_AMBIENT': False,
     'ENABLE_TELEGRAM': False,
+    'TELEGRAM_TOKEN': None,
+    'TELEGRAM_CHATID': None,
     'MODULE_HASS': True,
     'HASS_SERVER': 'http://localhost:8123/',
     'HASS_CHECK_SSL_CERT': False,
@@ -137,6 +139,10 @@ def _coerce(values):
     # Empty string API key → treat as unset
     if data.get('API_KEY') == '':
         data['API_KEY'] = None
+    if data.get('TELEGRAM_TOKEN') == '':
+        data['TELEGRAM_TOKEN'] = None
+    if data.get('TELEGRAM_CHATID') == '':
+        data['TELEGRAM_CHATID'] = None
     return data
 
 

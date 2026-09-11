@@ -118,6 +118,14 @@ Telegram
     When ``true``, LCD/status messages are also sent via a shell ``telegram``
     command (must be available on ``PATH``).
 
+``TELEGRAM_TOKEN`` (string or ``null``, default: ``null``)
+    Bot token passed to the ``telegram`` command when ``ENABLE_TELEGRAM`` is
+    ``true``.
+
+``TELEGRAM_CHATID`` (string or ``null``, default: ``null``)
+    Target chat id passed to the ``telegram`` command when ``ENABLE_TELEGRAM``
+    is ``true``.
+
 Home Assistant
 --------------
 
@@ -330,6 +338,8 @@ All configuration keys with types and defaults:
 | ``MODULE_SPEECH``           | bool          | ``false``                     |
 | ``MODULE_AMBIENT``          | bool          | ``false``                     |
 | ``ENABLE_TELEGRAM``         | bool          | ``false``                     |
+| ``TELEGRAM_TOKEN``          | string/null   | ``null``                      |
+| ``TELEGRAM_CHATID``         | string/null   | ``null``                      |
 | ``MODULE_HASS``             | bool          | ``true``                      |
 | ``HASS_SERVER``             | string        | ``http://localhost:8123/``    |
 | ``HASS_CHECK_SSL_CERT``     | bool          | ``false``                     |
