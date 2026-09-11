@@ -27,6 +27,9 @@ MODULE_AMBIENT: false
 
 # --- Telegram ---
 ENABLE_TELEGRAM: false
+# Required when ENABLE_TELEGRAM is true:
+TELEGRAM_TOKEN: null
+TELEGRAM_CHATID: null
 
 # --- Home Assistant ---
 MODULE_HASS: true
