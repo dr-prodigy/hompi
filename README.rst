@@ -4,15 +4,14 @@
 =====
 hompi
 =====
-Open-source Home Assistant sidekick (LCD display, temperature sensors, programmable thermostat, smart TRV, RGB strip, ...)
-for Raspberry Pi
+Open-source Home Assistant sidekick for Raspberry Pi
 
 
 Description
 -----------
 **hompi** ( */ˈhompi/* , Finnish word for "home") is a lightweight Python software developed
 for Raspberry Pi to provide a native reliable home automation engine
-to control heating, gates, ambient LED lights, etc...
+to control heating, gates, ambient LED lights, etc... and display status and info on a LCD screen.
 
 The system is designed to be headless, interfacing all needed
 peripherals (thermometre, relays, LED strips, ...) in hw via GPIO.
@@ -37,7 +36,7 @@ integration.
 
 Main features
 -------------
-- Support for Home Assistant https://www.home-assistant.io/
+- Natively integrated with Home Assistant https://www.home-assistant.io/
 - Heating system (multi-area temperature control, manual and automatic customizable modes and programmes, data logging
   and reporting)
 - MQTT integration with external thermometers and TRV (smart thermostatic valves)
@@ -47,7 +46,7 @@ Main features
   (eg: https://www.amazon.it/SunFounder-LCD1602-Display-Arduino-Raspberry/dp/B019K5X53O)
 - LED strip support (eg: WS2801) for ambient light, Xmas lights, sequences, configured as Home Assistant light
   (eg: https://www.amazon.it/BTF-LIGHTING-indirizzabili-individualmente-flessibile-impermeabile/dp/B088BRY2SH)
-- Native support for GPIO relays (boiler control, home gate, home illumination, etc.)
+- Native support for GPIO relays (HVAC control, home gate, home illumination, etc.)
   (eg: https://www.amazon.it/SunFounder-Channel-Optocoupler-Expansion-Raspberry/dp/B00E0NTPP4)
 - Integration with various external API (weather, aphorisms, etc.)
 - Multiple **hompi** servers can interoperate and share data
