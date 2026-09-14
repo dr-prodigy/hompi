@@ -4,12 +4,13 @@
 =====
 hompi
 =====
-Open-source home automation project for Raspberry Pi
+Open-source Home Assistant sidekick (LCD display, temperature sensors, programmable thermostat, smart TRV, RGB strip, ...)
+for Raspberry Pi
 
 
 Description
 -----------
-**hompi** (*'hom-pee'*) is a lightweight Python 2 / 3 software developed
+**hompi** ( */ˈhompi/* , Finnish word for "home") is a lightweight Python software developed
 for Raspberry Pi to provide a native reliable home automation engine
 to control heating, gates, ambient LED lights, etc...
 
@@ -26,9 +27,9 @@ Everything is implemented in code and local libs (ie: no cloud services
 required to work) and access to peripherals is made via native Pi's GPIO or
 LAN/WiFi (= simple, fast, reliable).
 
-All functions are exposed and controlled through a secured open web API
-developed with Flask (can be accessed on local subnet and/or internet through
-public IP), designed to run through web/WSGI server.
+All functions are exposed and controlled through a secured Flask web API
+(can be accessed on local subnet and/or internet through public IP),
+running through the provided uWSGI server.
 
 **hompi** server module is freeware and opensource, and can be controlled with
 no limitations using your own client (web, mobile app), and includes Home Assistant
@@ -161,6 +162,15 @@ or, for automatic daemon operation:
 
     $ systemctl --user enable --now hompi.service
     # or: ./scripts/hompid.sh start
+
+NOTE: to avoid OS temporary terminations upon user disconnection, your application user
+needs to have lingering enabled. This can be done with 
+
+.. code-block:: bash
+
+    $ sudo loginctl enable-linger [your-user]
+
+
 
 When run interactively from command line (debug mode), **hompi** displays
 internal status updates and emulates LCD on screen.
