@@ -117,6 +117,7 @@ def run_loop():
     init()
 
     # main loop
+    # announce start
     log_data('start')
     show_message('HOMPI', 'HOMPI START')
     say('Start')
@@ -278,6 +279,9 @@ def run_loop():
                     sighup_refresh = True
 
             except (KeyboardInterrupt, SystemExit):
+                # announce stop
+                log_data('stop')
+                show_message('STOP', 'HOMPI STOP')
                 # cleanup sensors & LCD
                 sensor.cleanup()
                 lcd.cleanup()
