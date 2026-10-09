@@ -244,6 +244,7 @@ BIGNUMMATRIX = {
 
 class Dashboard:
     def __init__(self):
+        global PAUSED
         self._current_program = -1
         self._is_backlit = True
         self._backlight_change = datetime.datetime(9999, 12, 31)
@@ -252,7 +253,9 @@ class Dashboard:
         self.line = [''] * LCD_ROWS
         self.old_line = [''] * LCD_ROWS
         self.position = [-LCD_LINE_DELAY] * LCD_ROWS
+        # initialize display
         self.lcd = None
+        PAUSED = True
         self.refresh_display()
 
     def _load_charset(self):
@@ -274,17 +277,18 @@ class Dashboard:
 
     def refresh_display(self, io_status = None):
         global PAUSED
+        if DISPLAY_TYPE == NONE or not PAUSED:
+            return 0
         try:
             PAUSED = False
+            # initialize display
             if DISPLAY_TYPE == GPIO_CharLCD:
-                # initialize display
                 if self.lcd is None:
                     self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5,
-                                               LCD_D6, LCD_D7,
-                                               LCD_COLUMNS, LCD_ROWS,
-                                               LCD_BACKLIGHT)
+                                            LCD_D6, LCD_D7,
+                                            LCD_COLUMNS, LCD_ROWS,
+                                            LCD_BACKLIGHT)
             elif DISPLAY_TYPE == I2C_LCD:
-                # initialize display
                 self.lcd = I2C_CharLCD.lcd(I2C_ADDRESS, I2C_BUS)
             # load symbol font data
             self._load_charset()
@@ -447,7 +451,7 @@ class Dashboard:
                                    io_status.message + ' \xA5 \xA5 \xA5'
                 else:
                     self.line[1] = line2options
-        else:
+        elif LCD_ROWS == 4:
             # +--------------------+
             # | _ 12:09 19-01-2018 |
             # |    -=0 0-0 0-0°    |
@@ -546,7 +550,7 @@ class Dashboard:
 
         if DISPLAY_TYPE == I2C_LCD:
             self.lcd.lcd_clear()
-        else:
+        elif DISPLAY_TYPE == GPIO_CharLCD:
             # on RPiGPIO lcd_clear breaks..
             for row in range(0, LCD_ROWS):
                 self.lcd.lcd_display_string(' ' * LCD_COLUMNS, row)

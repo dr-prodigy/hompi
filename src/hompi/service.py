@@ -290,10 +290,16 @@ def run_loop():
                 mqtt_client.cleanup()
                 db.flush()
                 raise
-            except Exception:
-                # LCD I/O error: refresh LCD screen
+            except OSError as err:
                 log_stderr(traceback.format_exc())
-                log_stderr('LCD I/O error: trying to recover..')
+                if err.errno:
+                    # LCD I/O error: refresh LCD screen
+                    log_stderr('LCD I/O error: trying to recover..')
+                    time.sleep(1)
+                    lcd.refresh_display(io_status)
+                time.sleep(1)
+            except Exception:
+                log_stderr(traceback.format_exc())
                 time.sleep(1)
                 lcd.refresh_display(io_status)
 
