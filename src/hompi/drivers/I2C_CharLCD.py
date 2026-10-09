@@ -142,8 +142,8 @@ class lcd:
     # clocks EN to latch command
     def lcd_strobe(self, data):
         self.lcd_device.write_cmd(data | En | LCD_BACKLIGHT)
-        #sleep(.0005) original value
-        sleep(.0001)
+        sleep(.0005)
+        #sleep(.0001) # Mauri: this used to work..
         self.lcd_device.write_cmd(((data & ~En) | LCD_BACKLIGHT))
         sleep(.0001)
 
@@ -181,9 +181,6 @@ class lcd:
     # clear lcd and set to home
     def lcd_clear(self):
         self.lcd_write(LCD_CLEARDISPLAY)
-
-    # set to home
-    def home(self):
         self.lcd_write(LCD_RETURNHOME)
 
     # define backlight on/off (lcd.backlight(1); off= lcd.backlight(0)
