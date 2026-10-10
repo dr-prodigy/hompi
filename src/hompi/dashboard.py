@@ -273,7 +273,7 @@ class Dashboard:
 
     def refresh_display(self, io_status = None, force_init = False):
         global PAUSED
-        if DISPLAY_TYPE == NONE or not PAUSED or not force_init:
+        if DISPLAY_TYPE == NONE or (not PAUSED and not force_init):
             return 0
         try:
             PAUSED = False
