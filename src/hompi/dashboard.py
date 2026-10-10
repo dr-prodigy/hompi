@@ -255,13 +255,9 @@ class Dashboard:
         self.position = [-LCD_LINE_DELAY] * LCD_ROWS
         # initialize display
         self.lcd = None
-        PAUSED = True
-        self.refresh_display()
+        self.refresh_display(force_init=True)
 
     def _load_charset(self):
-        if PAUSED:
-            return
-
         if CURRENT_CHARSET == CHARSET_SYMBOL:
             if DISPLAY_TYPE == GPIO_CharLCD:
                 for font_count in range(0, 4):
@@ -275,9 +271,9 @@ class Dashboard:
             elif DISPLAY_TYPE == I2C_LCD:
                 self.lcd.lcd_load_custom_chars(BIGNUMDATA)
 
-    def refresh_display(self, io_status = None):
+    def refresh_display(self, io_status = None, force_init = False):
         global PAUSED
-        if DISPLAY_TYPE == NONE or not PAUSED:
+        if DISPLAY_TYPE == NONE or not PAUSED or not force_init:
             return 0
         try:
             PAUSED = False

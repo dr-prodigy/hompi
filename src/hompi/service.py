@@ -296,12 +296,10 @@ def run_loop():
                     # LCD I/O error: refresh LCD screen
                     log_stderr('LCD I/O error: trying to recover..')
                     time.sleep(1)
-                    lcd.refresh_display(io_status)
-                time.sleep(1)
+                    lcd.refresh_display(io_status, force_init=True)
             except Exception:
+                log_stderr('General error')
                 log_stderr(traceback.format_exc())
-                time.sleep(1)
-                lcd.refresh_display(io_status)
 
 
 # initialize DB, I/O, signal handlers, tasks, message
