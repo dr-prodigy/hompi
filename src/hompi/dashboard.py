@@ -279,11 +279,10 @@ class Dashboard:
             PAUSED = False
             # initialize display
             if DISPLAY_TYPE == GPIO_CharLCD:
-                if self.lcd is None:
-                    self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5,
-                                            LCD_D6, LCD_D7,
-                                            LCD_COLUMNS, LCD_ROWS,
-                                            LCD_BACKLIGHT)
+                self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5,
+                                        LCD_D6, LCD_D7,
+                                        LCD_COLUMNS, LCD_ROWS,
+                                        LCD_BACKLIGHT)
             elif DISPLAY_TYPE == I2C_LCD:
                 self.lcd = I2C_CharLCD.lcd(I2C_ADDRESS, I2C_BUS)
             # load symbol font data

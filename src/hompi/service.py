@@ -292,14 +292,16 @@ def run_loop():
                 raise
             except OSError as err:
                 log_stderr(traceback.format_exc())
-                if err.errno:
-                    # LCD I/O error: refresh LCD screen
+                if err.errno == 5:
+                    # LCD I/O error: try to refresh LCD screen
                     log_stderr('LCD I/O error: trying to recover..')
                     time.sleep(1)
                     lcd.refresh_display(io_status, force_init=True)
+                else:
+                    log_stderr('Generic OS error')
             except Exception:
-                log_stderr('General error')
                 log_stderr(traceback.format_exc())
+                log_stderr('Generic error')
 
 
 # initialize DB, I/O, signal handlers, tasks, message
