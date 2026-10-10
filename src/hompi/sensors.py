@@ -75,7 +75,8 @@ class Sensors:
         else:
             self.device_file = None
 
-        # GPIO relay: BCM mode
+        # GPIO initialization
+        GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
 
         # relay control type
