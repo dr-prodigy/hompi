@@ -42,40 +42,88 @@ def _connect(path):
     return conn
 
 
+def _tmpfs_db_path():
+    return f'{config.TMPFS_PATH}{db_name}'
+
+
+def _sqlite_paths(path):
+    """Main DB path plus WAL/SHM sidecars."""
+    return (path, f'{path}-wal', f'{path}-shm')
+
+
+def _remove_sqlite_files(path):
+    for candidate in _sqlite_paths(path):
+        if os.path.exists(candidate):
+            os.remove(candidate)
+
+
+def _checkpoint(path):
+    """Flush WAL into the main DB file so a plain copy is consistent."""
+    if not os.path.exists(path):
+        return
+    conn = sqlite3.connect(path, timeout=SQLITE_TIMEOUT_SEC)
+    try:
+        conn.execute('pragma wal_checkpoint(TRUNCATE)')
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _copy_sqlite(src, dst):
+    """Copy a SQLite DB safely (checkpoint first; replace dst + sidecars)."""
+    _checkpoint(src)
+    _remove_sqlite_files(dst)
+    shutil.copy2(src, dst)
+
+
+def _ensure_runtime_db():
+    """Point ``db_path`` at the live DB; with TMPFS, seed it from persistent."""
+    global db_path, persistent_db_path
+    persistent_db_path = str(paths.db_file(db_name))
+    os.makedirs(os.path.dirname(persistent_db_path) or '.', exist_ok=True)
+
+    if not config.TMPFS_ENABLE:
+        db_path = persistent_db_path
+        return db_path
+
+    tmp_db_path = _tmpfs_db_path()
+    os.makedirs(os.path.dirname(tmp_db_path) or '.', exist_ok=True)
+    if os.path.exists(persistent_db_path):
+        print(f'Copying {persistent_db_path} to {tmp_db_path}')
+        _copy_sqlite(persistent_db_path, tmp_db_path)
+    else:
+        # Brand-new install: empty file on tmpfs; migrations create the schema
+        _remove_sqlite_files(tmp_db_path)
+        sqlite3.connect(tmp_db_path).close()
+    db_path = tmp_db_path
+    return db_path
+
+
 def __init__():
-    global db_path
-    if config.TMPFS_ENABLE:
-        # move db to temporary filesystem
-        tmp_db_path = f'{config.TMPFS_PATH}{db_name}'
-        if not os.path.exists(tmp_db_path):
-            print(f'Copying {db_path} to {tmp_db_path}')
-            shutil.copy2(db_path, tmp_db_path)
-        db_path = tmp_db_path
+    _ensure_runtime_db()
 
 
 def migrate():
+    """Seed TMPFS from persistent (if enabled), then run Caribou on that copy.
+
+    The persistent file is updated later by ``flush()`` when the daemon stops.
+    """
     global migrations_path, db_path, persistent_db_path
-    # Refresh paths in case HOMPI_HOME / cwd changed after import
-    persistent_db_path = str(paths.db_file(db_name))
-    if not config.TMPFS_ENABLE or db_path == persistent_db_path or not os.path.exists(db_path):
-        db_path = persistent_db_path
     migrations_path = str(paths.migrations_dir())
-    # Ensure parent exists for a brand-new DB
-    os.makedirs(os.path.dirname(db_path) or '.', exist_ok=True)
-    print(f'Applying migrations to {db_path}')
+    db_path = _ensure_runtime_db()
+
+    print(f'Applying migrations from {migrations_path} to {db_path}')
     caribou.upgrade(db_path, migrations_path)
 
 
 def flush():
+    """Copy the runtime (tmpfs) DB back to the persistent path on shutdown."""
     global db_path, persistent_db_path
     persistent_db_path = str(paths.db_file(db_name))
-    if config.TMPFS_ENABLE:
-        # move db back to persistent filesystem
+    if config.TMPFS_ENABLE and os.path.exists(db_path):
         print(f'Restoring {db_path} to {persistent_db_path}')
-        if os.path.exists(persistent_db_path):
-            os.remove(persistent_db_path)
-        shutil.copy2(db_path, persistent_db_path)
-        os.remove(db_path)
+        _copy_sqlite(db_path, persistent_db_path)
+        _remove_sqlite_files(db_path)
 
 
 class DatabaseManager(object):
@@ -83,11 +131,11 @@ class DatabaseManager(object):
         global db_path, persistent_db_path
         persistent_db_path = str(paths.db_file(db_name))
         if config.TMPFS_ENABLE:
-            # move db to temporary filesystem
-            tmp_db_path = f'{config.TMPFS_PATH}{db_name}'
-            if not os.path.exists(tmp_db_path):
-                src = db_path if os.path.exists(db_path) else persistent_db_path
-                shutil.copy2(src, tmp_db_path)
+            tmp_db_path = _tmpfs_db_path()
+            # After migrate(), tmpfs already holds the live DB. If the API
+            # process starts alone, seed from persistent when missing.
+            if not os.path.exists(tmp_db_path) and os.path.exists(persistent_db_path):
+                _copy_sqlite(persistent_db_path, tmp_db_path)
             db_path = tmp_db_path
         else:
             db_path = persistent_db_path
