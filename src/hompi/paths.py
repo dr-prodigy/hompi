@@ -39,18 +39,42 @@ def images_glob():
     return str(res_dir() / 'images' / '*.jpg')
 
 
+def _packaged_migrations_dir():
+    """Directory of Caribou migrations shipped inside the ``hompi`` package."""
+    import hompi.migrations as migrations_pkg
+
+    return Path(migrations_pkg.__file__).resolve().parent
+
+
+def _has_caribou_migrations(directory: Path) -> bool:
+    """True if *directory* contains Caribou migration modules (not just junk)."""
+    if not directory.is_dir():
+        return False
+    for path in directory.glob('*.py'):
+        name = path.name
+        if name == '__init__.py':
+            continue
+        # Caribou: UTC timestamp prefix, optional leading ``v``
+        stem = name[:-3]
+        if stem[:1] == 'v':
+            stem = stem[1:]
+        if len(stem) >= 14 and stem[:14].isdigit():
+            return True
+    return False
+
+
 def migrations_dir():
     """Filesystem path to Caribou migrations.
 
-    Prefers ``$HOMPI_HOME/migrations`` when present (override), otherwise the
-    migrations shipped inside the ``hompi`` package.
+    Prefers ``$HOMPI_HOME/migrations`` only when it contains real Caribou
+    migration scripts. An empty leftover directory (or one with only
+    ``__pycache__``) is ignored so packaged migrations under
+    ``hompi.migrations`` (``src/hompi/migrations`` in a source tree) are used.
     """
     override = data_dir() / 'migrations'
-    if override.is_dir() and any(override.iterdir()):
+    if _has_caribou_migrations(override):
         return override
-
-    import hompi.migrations as migrations_pkg
-    return Path(migrations_pkg.__file__).resolve().parent
+    return _packaged_migrations_dir()
 
 
 def resolve_under_data(path):
