@@ -164,7 +164,6 @@ def dashboard():
         title=config.HOMPI_ID or 'Hompi',
         status_url='{}/_dashboard_status'.format(API_PREFIX),
         api_key=API_KEY or '',
-        stale_secs=int(config.DASHBOARD_STALE_SECS),
         refresh_ms=15000,
     )
 

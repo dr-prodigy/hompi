@@ -330,11 +330,6 @@ HTTP API key
 Web dashboard
 -------------
 
-``DASHBOARD_STALE_SECS`` (int, default: ``120``)
-    Age threshold for ``last_update`` on the status dashboard
-    (``/hompi/`` / ``/hompi/dashboard``). When the daemon timestamp is older
-    than this many seconds, the page shows a warning (exclamation) icon.
-
 ``DASHBOARD_API_URL`` (string or ``null``, default: ``null``)
     Optional base URL of a remote hompi API used as the dashboard data
     source (same form as ``HOMPI_SERVERS`` entries, including the ``/hompi``
@@ -406,7 +401,6 @@ All configuration keys with types and defaults:
 | ``HOLIDAYS_COUNTRY``        | string        | ``IT``                        |
 | ``SPEECH_COMMAND``          | string        | espeak template               |
 | ``API_KEY``                 | string/null   | ``null``                      |
-| ``DASHBOARD_STALE_SECS``    | int           | ``120``                       |
 | ``DASHBOARD_API_URL``       | string/null   | ``null``                      |
 +-----------------------------+---------------+-------------------------------+
 

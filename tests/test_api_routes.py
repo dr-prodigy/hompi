@@ -54,7 +54,7 @@ def test_dashboard_page_renders(monkeypatch):
     # Browser always uses same-origin proxy (never embeds external host)
     assert b'/_dashboard_status' in rv.data
     assert b'api_key' in rv.data
-    assert b'Daemon status' in rv.data
+    assert b'Hompi status' in rv.data
 
 
 def test_dashboard_embeds_md5_api_key(monkeypatch):

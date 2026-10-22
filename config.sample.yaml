@@ -101,8 +101,6 @@ SPEECH_COMMAND: 'espeak -vit+m3 -s150 -k10 "{}"'
 API_KEY: null
 
 # --- Web dashboard ---
-# Mark last_update as stale (warning icon) after this many seconds
-DASHBOARD_STALE_SECS: 120
 # Optional remote API base for dashboard data (include /hompi prefix).
 # Proxied server-side via /_dashboard_status (avoids browser CORS).
 # null = local DB. Example: http://192.168.1.10:5000/hompi

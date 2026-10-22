@@ -87,8 +87,7 @@ Web dashboard
     ``GET /hompi/_dashboard_status`` (with ``?api_key=…`` when configured).
     It shows operation mode, program window / target temperature, heating
     status, TRV areas, peer slaves / external sensors, optional aphorism,
-    and last-update age (warning icon when older than
-    ``DASHBOARD_STALE_SECS``).
+    and last-update age (warning icon when older than 10 minutes).
 
 ``GET /hompi/_dashboard_status``
     JSON status feed for the dashboard. When ``DASHBOARD_API_URL`` is set,

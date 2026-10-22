@@ -322,7 +322,7 @@
 <body>
     <header>
         <h1>{{ title }}</h1>
-        <p class="subtitle">Daemon status</p>
+        <p class="subtitle">Hompi status</p>
         <p id="clock"></p>
     </header>
 
@@ -392,7 +392,8 @@
         const CONFIG = {
             statusUrl: {{ status_url | tojson }},
             apiKey: {{ api_key | tojson }},
-            staleSecs: {{ stale_secs | tojson }},
+            // Warn when last_update is older than 10 minutes
+            staleSecs: 600,
             refreshMs: {{ refresh_ms | tojson }}
         };
 
