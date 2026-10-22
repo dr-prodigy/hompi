@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'%3E%3C/path%3E%3Cpolyline points='9 22 9 12 15 12 15 22'%3E%3C/polyline%3E%3C/svg%3E">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --hover-bg: rgba(255, 255, 255, 0.15);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-warn: #fbbf24;
+            --accent-on: #f97316;
+            --accent-off: #64748b;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            padding: 2.5rem 1rem 1.5rem;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin: 0 0 0.5rem;
+            font-weight: 300;
+        }
+
+        header .subtitle {
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        header #clock {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.75rem;
+        }
+
+        .error-banner {
+            display: none;
+            width: 90%;
+            max-width: 1100px;
+            margin: 0 0 1.25rem;
+            padding: 0.85rem 1.25rem;
+            border-radius: 12px;
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            background: rgba(248, 113, 113, 0.12);
+            color: #fecaca;
+            text-align: center;
+        }
+
+        .error-banner.visible { display: block; }
+
+        main {
+            width: 90%;
+            max-width: 1100px;
+            padding-bottom: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card.status-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 160px;
+            gap: 0.35rem;
+        }
+
+        .card.status-tile:hover {
+            background: var(--hover-bg);
+            border-color: var(--accent-blue);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            transform: translateY(-3px);
+        }
+
+        .card .icon-wrap {
+            color: var(--accent-blue);
+            margin-bottom: 0.35rem;
+        }
+
+        .card .icon-wrap.warn { color: var(--accent-warn); }
+        .card .icon-wrap.heating-on { color: var(--accent-on); }
+        .card .icon-wrap.heating-warming { color: var(--accent-on); }
+        .card .icon-wrap.heating-cooling { color: var(--accent-blue); }
+        .card .icon-wrap.heating-off { color: var(--accent-off); }
+
+        /* on = filled flame; warming = outline only */
+        .card .icon-wrap.flame-filled svg {
+            fill: currentColor;
+            stroke: currentColor;
+        }
+        .card .icon-wrap.flame-outline svg {
+            fill: none;
+            stroke: currentColor;
+        }
+
+        .card .label {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 0.72rem;
+        }
+
+        .card .value {
+            font-size: 1.35rem;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .card .detail {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.15rem;
+        }
+
+        .section-card h2 {
+            margin: 0 0 1rem;
+            font-weight: 400;
+            font-size: 1.15rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: var(--accent-blue);
+        }
+
+        .section-card h2 i,
+        .section-card h2 svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .empty-hint {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .list-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.75rem 1.25rem;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .list-row .name {
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        .list-row .name svg {
+            width: 18px;
+            height: 18px;
+            color: var(--accent-blue);
+            flex-shrink: 0;
+        }
+
+        .list-row .meta {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+
+        .list-row.main-area {
+            border-color: rgba(56, 189, 248, 0.35);
+            background: rgba(56, 189, 248, 0.06);
+        }
+
+        .list-row.stale-area .name svg {
+            color: var(--accent-warn);
+        }
+
+        .badges {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-left: 0.35rem;
+            vertical-align: middle;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.12rem 0.45rem;
+            border-radius: 999px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .badge.main {
+            color: var(--accent-blue);
+            border-color: rgba(56, 189, 248, 0.45);
+        }
+
+        .badge.manual {
+            color: var(--accent-warn);
+            border-color: rgba(251, 191, 36, 0.45);
+        }
+
+        .badge.sensor {
+            color: var(--text-muted);
+        }
+
+        .list-row .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.85rem 1.25rem;
+            justify-content: flex-end;
+            text-align: right;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+            min-width: 4.5rem;
+        }
+
+        .stat .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .stat .stat-value {
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        .stat .stat-value.warn {
+            color: var(--accent-warn);
+        }
+
+        .aphorism-card blockquote {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 300;
+            line-height: 1.5;
+            font-style: italic;
+        }
+
+        .aphorism-card cite {
+            display: block;
+            margin-top: 0.85rem;
+            color: var(--accent-blue);
+            font-style: normal;
+            font-size: 0.9rem;
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 640px) {
+            header h1 { font-size: 1.7rem; }
+            .list-row {
+                grid-template-columns: 1fr;
+            }
+            .list-row .stats {
+                justify-content: flex-start;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{ title }}</h1>
+        <p class="subtitle">Hompi status</p>
+        <p id="clock"></p>
+    </header>
+
+    <div id="error-banner" class="error-banner" role="alert"></div>
+
+    <main>
+        <section class="status-grid">
+            <div class="card status-tile" id="mode-card">
+                <div class="icon-wrap" id="mode-icon-wrap">
+                    <i data-lucide="clock" width="48" height="48"></i>
+                </div>
+                <span class="label">Mode</span>
+                <span class="value" id="mode-desc">—</span>
+            </div>
+
+            <div class="card status-tile" id="program-card">
+                <div class="icon-wrap">
+                    <i data-lucide="target" width="48" height="48"></i>
+                </div>
+                <span class="label">Program</span>
+                <span class="value" id="program-temp">—</span>
+                <span class="detail" id="program-range">—</span>
+                <span class="detail" id="program-desc"></span>
+            </div>
+
+            <div class="card status-tile" id="heating-card">
+                <div class="icon-wrap" id="heating-icon-wrap">
+                    <i data-lucide="flame" width="48" height="48"></i>
+                </div>
+                <span class="label">Heating</span>
+                <span class="value" id="heating-status">—</span>
+                <span class="detail" id="int-temp"></span>
+            </div>
+
+            <div class="card status-tile" id="update-card">
+                <div class="icon-wrap" id="update-icon-wrap">
+                    <i data-lucide="refresh-cw" width="48" height="48"></i>
+                </div>
+                <span class="label">Last update</span>
+                <span class="value" id="last-update">—</span>
+                <span class="detail" id="last-update-age"></span>
+            </div>
+        </section>
+
+        <section class="card section-card" id="areas-section">
+            <h2><i data-lucide="layout-grid"></i> Areas</h2>
+            <div id="areas-list" class="list">
+                <p class="empty-hint">No areas reported.</p>
+            </div>
+        </section>
+
+        <section class="card section-card" id="slaves-section">
+            <h2><i data-lucide="server"></i> Slaves &amp; sensors</h2>
+            <div id="peers-list" class="list">
+                <p class="empty-hint">No external slaves or sensors.</p>
+            </div>
+        </section>
+
+        <section class="card section-card aphorism-card hidden" id="aphorism-section">
+            <h2><i data-lucide="quote"></i> Aphorism</h2>
+            <blockquote id="aphorism-text"></blockquote>
+            <cite id="aphorism-author"></cite>
+        </section>
+    </main>
+
+    <script>
+        const CONFIG = {
+            statusUrl: {{ status_url | tojson }},
+            apiKey: {{ api_key | tojson }},
+            // Warn when last_update is older than 10 minutes
+            staleSecs: 600,
+            refreshMs: {{ refresh_ms | tojson }}
+        };
+
+        function setIcon(wrap, name, size) {
+            wrap.innerHTML = '';
+            const icon = document.createElement('i');
+            icon.setAttribute('data-lucide', name);
+            if (size) {
+                icon.setAttribute('width', String(size));
+                icon.setAttribute('height', String(size));
+            }
+            wrap.appendChild(icon);
+        }
+
+        function modeIcon(modeDesc) {
+            const mode = (modeDesc || '').toLowerCase().replace(/\s+/g, '-');
+            if (mode === 'off') return 'power-off';
+            if (mode === 'manual') return 'hand';
+            if (mode === 'automatic' || mode === 'smartworking') return 'clock';
+            if (mode === 'winter-safe' || mode === 'wintersafe') return 'snowflake';
+            return 'circle-help';
+        }
+
+        /** Radiator with rising smoke (cooling) — lucide-style stroke SVG */
+        function radiatorSmokeSvg(size) {
+            const s = size || 48;
+            return (
+                '<svg xmlns="http://www.w3.org/2000/svg" width="' + s + '" height="' + s + '" ' +
+                'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+                'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                  // smoke rising
+                  '<path d="M7 8c.5-1 .5-2 0-3 .5-1 .5-2 0-3"/>' +
+                  '<path d="M12 7c.5-1 .5-2 0-3 .5-1 .5-2 0-3"/>' +
+                  '<path d="M17 8c.5-1 .5-2 0-3 .5-1 .5-2 0-3"/>' +
+                  // radiator body + fins
+                  '<rect x="3" y="10" width="18" height="9" rx="1"/>' +
+                  '<path d="M6 10v9M9 10v9M12 10v9M15 10v9M18 10v9"/>' +
+                  // feet
+                  '<path d="M5 19v2M19 19v2"/>' +
+                '</svg>'
+            );
+        }
+
+        function setHeatingIcon(wrap, status, size) {
+            const s = (status || '').toLowerCase();
+            wrap.classList.remove(
+                'heating-on', 'heating-warming', 'heating-cooling', 'heating-off',
+                'flame-filled', 'flame-outline'
+            );
+            wrap.innerHTML = '';
+
+            if (s === 'cooling') {
+                wrap.classList.add('heating-cooling');
+                wrap.innerHTML = radiatorSmokeSvg(size || 48);
+                return;
+            }
+
+            let name = 'circle-help';
+            if (s === 'on') {
+                name = 'flame';
+                wrap.classList.add('heating-on', 'flame-filled');
+            } else if (s === 'warming') {
+                name = 'flame';
+                wrap.classList.add('heating-warming', 'flame-outline');
+            } else if (s === 'off') {
+                // dash / underscore-like mark
+                name = 'minus';
+                wrap.classList.add('heating-off');
+            }
+
+            const icon = document.createElement('i');
+            icon.setAttribute('data-lucide', name);
+            icon.setAttribute('width', String(size || 48));
+            icon.setAttribute('height', String(size || 48));
+            wrap.appendChild(icon);
+        }
+
+        function formatHhmm(value) {
+            if (value === null || value === undefined || value === '') return '--:--';
+            const n = Number(value);
+            if (!Number.isFinite(n) || n <= 0) return '--:--';
+            const h = Math.floor(n / 100);
+            const m = Math.abs(n % 100);
+            return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+        }
+
+        function formatTemp(value) {
+            const n = Number(value);
+            if (!Number.isFinite(n) || n >= 900) return '—';
+            return n.toFixed(1) + ' °C';
+        }
+
+        function hasTrv(area) {
+            const name = area && area.mqtt_trv_name;
+            return !!(name && String(name).trim());
+        }
+
+        function hasAreaTarget(area) {
+            const n = Number(area && area.req_temp_c);
+            return hasTrv(area) && Number.isFinite(n) && n > 0;
+        }
+
+        function areaDeviceLabel(area) {
+            if (hasTrv(area)) {
+                const trv = String(area.mqtt_trv_name).trim();
+                const sensor = area.mqtt_temp_name ? String(area.mqtt_temp_name).trim() : '';
+                if (sensor && sensor !== trv) {
+                    return 'TRV ' + trv + ' · sensor ' + sensor;
+                }
+                return 'TRV ' + trv;
+            }
+            if (area && area.mqtt_temp_name) {
+                return 'Sensor ' + String(area.mqtt_temp_name).trim();
+            }
+            return 'No device';
+        }
+
+        function pad2(n) {
+            return String(n).padStart(2, '0');
+        }
+
+        /** Date as DD/MM/YYYY */
+        function formatDate(value) {
+            const d = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(d.getTime())) return '—';
+            return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear();
+        }
+
+        /** Timestamp as DD/MM/YYYY hh24.mm.ss */
+        function formatTimestamp(value) {
+            const d = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(d.getTime())) return '—';
+            return formatDate(d) + ' ' +
+                pad2(d.getHours()) + '.' +
+                pad2(d.getMinutes()) + '.' +
+                pad2(d.getSeconds());
+        }
+
+        function formatAge(iso) {
+            if (!iso) return { text: 'unknown', ageSecs: null };
+            const then = Date.parse(iso);
+            if (Number.isNaN(then)) return { text: iso, ageSecs: null };
+            const ageSecs = Math.max(0, Math.floor((Date.now() - then) / 1000));
+            let text;
+            if (ageSecs < 60) text = ageSecs + 's ago';
+            else if (ageSecs < 3600) text = Math.floor(ageSecs / 60) + 'm ago';
+            else if (ageSecs < 86400) text = Math.floor(ageSecs / 3600) + 'h ago';
+            else text = Math.floor(ageSecs / 86400) + 'd ago';
+            return { text: text, ageSecs: ageSecs, local: formatTimestamp(then) };
+        }
+
+        function capitalize(value) {
+            if (!value) return '—';
+            return String(value).charAt(0).toUpperCase() + String(value).slice(1);
+        }
+
+        function showError(message) {
+            const banner = document.getElementById('error-banner');
+            banner.textContent = message;
+            banner.classList.add('visible');
+        }
+
+        function clearError() {
+            document.getElementById('error-banner').classList.remove('visible');
+        }
+
+        function renderAreas(areas, mainAreaId) {
+            const section = document.getElementById('areas-section');
+            const container = document.getElementById('areas-list');
+            const entries = areas && typeof areas === 'object'
+                ? Object.keys(areas).map(function (id) {
+                    return { id: id, area: areas[id] || {} };
+                })
+                : [];
+
+            if (!entries.length) {
+                section.classList.add('hidden');
+                container.innerHTML = '<p class="empty-hint">No areas reported.</p>';
+                return;
+            }
+            section.classList.remove('hidden');
+
+            entries.sort(function (a, b) {
+                const na = Number(a.id);
+                const nb = Number(b.id);
+                if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) return na - nb;
+                return String(a.area.area || '').localeCompare(String(b.area.area || ''));
+            });
+
+            const mainId = mainAreaId == null ? null : String(mainAreaId);
+            container.innerHTML = entries.map(function (entry) {
+                const area = entry.area;
+                const name = area.area || 'Area';
+                const isMain = mainId !== null && String(entry.id) === mainId;
+                const isManual = !!area.manual_set;
+                const trv = hasTrv(area);
+                const age = formatAge(area.last_update);
+                const areaStale = age.ageSecs !== null && age.ageSecs > CONFIG.staleSecs;
+                const unavailable = !(Number.isFinite(Number(area.cur_temp_c)) && Number(area.cur_temp_c) < 900);
+
+                const badges = [];
+                if (isMain) badges.push('<span class="badge main">Main</span>');
+                if (isManual) badges.push('<span class="badge manual">Manual</span>');
+                if (!trv) badges.push('<span class="badge sensor">Sensor</span>');
+
+                const stats = [];
+                if (hasAreaTarget(area)) {
+                    stats.push(
+                        '<div class="stat"><span class="stat-label">Requested</span><span class="stat-value">' +
+                        escapeHtml(formatTemp(area.req_temp_c)) + '</span></div>'
+                    );
+                }
+                stats.push(
+                    '<div class="stat"><span class="stat-label">Current</span><span class="stat-value' +
+                    (unavailable ? ' warn' : '') + '">' +
+                    escapeHtml(formatTemp(area.cur_temp_c)) + '</span></div>'
+                );
+                if (area.last_update) {
+                    stats.push(
+                        '<div class="stat"><span class="stat-label">Updated</span><span class="stat-value' +
+                        (areaStale ? ' warn' : '') + '">' +
+                        escapeHtml(age.text) +
+                        (areaStale ? ' !' : '') +
+                        '</span></div>'
+                    );
+                }
+
+                const rowClass = ['list-row'];
+                if (isMain) rowClass.push('main-area');
+                if (areaStale || unavailable) rowClass.push('stale-area');
+
+                return (
+                    '<div class="' + rowClass.join(' ') + '">' +
+                      '<div>' +
+                        '<div class="name">' +
+                          '<i data-lucide="' + (trv ? 'thermometer' : 'radio') + '"></i>' +
+                          '<span>' + escapeHtml(name) + '</span>' +
+                          (badges.length ? '<span class="badges">' + badges.join('') + '</span>' : '') +
+                        '</div>' +
+                        '<div class="meta">' + escapeHtml(areaDeviceLabel(area)) + '</div>' +
+                      '</div>' +
+                      '<div class="stats">' + stats.join('') + '</div>' +
+                    '</div>'
+                );
+            }).join('');
+        }
+
+        function renderPeers(slaves, sensors) {
+            const section = document.getElementById('slaves-section');
+            const container = document.getElementById('peers-list');
+            const rows = [];
+
+            if (slaves && typeof slaves === 'object') {
+                Object.keys(slaves).sort().forEach(function (id) {
+                    const slave = slaves[id] || {};
+                    const age = formatAge(slave.last_update);
+                    rows.push(
+                        '<div class="list-row">' +
+                          '<div>' +
+                            '<div class="name"><i data-lucide="server"></i><span>' + escapeHtml(id) + '</span></div>' +
+                            '<div class="meta">Slave' +
+                              (slave.mode_desc ? ' · ' + escapeHtml(slave.mode_desc) : '') +
+                              (slave.heating_status ? ' · heating ' + escapeHtml(slave.heating_status) : '') +
+                            '</div>' +
+                          '</div>' +
+                          '<div class="stats">' +
+                            '<div class="stat"><span class="stat-label">Temp</span><span class="stat-value">' +
+                              escapeHtml(formatTemp(slave.int_temp_c)) + '</span></div>' +
+                            '<div class="stat"><span class="stat-label">Updated</span><span class="stat-value">' +
+                              escapeHtml(age.text) + '</span></div>' +
+                          '</div>' +
+                        '</div>'
+                    );
+                });
+            }
+
+            if (sensors && typeof sensors === 'object') {
+                Object.keys(sensors).sort().forEach(function (name) {
+                    const sensor = sensors[name] || {};
+                    const detailParts = [];
+                    if (sensor.type) detailParts.push(sensor.type);
+                    if (sensor.location) detailParts.push(sensor.location);
+                    rows.push(
+                        '<div class="list-row">' +
+                          '<div>' +
+                            '<div class="name"><i data-lucide="radio"></i><span>' + escapeHtml(name) + '</span></div>' +
+                            '<div class="meta">External sensor' +
+                              (detailParts.length ? ' · ' + escapeHtml(detailParts.join(' · ')) : '') +
+                            '</div>' +
+                          '</div>' +
+                          '<div class="stats">' +
+                            '<div class="stat"><span class="stat-label">Value</span><span class="stat-value">' +
+                              escapeHtml(formatSensorValue(sensor)) + '</span></div>' +
+                          '</div>' +
+                        '</div>'
+                    );
+                });
+            }
+
+            if (!rows.length) {
+                section.classList.add('hidden');
+                container.innerHTML = '<p class="empty-hint">No external slaves or sensors.</p>';
+                return;
+            }
+            section.classList.remove('hidden');
+            container.innerHTML = rows.join('');
+        }
+
+        function formatSensorValue(sensor) {
+            if (sensor == null) return '—';
+            if (typeof sensor.temp_c === 'number') return formatTemp(sensor.temp_c);
+            if (typeof sensor.value !== 'undefined') return String(sensor.value);
+            if (typeof sensor.state !== 'undefined') return String(sensor.state);
+            try { return JSON.stringify(sensor); } catch (e) { return '—'; }
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function renderStatus(data) {
+            const modeDesc = data.mode_desc || '—';
+            document.getElementById('mode-desc').textContent = modeDesc;
+            setIcon(document.getElementById('mode-icon-wrap'), modeIcon(modeDesc), 48);
+
+            const reqTemp = formatTemp(data.req_temp_c);
+            const startN = Number(data.req_start_time);
+            const endN = Number(data.req_end_time);
+            const hasWindow = Number.isFinite(startN) && Number.isFinite(endN) && (startN > 0 || endN > 0);
+            document.getElementById('program-temp').textContent =
+                (data.req_area_temps && String(data.req_area_temps).trim())
+                    ? String(data.req_area_temps).trim() + ' °C'
+                    : reqTemp;
+            document.getElementById('program-range').textContent = hasWindow
+                ? formatHhmm(startN) + ' → ' + formatHhmm(endN)
+                : 'No time window';
+            document.getElementById('program-desc').textContent = data.req_temp_desc
+                ? String(data.req_temp_desc)
+                : '';
+
+            const heating = (data.heating_status || '—').toLowerCase();
+            document.getElementById('heating-status').textContent = capitalize(heating);
+            setHeatingIcon(document.getElementById('heating-icon-wrap'), heating, 48);
+
+            const intTemp = document.getElementById('int-temp');
+            if (typeof data.int_temp_c === 'number' && data.int_temp_c < 900) {
+                intTemp.textContent = 'Indoor ' + formatTemp(data.int_temp_c);
+            } else {
+                intTemp.textContent = '';
+            }
+
+            const age = formatAge(data.last_update);
+            document.getElementById('last-update').textContent = age.local || data.last_update || '—';
+            document.getElementById('last-update-age').textContent = age.text || '';
+            const updateWrap = document.getElementById('update-icon-wrap');
+            const stale = age.ageSecs !== null && age.ageSecs > CONFIG.staleSecs;
+            setIcon(updateWrap, stale ? 'alert-triangle' : 'refresh-cw', 48);
+            updateWrap.classList.toggle('warn', stale);
+
+            renderAreas(data.areas, data.main_area_id);
+            renderPeers(data.hompi_slaves, data.hompi_ext_sensors);
+
+            const aphorismSection = document.getElementById('aphorism-section');
+            const text = (data.aphorism_text || '').trim();
+            if (text) {
+                document.getElementById('aphorism-text').textContent = text;
+                document.getElementById('aphorism-author').textContent =
+                    (data.aphorism_author || '').trim()
+                        ? '— ' + String(data.aphorism_author).trim()
+                        : '';
+                aphorismSection.classList.remove('hidden');
+            } else {
+                aphorismSection.classList.add('hidden');
+            }
+
+            lucide.createIcons();
+        }
+
+        async function fetchStatus() {
+            const url = new URL(CONFIG.statusUrl, window.location.origin);
+            if (CONFIG.apiKey) {
+                url.searchParams.set('api_key', CONFIG.apiKey);
+            }
+            const response = await fetch(url.toString(), { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error('Status request failed (' + response.status + ')');
+            }
+            return response.json();
+        }
+
+        async function refresh() {
+            try {
+                const data = await fetchStatus();
+                clearError();
+                renderStatus(data);
+            } catch (err) {
+                showError(err.message || 'Unable to load daemon status');
+            }
+        }
+
+        function updateClock() {
+            document.getElementById('clock').textContent = formatTimestamp(new Date());
+        }
+
+        lucide.createIcons();
+        updateClock();
+        setInterval(updateClock, 1000);
+        refresh();
+        setInterval(refresh, CONFIG.refreshMs);
+    </script>
+</body>
+</html>
