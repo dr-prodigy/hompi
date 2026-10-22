@@ -77,7 +77,15 @@ def _copy_sqlite(src, dst):
 
 
 def _ensure_runtime_db():
-    """Point ``db_path`` at the live DB; with TMPFS, seed it from persistent."""
+    """Point ``db_path`` at the live DB.
+
+    With TMPFS enabled:
+    - if the tmpfs copy is missing, seed it from the persistent file;
+    - if it already exists, keep it (it may hold unflushed API/runtime writes).
+
+    ``flush()`` writes tmpfs back to persistent and removes the temp files, so
+    the next clean start seeds again from disk.
+    """
     global db_path, persistent_db_path
     persistent_db_path = str(paths.db_file(db_name))
     os.makedirs(os.path.dirname(persistent_db_path) or '.', exist_ok=True)
@@ -88,7 +96,9 @@ def _ensure_runtime_db():
 
     tmp_db_path = _tmpfs_db_path()
     os.makedirs(os.path.dirname(tmp_db_path) or '.', exist_ok=True)
-    if os.path.exists(persistent_db_path):
+    if os.path.exists(tmp_db_path):
+        print(f'Using existing tmpfs DB {tmp_db_path}')
+    elif os.path.exists(persistent_db_path):
         print(f'Copying {persistent_db_path} to {tmp_db_path}')
         _copy_sqlite(persistent_db_path, tmp_db_path)
     else:
@@ -104,9 +114,9 @@ def __init__():
 
 
 def migrate():
-    """Seed TMPFS from persistent (if enabled), then run Caribou on that copy.
+    """Seed TMPFS from persistent when missing, then run Caribou on the live DB.
 
-    The persistent file is updated later by ``flush()`` when the daemon stops.
+    The persistent file is updated by ``flush()`` when the daemon stops.
     """
     global migrations_path, db_path, persistent_db_path
     migrations_path = str(paths.migrations_dir())
@@ -120,10 +130,14 @@ def flush():
     """Copy the runtime (tmpfs) DB back to the persistent path on shutdown."""
     global db_path, persistent_db_path
     persistent_db_path = str(paths.db_file(db_name))
-    if config.TMPFS_ENABLE and os.path.exists(db_path):
-        print(f'Restoring {db_path} to {persistent_db_path}')
-        _copy_sqlite(db_path, persistent_db_path)
-        _remove_sqlite_files(db_path)
+    if not config.TMPFS_ENABLE:
+        return
+    # Prefer the configured tmpfs path (API and daemon share it)
+    runtime = db_path if os.path.exists(db_path) else _tmpfs_db_path()
+    if os.path.exists(runtime):
+        print(f'Restoring {runtime} to {persistent_db_path}')
+        _copy_sqlite(runtime, persistent_db_path)
+        _remove_sqlite_files(runtime)
 
 
 class DatabaseManager(object):

@@ -17,8 +17,22 @@ export HOMPI_HOME="${HOMPI_HOME:-/home/pi/hompi}"
 
 _kill_pidfile() {
   local pidfile="$1"
+  local pid
   if [ -f "$pidfile" ]; then
-    kill "$(cat "$pidfile")" 2>/dev/null || true
+    pid="$(cat "$pidfile")"
+    kill "$pid" 2>/dev/null || true
+    # Wait for clean exit so the daemon can flush the TMPFS DB to disk
+    local i
+    for i in $(seq 1 50); do
+      if ! kill -0 "$pid" 2>/dev/null; then
+        break
+      fi
+      sleep 0.1
+    done
+    if kill -0 "$pid" 2>/dev/null; then
+      echo "hompi pid $pid did not exit; sending SIGKILL" >&2
+      kill -KILL "$pid" 2>/dev/null || true
+    fi
     rm -f "$pidfile"
   fi
 }

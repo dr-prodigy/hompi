@@ -523,6 +523,12 @@ def sighup_handler(signal, frame):
 def sigterm_handler(signal, frame):
     log_stdout('HOMPI', 'got SIGTERM - exiting.', LOG_INFO)
     log_data('stop')
+    # Persist TMPFS DB before exit — must not rely on the main-loop except
+    # block, which may not be active when the signal arrives.
+    try:
+        db.flush()
+    except Exception:
+        log_stderr(traceback.format_exc())
     pidfile.remove_pid(pidfile.daemon_pid_path())
     sys.exit(0)
 
