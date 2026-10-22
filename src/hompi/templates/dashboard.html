@@ -123,7 +123,19 @@
 
         .card .icon-wrap.warn { color: var(--accent-warn); }
         .card .icon-wrap.heating-on { color: var(--accent-on); }
+        .card .icon-wrap.heating-warming { color: var(--accent-on); }
+        .card .icon-wrap.heating-cooling { color: var(--accent-blue); }
         .card .icon-wrap.heating-off { color: var(--accent-off); }
+
+        /* on = filled flame; warming = outline only */
+        .card .icon-wrap.flame-filled svg {
+            fill: currentColor;
+            stroke: currentColor;
+        }
+        .card .icon-wrap.flame-outline svg {
+            fill: none;
+            stroke: currentColor;
+        }
 
         .card .label {
             color: var(--text-muted);
@@ -396,21 +408,66 @@
         }
 
         function modeIcon(modeDesc) {
-            const mode = (modeDesc || '').toLowerCase();
+            const mode = (modeDesc || '').toLowerCase().replace(/\s+/g, '-');
             if (mode === 'off') return 'power-off';
             if (mode === 'manual') return 'hand';
             if (mode === 'automatic' || mode === 'smartworking') return 'clock';
+            if (mode === 'winter-safe' || mode === 'wintersafe') return 'snowflake';
             return 'circle-help';
         }
 
-        function heatingIcon(status) {
-            switch ((status || '').toLowerCase()) {
-                case 'on': return 'flame';
-                case 'warming': return 'thermometer-sun';
-                case 'cooling': return 'thermometer-snowflake';
-                case 'off': return 'circle-off';
-                default: return 'circle-help';
+        /** Radiator with rising smoke (cooling) — lucide-style stroke SVG */
+        function radiatorSmokeSvg(size) {
+            const s = size || 48;
+            return (
+                '<svg xmlns="http://www.w3.org/2000/svg" width="' + s + '" height="' + s + '" ' +
+                'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+                'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                  // smoke rising
+                  '<path d="M7 8c.5-1 .5-2 0-3 .5-1 .5-2 0-3"/>' +
+                  '<path d="M12 7c.5-1 .5-2 0-3 .5-1 .5-2 0-3"/>' +
+                  '<path d="M17 8c.5-1 .5-2 0-3 .5-1 .5-2 0-3"/>' +
+                  // radiator body + fins
+                  '<rect x="3" y="10" width="18" height="9" rx="1"/>' +
+                  '<path d="M6 10v9M9 10v9M12 10v9M15 10v9M18 10v9"/>' +
+                  // feet
+                  '<path d="M5 19v2M19 19v2"/>' +
+                '</svg>'
+            );
+        }
+
+        function setHeatingIcon(wrap, status, size) {
+            const s = (status || '').toLowerCase();
+            wrap.classList.remove(
+                'heating-on', 'heating-warming', 'heating-cooling', 'heating-off',
+                'flame-filled', 'flame-outline'
+            );
+            wrap.innerHTML = '';
+
+            if (s === 'cooling') {
+                wrap.classList.add('heating-cooling');
+                wrap.innerHTML = radiatorSmokeSvg(size || 48);
+                return;
             }
+
+            let name = 'circle-help';
+            if (s === 'on') {
+                name = 'flame';
+                wrap.classList.add('heating-on', 'flame-filled');
+            } else if (s === 'warming') {
+                name = 'flame';
+                wrap.classList.add('heating-warming', 'flame-outline');
+            } else if (s === 'off') {
+                // dash / underscore-like mark
+                name = 'minus';
+                wrap.classList.add('heating-off');
+            }
+
+            const icon = document.createElement('i');
+            icon.setAttribute('data-lucide', name);
+            icon.setAttribute('width', String(size || 48));
+            icon.setAttribute('height', String(size || 48));
+            wrap.appendChild(icon);
         }
 
         function formatHhmm(value) {
@@ -683,11 +740,7 @@
 
             const heating = (data.heating_status || '—').toLowerCase();
             document.getElementById('heating-status').textContent = capitalize(heating);
-            const heatingWrap = document.getElementById('heating-icon-wrap');
-            setIcon(heatingWrap, heatingIcon(heating), 48);
-            heatingWrap.classList.remove('heating-on', 'heating-off');
-            if (heating === 'on' || heating === 'warming') heatingWrap.classList.add('heating-on');
-            if (heating === 'off') heatingWrap.classList.add('heating-off');
+            setHeatingIcon(document.getElementById('heating-icon-wrap'), heating, 48);
 
             const intTemp = document.getElementById('int-temp');
             if (typeof data.int_temp_c === 'number' && data.int_temp_c < 900) {
