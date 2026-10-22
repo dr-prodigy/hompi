@@ -44,6 +44,8 @@ MODULE_TRV: true
 MQTT_BROKER: localhost
 MQTT_PORT: 1883
 MQTT_BASE_TOPIC: zigbee2mqtt
+# Listen to MQTT updates but do not publish setpoints to TRVs
+MQTT_READONLY: false
 TRV_DATA_EXPIRATION_SECS: 3600  # 1 hour
 TRV_KEEPALIVE: true
 # Thermostat modes (bitmask OR): NONE=0, Main=1, TRV=2, External servers=4
@@ -98,3 +100,7 @@ API_KEY: null
 # --- Web dashboard ---
 # Mark last_update as stale (warning icon) after this many seconds
 DASHBOARD_STALE_SECS: 120
+# Optional remote API base for dashboard data (include /hompi prefix).
+# Proxied server-side via /_dashboard_status (avoids browser CORS).
+# null = local DB. Example: http://192.168.1.10:5000/hompi
+DASHBOARD_API_URL: null

@@ -134,6 +134,14 @@ class MQTT:
             payload = (area['mqtt_trv_publish_payload']
                       .replace('**TEMP**', str(int(req_temp_c)))
                       .replace('**TEMP_CAL**', str(int(calibration))))
+            if config.MQTT_READONLY:
+                # Listen-only: keep subscriptions, never command devices
+                log_stdout('MQTT',
+                           'Area: {} - Publish SKIPPED (MQTT_READONLY): '
+                           'req. temp.: {}, calibration: {} -> ({})'.format(
+                               area['area_name'], req_temp_c, calibration, topic),
+                           LOG_INFO)
+                return True
             if self.__connected:
                 if self.__client.publish(topic, payload).is_published():
                     log_stdout('MQTT', 'Area: {} - Publish: req. temp.: {}, calibration: {}'.

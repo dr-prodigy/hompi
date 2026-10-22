@@ -83,11 +83,19 @@ Web dashboard
 ``GET /hompi/``
 ``GET /hompi/dashboard``
     Serves the status dashboard HTML page (same visual language as the CasaJina
-    command-center style). The page polls ``GET /hompi/_get_status`` from the
-    browser, appending ``?api_key=…`` when ``API_KEY`` is configured. It shows
-    operation mode, program window / target temperature, heating status, TRV
-    areas, peer slaves / external sensors, optional aphorism, and last-update
-    age (warning icon when older than ``DASHBOARD_STALE_SECS``).
+    command-center style). The page polls same-origin
+    ``GET /hompi/_dashboard_status`` (with ``?api_key=…`` when configured).
+    It shows operation mode, program window / target temperature, heating
+    status, TRV areas, peer slaves / external sensors, optional aphorism,
+    and last-update age (warning icon when older than
+    ``DASHBOARD_STALE_SECS``).
+
+``GET /hompi/_dashboard_status``
+    JSON status feed for the dashboard. When ``DASHBOARD_API_URL`` is set,
+    this instance proxies ``GET {DASHBOARD_API_URL}/_get_status`` server-side
+    (avoids browser CORS). Otherwise returns the same payload as
+    ``/_get_status`` from the local database. Requires ``api_key`` when
+    ``API_KEY`` is configured. Remote failures return ``502``.
 
 Read endpoints (GET)
 --------------------

@@ -53,6 +53,8 @@ _DEFAULTS = {
     'MQTT_BROKER': 'localhost',
     'MQTT_PORT': 1883,
     'MQTT_BASE_TOPIC': 'zigbee2mqtt',
+    # Subscribe/listen only; skip TRV setpoint publishes
+    'MQTT_READONLY': False,
     'TRV_DATA_EXPIRATION_SECS': 3600,
     'TRV_KEEPALIVE': True,
     'THERMOSTAT_MODE': 3,
@@ -87,6 +89,8 @@ _DEFAULTS = {
     'API_KEY': None,
     # Web dashboard: mark last_update as stale after this many seconds
     'DASHBOARD_STALE_SECS': 120,
+    # Optional external API base (e.g. http://host:5000/hompi); null = local
+    'DASHBOARD_API_URL': None,
     # Mirror former config.py constants for utils.py compatibility
     'LOG_GPIO': LOG_GPIO,
     'LOG_DEBUG': LOG_DEBUG,
@@ -145,6 +149,10 @@ def _coerce(values):
         data['TELEGRAM_TOKEN'] = None
     if data.get('TELEGRAM_CHATID') == '':
         data['TELEGRAM_CHATID'] = None
+    if data.get('DASHBOARD_API_URL') == '':
+        data['DASHBOARD_API_URL'] = None
+    elif data.get('DASHBOARD_API_URL'):
+        data['DASHBOARD_API_URL'] = str(data['DASHBOARD_API_URL']).rstrip('/')
     return data
 
 

@@ -156,6 +156,12 @@ Climate, MQTT, and TRV
 ``MQTT_BASE_TOPIC`` (string, default: ``zigbee2mqtt``)
     Topic prefix; TRV topics are ``{MQTT_BASE_TOPIC}/{device}/…``.
 
+``MQTT_READONLY`` (bool, default: ``false``)
+    When ``true``, the daemon still connects and subscribes to MQTT topics
+    (temperatures / TRV state) but **never publishes** setpoints or other
+    commands to devices (``client.publish`` is skipped). Useful for observing
+    a live broker without driving valves.
+
 ``TRV_DATA_EXPIRATION_SECS`` (integer, default: ``3600``)
     Ignore TRV area data older than this many seconds for heating decisions and
     Home Assistant staleness icons.
@@ -329,6 +335,16 @@ Web dashboard
     (``/hompi/`` / ``/hompi/dashboard``). When the daemon timestamp is older
     than this many seconds, the page shows a warning (exclamation) icon.
 
+``DASHBOARD_API_URL`` (string or ``null``, default: ``null``)
+    Optional base URL of a remote hompi API used as the dashboard data
+    source (same form as ``HOMPI_SERVERS`` entries, including the ``/hompi``
+    prefix), e.g. ``http://192.168.1.10:5000/hompi``. The browser always
+    calls same-origin ``/hompi/_dashboard_status``; that endpoint proxies
+    to ``{DASHBOARD_API_URL}/_get_status`` server-side (with ``api_key``)
+    so cross-origin / CORS ``Failed to fetch`` is avoided. When ``null``
+    or empty, status is read from this instance's database. A trailing
+    slash is stripped.
+
 Quick reference
 ---------------
 
@@ -361,6 +377,7 @@ All configuration keys with types and defaults:
 | ``MQTT_BROKER``             | string        | ``localhost``                 |
 | ``MQTT_PORT``               | int           | ``1883``                      |
 | ``MQTT_BASE_TOPIC``         | string        | ``zigbee2mqtt``               |
+| ``MQTT_READONLY``           | bool          | ``false``                     |
 | ``TRV_DATA_EXPIRATION_SECS``| int           | ``3600``                      |
 | ``TRV_KEEPALIVE``           | bool          | ``true``                      |
 | ``THERMOSTAT_MODE``         | int           | ``3``                         |
@@ -390,6 +407,7 @@ All configuration keys with types and defaults:
 | ``SPEECH_COMMAND``          | string        | espeak template               |
 | ``API_KEY``                 | string/null   | ``null``                      |
 | ``DASHBOARD_STALE_SECS``    | int           | ``120``                       |
+| ``DASHBOARD_API_URL``       | string/null   | ``null``                      |
 +-----------------------------+---------------+-------------------------------+
 
 Related setup (not in config.yaml)

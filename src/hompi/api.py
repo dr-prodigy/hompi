@@ -19,6 +19,7 @@
 
 from flask import Blueprint
 from flask import Flask
+from flask import Response
 from flask import render_template
 from flask import request
 from flask import send_file
@@ -29,6 +30,7 @@ import json
 import signal
 import hashlib
 import os
+import urllib.error
 import urllib.request
 from PIL import Image
 
@@ -124,18 +126,68 @@ def _get_remote_address(server):
 
 
 # READER METHODS (GET)
+def _local_status_json():
+    """Return gm_output status JSON string from the local database."""
+    dbmgr = db.DatabaseManager()
+    return dbmgr.query("SELECT data FROM gm_output").fetchone()[0]
+
+
+def _fetch_dashboard_status():
+    """Status JSON for the dashboard: remote ``DASHBOARD_API_URL`` or local.
+
+    Fetched server-side so the browser stays same-origin (avoids CORS
+    ``Failed to fetch`` when ``DASHBOARD_API_URL`` points at another host).
+    """
+    base = config.DASHBOARD_API_URL
+    if not base:
+        return _local_status_json()
+
+    url = '{}/_get_status'.format(base.rstrip('/'))
+    if API_KEY:
+        url = '{}?api_key={}'.format(url, API_KEY)
+    with urllib.request.urlopen(url, timeout=5) as resp:
+        body = resp.read()
+    if isinstance(body, bytes):
+        body = body.decode('utf-8')
+    return body
+
+
 @api.route('/', methods=['GET'])
 @api.route('/dashboard', methods=['GET'])
 def dashboard():
-    """Status dashboard UI (queries ``/_get_status`` from the browser)."""
+    """Status dashboard UI (polls same-origin ``/_dashboard_status``)."""
+    # API_KEY is already the MD5 hex (uppercase) of config.API_KEY — same
+    # value clients must pass to ``_check_sharedkey``; do not re-hash here.
+    # Browser always hits this instance; external URL is proxied server-side.
     return render_template(
         'dashboard.html',
         title=config.HOMPI_ID or 'Hompi',
-        status_url='{}/_get_status'.format(API_PREFIX),
+        status_url='{}/_dashboard_status'.format(API_PREFIX),
         api_key=API_KEY or '',
         stale_secs=int(config.DASHBOARD_STALE_SECS),
         refresh_ms=15000,
     )
+
+
+@api.route('/_dashboard_status', methods=['GET'])
+def dashboard_status():
+    """Same-origin status feed for the dashboard (proxies ``DASHBOARD_API_URL``)."""
+    if not _check_sharedkey():
+        return "Forbidden", 403
+    try:
+        return Response(_fetch_dashboard_status(), mimetype='application/json')
+    except urllib.error.HTTPError as exc:
+        print("dashboard_status(): remote HTTP {}".format(exc.code))
+        print(traceback.format_exc())
+        return "Error", 502
+    except urllib.error.URLError as exc:
+        print("dashboard_status(): remote unreachable: {}".format(exc))
+        print(traceback.format_exc())
+        return "Error", 502
+    except Exception:
+        print("dashboard_status(): error")
+        print(traceback.format_exc())
+        return "Error", 500
 
 
 @api.route('/_get_system_info', methods=['GET'])
@@ -151,9 +203,8 @@ def get_status():
     if not _check_sharedkey():
         return "Forbidden", 403
 
-    dbmgr = db.DatabaseManager()
     try:
-        return dbmgr.query("SELECT data FROM gm_output").fetchone()[0]
+        return Response(_local_status_json(), mimetype='application/json')
     except Exception:
         print("get_status(): error")
         print(traceback.format_exc())
