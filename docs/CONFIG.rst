@@ -56,9 +56,12 @@ Temporary filesystem (SQLite)
 -----------------------------
 
 ``TMPFS_ENABLE`` (bool, default: ``true``)
-    When enabled, startup copies ``db/hompi.sqlite`` to ``TMPFS_PATH``, Caribou
-    migrations run on that temporary copy, and ``db.flush()`` writes it back to
-    the persistent file when the daemon stops. Reduces SD-card wear on
+    When enabled, the live DB is ``$TMPFS_PATH/hompi.sqlite``. On first start
+    (or after a clean ``flush()``) it is seeded from ``db/hompi.sqlite``;
+    Caribou migrations run on that copy. An existing tmpfs file is kept across
+    restarts so API/runtime writes are not wiped if shutdown was unclean.
+    ``db.flush()`` (on SIGTERM / daemon stop) writes tmpfs back to the
+    persistent file and removes the temp copy. Reduces SD-card wear on
     Raspberry Pi.
 
 ``TMPFS_PATH`` (string, default: ``/tmp/``)
