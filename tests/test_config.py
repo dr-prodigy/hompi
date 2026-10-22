@@ -34,6 +34,7 @@ def test_load_settings_from_sample(tmp_path):
     assert settings.THUMB_SIZE == (800, 800)
     assert settings.BUTTONS[0] == [18, "Gate"]
     assert settings.API_KEY is None
+    assert settings.DASHBOARD_STALE_SECS == 120
     assert settings.TELEGRAM_TOKEN is None
     assert settings.TELEGRAM_CHATID is None
     assert settings._config_path == str(cfg)

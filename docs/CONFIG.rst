@@ -316,8 +316,18 @@ HTTP API key
     Optional pre-shared secret for the web API. When set, clients must pass
     ``?api_key=<MD5_HEX_UPPERCASE>`` where the hash is computed from this
     string (see `docs/API.rst`__). An empty string is treated as unset.
+    The status dashboard injects this hash into its browser calls to
+    ``/_get_status``.
 
     .. __: API.rst
+
+Web dashboard
+-------------
+
+``DASHBOARD_STALE_SECS`` (int, default: ``120``)
+    Age threshold for ``last_update`` on the status dashboard
+    (``/hompi/`` / ``/hompi/dashboard``). When the daemon timestamp is older
+    than this many seconds, the page shows a warning (exclamation) icon.
 
 Quick reference
 ---------------
@@ -379,6 +389,7 @@ All configuration keys with types and defaults:
 | ``HOLIDAYS_COUNTRY``        | string        | ``IT``                        |
 | ``SPEECH_COMMAND``          | string        | espeak template               |
 | ``API_KEY``                 | string/null   | ``null``                      |
+| ``DASHBOARD_STALE_SECS``    | int           | ``120``                       |
 +-----------------------------+---------------+-------------------------------+
 
 Related setup (not in config.yaml)

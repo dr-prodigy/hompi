@@ -82,7 +82,7 @@ hompi-api = "hompi.api:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-hompi = ["migrations/*", "data/*"]
+hompi = ["migrations/*", "data/*", "templates/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

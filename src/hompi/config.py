@@ -85,6 +85,8 @@ _DEFAULTS = {
     'HOLIDAYS_COUNTRY': 'IT',
     'SPEECH_COMMAND': 'espeak -vit+m3 -s150 -k10 "{}"',
     'API_KEY': None,
+    # Web dashboard: mark last_update as stale after this many seconds
+    'DASHBOARD_STALE_SECS': 120,
     # Mirror former config.py constants for utils.py compatibility
     'LOG_GPIO': LOG_GPIO,
     'LOG_DEBUG': LOG_DEBUG,

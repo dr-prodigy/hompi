@@ -77,6 +77,18 @@ Response conventions
 | 500         | Database or internal error (reads). Body: ``Error``.          |
 +-------------+---------------------------------------------------------------+
 
+Web dashboard
+-------------
+
+``GET /hompi/``
+``GET /hompi/dashboard``
+    Serves the status dashboard HTML page (same visual language as the CasaJina
+    command-center style). The page polls ``GET /hompi/_get_status`` from the
+    browser, appending ``?api_key=…`` when ``API_KEY`` is configured. It shows
+    operation mode, program window / target temperature, heating status, TRV
+    areas, peer slaves / external sensors, optional aphorism, and last-update
+    age (warning icon when older than ``DASHBOARD_STALE_SECS``).
+
 Read endpoints (GET)
 --------------------
 

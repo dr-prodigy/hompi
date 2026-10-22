@@ -19,6 +19,7 @@
 
 from flask import Blueprint
 from flask import Flask
+from flask import render_template
 from flask import request
 from flask import send_file
 from werkzeug import exceptions
@@ -42,7 +43,12 @@ from . import pidfile
 API_PREFIX = '/hompi'
 
 app = Flask(__name__)
-api = Blueprint('api', __name__, url_prefix=API_PREFIX)
+api = Blueprint(
+    'api',
+    __name__,
+    url_prefix=API_PREFIX,
+    template_folder='templates',
+)
 
 
 class RestoreMountPrefixMiddleware:
@@ -118,6 +124,20 @@ def _get_remote_address(server):
 
 
 # READER METHODS (GET)
+@api.route('/', methods=['GET'])
+@api.route('/dashboard', methods=['GET'])
+def dashboard():
+    """Status dashboard UI (queries ``/_get_status`` from the browser)."""
+    return render_template(
+        'dashboard.html',
+        title=config.HOMPI_ID or 'Hompi',
+        status_url='{}/_get_status'.format(API_PREFIX),
+        api_key=API_KEY or '',
+        stale_secs=int(config.DASHBOARD_STALE_SECS),
+        refresh_ms=15000,
+    )
+
+
 @api.route('/_get_system_info', methods=['GET'])
 def get_system_info():
     if not _check_sharedkey():

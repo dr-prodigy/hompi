@@ -8,6 +8,8 @@ def test_routes_use_hompi_prefix():
     rules = {rule.rule for rule in app.url_map.iter_rules()}
     assert '{}/_get_status'.format(API_PREFIX) in rules
     assert '/_get_status' not in rules
+    assert '{}/dashboard'.format(API_PREFIX) in rules
+    assert '{}/'.format(API_PREFIX) in rules
 
 
 def test_full_path_matches_like_flask_debug():
@@ -30,3 +32,13 @@ def test_stripped_mount_matches_like_lighttpd():
     )
     assert rv.status_code == 200
     assert rv.data == b'Ok'
+
+
+def test_dashboard_page_renders():
+    client = app.test_client()
+    rv = client.get('{}/dashboard'.format(API_PREFIX))
+    assert rv.status_code == 200
+    assert b'text/html' in rv.content_type.encode()
+    assert b'_get_status' in rv.data
+    assert b'api_key' in rv.data
+    assert b'Daemon status' in rv.data

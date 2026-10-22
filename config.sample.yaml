@@ -97,3 +97,7 @@ SPEECH_COMMAND: 'espeak -vit+m3 -s150 -k10 "{}"'
 # --- HTTP API pre-shared key (optional) ---
 # API_KEY: change-me
 API_KEY: null
+
+# --- Web dashboard ---
+# Mark last_update as stale (warning icon) after this many seconds
+DASHBOARD_STALE_SECS: 120
