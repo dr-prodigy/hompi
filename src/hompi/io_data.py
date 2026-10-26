@@ -56,6 +56,8 @@ class Status:
         self.req_start_time = 0
         self.req_end_time = 0
         self.heating_status = 'off'
+        # temperature presets (Comfort / Economy / … from gm_temp)
+        self.temperatures = []
         # switches
         self.sw_sig = [False]*len(config.BUTTONS)
         self.sw_status = [False]*len(config.BUTTONS)
