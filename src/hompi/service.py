@@ -699,12 +699,16 @@ def refresh_program(time_):
             io_status.req_area_temps = req_area_temps
             is_program_changed = True
 
-    # refresh temperatures
-    rows = dbmgr.query("SELECT id, description, temp_c FROM gm_temp")
+    # refresh temperature presets (exposed on status JSON + system info)
+    rows = dbmgr.query(
+        "SELECT id, description, temp_c FROM gm_temp ORDER BY id")
     if rows:
         io_system.temperatures.clear()
+        io_status.temperatures.clear()
         for row in rows:
-            io_system.temperatures.append(dict(id=row[0], description=row[1], temp_c=row[2]))
+            entry = dict(id=row[0], description=row[1], temp_c=row[2])
+            io_system.temperatures.append(entry)
+            io_status.temperatures.append(entry)
 
     if is_program_changed:
         io_data.last_program_change = datetime.datetime.now().isoformat()

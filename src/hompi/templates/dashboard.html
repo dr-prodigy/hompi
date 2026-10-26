@@ -156,6 +156,38 @@
             margin-top: 0.15rem;
         }
 
+        .temps-list {
+            width: 100%;
+            margin-top: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .temps-list:empty { display: none; }
+
+        .temps-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            padding: 0.2rem 0.35rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .temps-row .temp-name {
+            color: var(--text-muted);
+            text-align: left;
+            text-transform: capitalize;
+        }
+
+        .temps-row .temp-value {
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
         .section-card h2 {
             margin: 0 0 1rem;
             font-weight: 400;
@@ -338,6 +370,14 @@
                 <span class="value" id="mode-desc">—</span>
             </div>
 
+            <div class="card status-tile" id="temps-card">
+                <div class="icon-wrap">
+                    <i data-lucide="thermometer" width="48" height="48"></i>
+                </div>
+                <span class="label">Temperatures</span>
+                <div class="temps-list" id="temps-list"></div>
+            </div>
+
             <div class="card status-tile" id="program-card">
                 <div class="icon-wrap">
                     <i data-lucide="target" width="48" height="48"></i>
@@ -392,8 +432,10 @@
         const CONFIG = {
             statusUrl: {{ status_url | tojson }},
             apiKey: {{ api_key | tojson }},
-            // Warn when last_update is older than 10 minutes
+            // Daemon last_update warning threshold (10 minutes)
             staleSecs: 600,
+            // Area sensor last_update yellow threshold (30 minutes)
+            areaStaleSecs: 1800,
             refreshMs: {{ refresh_ms | tojson }}
         };
 
@@ -482,8 +524,14 @@
 
         function formatTemp(value) {
             const n = Number(value);
-            if (!Number.isFinite(n) || n >= 900) return '—';
+            // 0 / 999 mean unset or unavailable — show a dash, never a warning
+            if (!Number.isFinite(n) || n <= 0 || n >= 900) return '—';
             return n.toFixed(1) + ' °C';
+        }
+
+        function isTempUnset(value) {
+            const n = Number(value);
+            return !Number.isFinite(n) || n <= 0 || n >= 900;
         }
 
         function hasTrv(area) {
@@ -560,6 +608,27 @@
             document.getElementById('error-banner').classList.remove('visible');
         }
 
+        function renderTemperatures(temperatures) {
+            const container = document.getElementById('temps-list');
+            const list = Array.isArray(temperatures) ? temperatures.slice() : [];
+            // Skip unset / Off (0 °C) presets
+            const visible = list.filter(function (row) {
+                return !isTempUnset(row && row.temp_c);
+            });
+            visible.sort(function (a, b) {
+                return Number(a.id) - Number(b.id);
+            });
+            container.innerHTML = visible.map(function (row) {
+                const name = row.description || 'Temp';
+                return (
+                    '<div class="temps-row">' +
+                      '<span class="temp-name">' + escapeHtml(name) + '</span>' +
+                      '<span class="temp-value">' + escapeHtml(formatTemp(row.temp_c)) + '</span>' +
+                    '</div>'
+                );
+            }).join('');
+        }
+
         function renderAreas(areas, mainAreaId) {
             const section = document.getElementById('areas-section');
             const container = document.getElementById('areas-list');
@@ -591,8 +660,8 @@
                 const isManual = !!area.manual_set;
                 const trv = hasTrv(area);
                 const age = formatAge(area.last_update);
-                const areaStale = age.ageSecs !== null && age.ageSecs > CONFIG.staleSecs;
-                const unavailable = !(Number.isFinite(Number(area.cur_temp_c)) && Number(area.cur_temp_c) < 900);
+                const areaStale = age.ageSecs !== null &&
+                    age.ageSecs > CONFIG.areaStaleSecs;
 
                 const badges = [];
                 if (isMain) badges.push('<span class="badge main">Main</span>');
@@ -607,8 +676,7 @@
                     );
                 }
                 stats.push(
-                    '<div class="stat"><span class="stat-label">Current</span><span class="stat-value' +
-                    (unavailable ? ' warn' : '') + '">' +
+                    '<div class="stat"><span class="stat-label">Current</span><span class="stat-value">' +
                     escapeHtml(formatTemp(area.cur_temp_c)) + '</span></div>'
                 );
                 if (area.last_update) {
@@ -616,14 +684,12 @@
                         '<div class="stat"><span class="stat-label">Updated</span><span class="stat-value' +
                         (areaStale ? ' warn' : '') + '">' +
                         escapeHtml(age.text) +
-                        (areaStale ? ' !' : '') +
                         '</span></div>'
                     );
                 }
 
                 const rowClass = ['list-row'];
                 if (isMain) rowClass.push('main-area');
-                if (areaStale || unavailable) rowClass.push('stale-area');
 
                 return (
                     '<div class="' + rowClass.join(' ') + '">' +
@@ -723,6 +789,7 @@
             const modeDesc = data.mode_desc || '—';
             document.getElementById('mode-desc').textContent = modeDesc;
             setIcon(document.getElementById('mode-icon-wrap'), modeIcon(modeDesc), 48);
+            renderTemperatures(data.temperatures);
 
             const reqTemp = formatTemp(data.req_temp_c);
             const startN = Number(data.req_start_time);
@@ -744,8 +811,8 @@
             setHeatingIcon(document.getElementById('heating-icon-wrap'), heating, 48);
 
             const intTemp = document.getElementById('int-temp');
-            if (typeof data.int_temp_c === 'number' && data.int_temp_c < 900) {
-                intTemp.textContent = 'Indoor ' + formatTemp(data.int_temp_c);
+            if (!isTempUnset(data.int_temp_c)) {
+                intTemp.textContent = 'Current ' + formatTemp(data.int_temp_c);
             } else {
                 intTemp.textContent = '';
             }

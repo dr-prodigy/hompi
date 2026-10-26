@@ -84,7 +84,10 @@ def test_dashboard_status_proxies_external_api(monkeypatch):
     from hompi import api as api_mod
     from hompi.config import config
 
-    remote_body = '{"id": "remote", "mode_desc": "Manual"}'
+    remote_body = (
+        '{"id": "remote", "mode_desc": "Manual",'
+        ' "temperatures": [{"id": 3, "description": "Comfort", "temp_c": 21.0}]}'
+    )
     captured = {}
 
     class FakeResp:
@@ -114,8 +117,8 @@ def test_dashboard_status_proxies_external_api(monkeypatch):
     client = app.test_client()
     rv = client.get('{}/_dashboard_status?api_key=ABCD1234'.format(API_PREFIX))
     assert rv.status_code == 200
-    assert rv.is_json or b'remote' in rv.data
     assert b'"id": "remote"' in rv.data or b'"id":"remote"' in rv.data
+    assert b'Comfort' in rv.data
 
 
 def test_dashboard_page_does_not_embed_external_host(monkeypatch):

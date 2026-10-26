@@ -126,6 +126,8 @@ Read endpoints (GET)
     - Climate: ``int_temp_c``, ``mode_id``, ``mode_desc``, ``short_mode_desc``,
       ``timetable_desc``, ``day_type_desc``, ``req_temp_c``, ``req_temp_desc``,
       ``req_start_time``, ``req_end_time``, ``heating_status``
+    - Temperature presets: ``temperatures`` — list of
+      ``{id, description, temp_c}`` from ``gm_temp`` (e.g. Comfort / Economy)
     - TRV (if ``MODULE_TRV``): ``areas``, ``req_area_temps``, ``main_area_id``
     - Relays: ``sw_sig``, ``sw_status`` (parallel to ``BUTTONS``)
     - UI: ``current_image``, ``message``
