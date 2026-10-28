@@ -12,8 +12,8 @@ version: 20261028121900
 def upgrade(connection):
     sql = """
         UPDATE `gm_timetable_type_data_area`
-            SET temp_id = 2
-        WHERE id = 282;
+            SET `temp_id` = 2
+        WHERE `id` IN (222, 282);
     """
     connection.execute(sql)
     connection.commit()
