@@ -108,12 +108,12 @@ class Status:
     def update(self, current_time):
         if self.message != '' and hide_message_time <= current_time:
             self.message = ''
-            self.last_change == current_time.isoformat()
+            self.last_change = current_time.isoformat()
 
     def send_message(self, message):
         global hide_message_time
 
-        self.message = message.encode('utf-8')
+        self.message = message.decode('utf-8') if isinstance(message, bytes) else str(message)
         self.last_change = datetime.datetime.now().isoformat()
         hide_message_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
 

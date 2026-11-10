@@ -133,3 +133,32 @@ def test_dashboard_page_does_not_embed_external_host(monkeypatch):
     assert rv.status_code == 200
     assert b'192.168.1.10' not in rv.data
     assert b'/_dashboard_status' in rv.data
+
+
+def test_get_image_creates_thumbnail(tmp_path, monkeypatch):
+    from PIL import Image
+    from hompi import api as api_mod
+    from hompi.config import config
+
+    monkeypatch.setattr(api_mod, 'API_KEY', '')
+
+    img_dir = tmp_path / "images"
+    img_dir.mkdir(parents=True)
+    (img_dir / "thumbs").mkdir(parents=True)
+
+    img_path = img_dir / "sample.jpg"
+    im = Image.new("RGB", (200, 200), color="red")
+    im.save(str(img_path), "JPEG")
+
+    monkeypatch.setattr(config, 'IMAGE_PATH', str(img_dir / '*.jpg'))
+    monkeypatch.setattr(config, 'THUMB_SIZE', (50, 50))
+
+    client = app.test_client()
+    rv = client.get(f'{API_PREFIX}/_get_image/sample.jpg')
+    assert rv.status_code == 200
+
+    thumb_path = img_dir / "thumbs" / "sample.jpg"
+    assert thumb_path.is_file()
+    with Image.open(str(thumb_path)) as thumb:
+        assert thumb.size[0] <= 50 and thumb.size[1] <= 50
+

@@ -362,7 +362,12 @@ def get_image(image_name):
         if not os.path.isfile(thumb_filename):
             try:
                 image = Image.open(filename)
-                image.thumbnail(config.THUMB_SIZE, Image.ANTIALIAS)
+                resample = (
+                    Image.Resampling.LANCZOS
+                    if hasattr(Image, 'Resampling')
+                    else getattr(Image, 'ANTIALIAS', None)
+                )
+                image.thumbnail(config.THUMB_SIZE, resample)
                 image.save(thumb_filename, 'JPEG')
             except Exception:
                 print("get_image({}): error".format(image_name))
