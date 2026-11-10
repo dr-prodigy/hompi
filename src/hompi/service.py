@@ -27,6 +27,8 @@ import math
 import traceback
 import os
 import holidays
+import shlex
+import subprocess
 
 import random
 import socket
@@ -925,11 +927,12 @@ def show_message(lcd_message, telegram_message=""):
             telegram_message = "{}: {}".format(
                 socket.gethostname(), telegram_message)
             os_async_command(
-                'telegram -t {} -c {} "{}"'.format(
-                    config.TELEGRAM_TOKEN,
-                    config.TELEGRAM_CHATID,
+                [
+                    'telegram',
+                    '-t', str(config.TELEGRAM_TOKEN or ''),
+                    '-c', str(config.TELEGRAM_CHATID or ''),
                     telegram_message,
-                )
+                ]
             )
     if lcd_message != "":
         lcd.show_command(lcd_message)
@@ -939,9 +942,13 @@ def say(message, say_status = False):
     if config.MODULE_SPEECH:
         message = 'HOMPI - ' + message \
             + (' - ' + io_status.get_status_text() if say_status else '')
-        command = config.SPEECH_COMMAND.format(message) + ' &'
         log_stdout('HOMPI', 'saying: {}'.format(message), LOG_INFO)
-        os.system(command)
+        try:
+            tokens = shlex.split(config.SPEECH_COMMAND)
+            cmd = [t.replace('{}', message) for t in tokens]
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception as exc:
+            log_stderr('say() error: {}'.format(exc))
 
 
 def log_data(event):

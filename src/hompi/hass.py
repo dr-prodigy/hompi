@@ -52,6 +52,7 @@ HOMPI_AMBIENT_EFFECT_ICON = "mdi:palette"
 
 RETRY_MINUTES = 2
 REFRESH_MINUTES = 10
+HASS_TIMEOUT_SECS = 5.0
 
 headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
 old_entity = {}
@@ -209,7 +210,13 @@ def publish_status(io_status, io_system, ambient):
             for entity in hass_entities:
                 entity_id = entity["entity_id"]
                 url = config.HASS_SERVER + STATUS_ENTITY_API_URL + entity_id
-                response = post(url, headers=headers, json=entity["data"], verify=config.HASS_CHECK_SSL_CERT)
+                response = post(
+                    url,
+                    headers=headers,
+                    json=entity["data"],
+                    verify=config.HASS_CHECK_SSL_CERT,
+                    timeout=HASS_TIMEOUT_SECS,
+                )
                 log_stdout('HASS', 'PUBLISH ({}): {}'.format(entity_id, response.text), LOG_INFO)
     except Exception as e:
         # error: cleanup old_entity and delay next publish for RETRY_MINUTES

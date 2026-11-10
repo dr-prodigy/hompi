@@ -162,3 +162,32 @@ def test_get_image_creates_thumbnail(tmp_path, monkeypatch):
     with Image.open(str(thumb_path)) as thumb:
         assert thumb.size[0] <= 50 and thumb.size[1] <= 50
 
+
+def test_get_image_not_found(tmp_path, monkeypatch):
+    from hompi import api as api_mod
+    from hompi.config import config
+
+    monkeypatch.setattr(api_mod, 'API_KEY', '')
+    img_dir = tmp_path / "images"
+    img_dir.mkdir(parents=True)
+    monkeypatch.setattr(config, 'IMAGE_PATH', str(img_dir / '*.jpg'))
+
+    client = app.test_client()
+    rv = client.get(f'{API_PREFIX}/_get_image/nonexistent.jpg')
+    assert rv.status_code == 404
+
+
+def test_get_image_rejects_path_traversal(tmp_path, monkeypatch):
+    from hompi import api as api_mod
+    from hompi.config import config
+
+    monkeypatch.setattr(api_mod, 'API_KEY', '')
+    img_dir = tmp_path / "images"
+    img_dir.mkdir(parents=True)
+    monkeypatch.setattr(config, 'IMAGE_PATH', str(img_dir / '*.jpg'))
+
+    client = app.test_client()
+    rv = client.get(f'{API_PREFIX}/_get_image/..%2fsecret.txt')
+    assert rv.status_code in (400, 403, 404)
+
+

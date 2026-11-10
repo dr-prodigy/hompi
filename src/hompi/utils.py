@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with hompi.  If not, see <http://www.gnu.org/licenses/>.
 
+import shlex
 import subprocess
 import sys
 import datetime
@@ -38,6 +39,19 @@ def log_stderr(data):
     cur_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     sys.stderr.write('{} - {}\n'.format(cur_date, data))
 
-def os_async_command(command):
-    result = subprocess.run([command], capture_output=True, text=True, shell=True)
-    log_stdout('UTILS', result.stdout, LOG_DEBUG)
+def os_async_command(command, timeout=10):
+    """Execute a system command safely without shell expansion."""
+    try:
+        if isinstance(command, (list, tuple)):
+            cmd_args = [str(arg) for arg in command]
+        else:
+            cmd_args = shlex.split(command)
+        result = subprocess.run(cmd_args, capture_output=True, text=True, shell=False, timeout=timeout)
+        if result.stdout:
+            log_stdout('UTILS', result.stdout.strip(), LOG_DEBUG)
+        if result.stderr:
+            log_stdout('UTILS', result.stderr.strip(), LOG_WARN)
+        return result
+    except Exception as exc:
+        log_stderr('os_async_command error executing {}: {}'.format(command, exc))
+        return None

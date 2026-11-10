@@ -22,6 +22,8 @@ import sys
 import datetime
 import traceback
 import colorsys
+import shlex
+import subprocess
 
 from .config import config
 
@@ -68,47 +70,43 @@ rgb2ctrl_code = [
 CTRL_CODE_OFF = rgb2ctrl_code[0][0]
 
 
-def _do_cleanup():
-    command = AMBIENT_MODULE_CMD + AMBIENT_CLEAR_COMMAND + ' &'
-    log_stdout('AMBIENT', 'cleanup - Executing: {}'.format(command))
+def _run_ambient_cmd(*args):
+    cmd = [sys.executable, '-m', 'hompi.led_effects']
+    for a in args:
+        if isinstance(a, (list, tuple)):
+            cmd.extend(str(item) for item in a)
+        elif a is not None and str(a) != '':
+            cmd.append(str(a))
+    log_stdout('AMBIENT', 'Executing: {}'.format(' '.join(cmd)))
     if AMBIENT_ENABLED:
-        os.system(command)
+        try:
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception as exc:
+            log_stderr('Ambient process spawn error: {}'.format(exc))
+
+
+def _do_cleanup():
+    _run_ambient_cmd('clear')
 
 
 def _do_effect(effect, params):
-    command = AMBIENT_MODULE_CMD + \
-              '{} {} &'.format(effect, params)
-    log_stdout('AMBIENT', 'effect {} - Executing: {}'.format(effect, command))
-    if AMBIENT_ENABLED:
-        os.system(command)
+    tokens = shlex.split(params) if isinstance(params, str) else list(params)
+    _run_ambient_cmd(effect, *tokens)
 
 
 def _do_ambient_color(color, brightness):
     color = _rgb_brightness2rgb(color, brightness)
-    command = AMBIENT_MODULE_CMD + AMBIENT_SET_COLOR_COMMAND.format(
-        AMBIENT_MIN_BRIGHTNESS, color) + ' &'
-    log_stdout('AMBIENT', 'do color - Executing: {}'.format(command))
-    if AMBIENT_ENABLED:
-        os.system(command)
+    _run_ambient_cmd('set_color', AMBIENT_MIN_BRIGHTNESS, color)
 
 
 def _do_ambient_crossfade(color_start, brightness_start, color_end, brightness_end):
     color_start = _rgb_brightness2rgb(color_start, brightness_start)
     color_end = _rgb_brightness2rgb(color_end, brightness_end)
-
-    command = AMBIENT_MODULE_CMD + AMBIENT_CROSSFADE_COMMAND.format(
-        AMBIENT_MIN_BRIGHTNESS, color_start, color_end) + ' &'
-    log_stdout('AMBIENT', 'crossfade - Executing: {}'.format(command))
-    if AMBIENT_ENABLED:
-        os.system(command)
+    _run_ambient_cmd('crossfade', AMBIENT_MIN_BRIGHTNESS, color_start, color_end)
 
 
 def _do_go_to_sleep(color):
-    command = AMBIENT_MODULE_CMD + AMBIENT_GOING_TO_SLEEP_COMMAND.format(
-        AMBIENT_MIN_BRIGHTNESS, color) + ' &'
-    log_stdout('AMBIENT', 'go_to_sleep - Executing: {}'.format(command))
-    if AMBIENT_ENABLED:
-        os.system(command)
+    _run_ambient_cmd('go_to_sleep', AMBIENT_MIN_BRIGHTNESS, color)
 
 
 def _rgb_brightness2rgb(color, brightness):
@@ -272,11 +270,7 @@ class Ambient:
             self.update()
 
     def ambient_ack(self):
-        command = AMBIENT_MODULE_CMD + AMBIENT_ACK_COMMAND.format(
-                      AMBIENT_MAX_BRIGHTNESS, 'ff0000', self._newstatus_color) + ' &'
-        log_stdout('AMBIENT', 'ack - Executing: {}'.format(command))
-        if AMBIENT_ENABLED:
-            os.system(command)
+        _run_ambient_cmd('curtain_in_out', AMBIENT_MAX_BRIGHTNESS, 'ff0000', self._newstatus_color)
 
     def update(self):
         if datetime.datetime.now() > self.status_power_off_time:

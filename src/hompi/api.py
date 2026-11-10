@@ -30,6 +30,7 @@ import json
 import signal
 import hashlib
 import os
+from pathlib import Path
 import urllib.error
 import urllib.request
 from PIL import Image
@@ -356,25 +357,35 @@ def get_image(image_name):
         return "Forbidden", 403
 
     try:
-        image_dir = str(paths.resolve_under_data(config.IMAGE_PATH).parent)
-        filename = '{}/{}'.format(image_dir, image_name)
-        thumb_filename = '{}/thumbs/{}'.format(image_dir, image_name)
-        if not os.path.isfile(thumb_filename):
+        image_dir = Path(paths.resolve_under_data(config.IMAGE_PATH).parent).resolve()
+        target_file = (image_dir / image_name).resolve()
+
+        if not target_file.is_relative_to(image_dir) or target_file.name != image_name or target_file == image_dir:
+            return "Forbidden", 403
+
+        if not target_file.is_file():
+            return "Not Found", 404
+
+        thumb_dir = image_dir / 'thumbs'
+        thumb_dir.mkdir(parents=True, exist_ok=True)
+        thumb_filename = thumb_dir / target_file.name
+
+        if not thumb_filename.is_file():
             try:
-                image = Image.open(filename)
+                image = Image.open(str(target_file))
                 resample = (
                     Image.Resampling.LANCZOS
                     if hasattr(Image, 'Resampling')
                     else getattr(Image, 'ANTIALIAS', None)
                 )
                 image.thumbnail(config.THUMB_SIZE, resample)
-                image.save(thumb_filename, 'JPEG')
+                image.save(str(thumb_filename), 'JPEG')
             except Exception:
                 print("get_image({}): error".format(image_name))
                 print(traceback.format_exc())
                 return "Error", 500  # INTERNAL_SERVER_ERROR
 
-        return send_file(thumb_filename)
+        return send_file(str(thumb_filename))
     except Exception:
         print("get_image({}): error".format(image_name))
         print(traceback.format_exc())
