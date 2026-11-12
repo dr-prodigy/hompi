@@ -1,0 +1,692 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Timetables{% endblock %}
+
+{% block header_title %}{{ title }}{% endblock %}
+{% block header_subtitle %}Timetables{% endblock %}
+
+{% block top_nav %}
+    <a href="{{ back_url }}" class="nav-btn" id="back-link">
+        <i data-lucide="arrow-left"></i>
+        <span>Back to Dashboard</span>
+    </a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Selector Card */
+    .selector-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .selector-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .selector-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .selector-icon {
+        color: var(--accent-blue);
+        width: 32px;
+        height: 32px;
+    }
+
+    .selector-title-wrap h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+
+    .selector-hint {
+        margin: 0.2rem 0 0;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .selector-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .select-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    select {
+        appearance: none;
+        -webkit-appearance: none;
+        background: rgba(15, 23, 42, 0.85);
+        color: var(--text-main);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.65rem 2.6rem 0.65rem 1.1rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        outline: none;
+        min-width: 220px;
+        transition: all 0.2s ease;
+    }
+
+    select:hover {
+        border-color: var(--accent-blue);
+        background: rgba(30, 41, 59, 0.95);
+    }
+
+    select:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+    }
+
+    .select-arrow {
+        position: absolute;
+        right: 0.9rem;
+        pointer-events: none;
+        color: var(--text-muted);
+        width: 18px;
+        height: 18px;
+    }
+
+    .timetable-summary {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .legend-title {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        margin-right: 0.25rem;
+    }
+
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    /* Section Header */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 0.85rem;
+    }
+
+    .section-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .section-title-wrap h2 {
+        margin: 0;
+    }
+
+    /* Table Container */
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.45);
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .program-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.88rem;
+        text-align: center;
+        min-width: 860px;
+    }
+
+    .program-table th,
+    .program-table td {
+        padding: 0.75rem 0.6rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
+        vertical-align: middle;
+    }
+
+    .program-table th:last-child,
+    .program-table td:last-child {
+        border-right: none;
+    }
+
+    .program-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .program-table th {
+        background: rgba(30, 41, 59, 0.95);
+        color: var(--text-main);
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .time-col-header,
+    .time-cell {
+        position: sticky;
+        left: 0;
+        background: rgba(30, 41, 59, 0.98) !important;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        text-align: left;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        z-index: 3;
+        width: 135px;
+        min-width: 135px;
+        box-shadow: 2px 0 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .day-header {
+        min-width: 100px;
+    }
+
+    .day-header-title {
+        display: block;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .day-header-badge {
+        display: inline-block;
+        margin-top: 0.35rem;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-weight: 400;
+        background: rgba(255, 255, 255, 0.06);
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .program-table tbody tr:hover td {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Preset badge inside cell */
+    .temp-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0.45rem 0.5rem;
+        border-radius: 10px;
+        width: 100%;
+        min-height: 48px;
+        gap: 0.15rem;
+        transition: all 0.2s ease;
+    }
+
+    .temp-badge .temp-name {
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: capitalize;
+        letter-spacing: 0.3px;
+    }
+
+    .temp-badge .temp-degrees {
+        font-size: 0.88rem;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Preset Color Variants */
+    .preset-comfort {
+        background: rgba(249, 115, 22, 0.15);
+        border: 1px solid rgba(249, 115, 22, 0.4);
+        color: #fdba74;
+    }
+
+    .preset-economy {
+        background: rgba(56, 189, 248, 0.12);
+        border: 1px solid rgba(56, 189, 248, 0.32);
+        color: #7dd3fc;
+    }
+
+    .preset-winter_safe,
+    .preset-winter-safe {
+        background: rgba(6, 182, 212, 0.14);
+        border: 1px solid rgba(6, 182, 212, 0.35);
+        color: #67e8f9;
+    }
+
+    .preset-manual {
+        background: rgba(168, 85, 247, 0.14);
+        border: 1px solid rgba(168, 85, 247, 0.35);
+        color: #d8b4fe;
+    }
+
+    .preset-off {
+        background: rgba(100, 116, 139, 0.14);
+        border: 1px solid rgba(100, 116, 139, 0.28);
+        color: #94a3b8;
+    }
+
+    .preset-default {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: var(--text-main);
+    }
+
+    /* Daytypes Grid */
+    .daytypes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.25rem;
+        margin-top: 0.5rem;
+    }
+
+    .daytype-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 1.15rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .daytype-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+
+    .daytype-name {
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: var(--text-main);
+    }
+
+    .daytype-days {
+        font-size: 0.78rem;
+        color: var(--accent-blue);
+    }
+
+    .daytype-slots {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .daytype-slot-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        padding: 0.35rem 0.6rem;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .daytype-time {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+        .selector-header { flex-direction: column; align-items: flex-start; }
+        .selector-controls { width: 100%; }
+        select { width: 100%; min-width: unset; }
+        .select-wrapper { width: 100%; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Selector Card -->
+<section class="card selector-card">
+    <div class="selector-header">
+        <div class="selector-title-wrap">
+            <i data-lucide="calendar" class="selector-icon"></i>
+            <div>
+                <h2>Timetable Program</h2>
+                <p class="selector-hint">Select a weekly schedule to view its time slots</p>
+            </div>
+        </div>
+        <div class="selector-controls">
+            <label for="timetable-select" class="sr-only">Choose Timetable</label>
+            <div class="select-wrapper">
+                <select id="timetable-select" aria-label="Select Timetable">
+                    <option value="">Loading timetables...</option>
+                </select>
+                <i data-lucide="chevron-down" class="select-arrow"></i>
+            </div>
+            <span id="active-badge" class="badge active-badge hidden">
+                <i data-lucide="check-circle-2"></i> Currently Active
+            </span>
+            <span id="inactive-badge" class="badge inactive-badge hidden">
+                <i data-lucide="info"></i> Active: <strong id="active-schedule-name">—</strong>
+            </span>
+        </div>
+    </div>
+
+    <div class="timetable-summary" id="timetable-summary">
+        <div class="legend" id="temp-legend"></div>
+    </div>
+</section>
+
+<!-- Week Program Table Card -->
+<section class="card section-card table-section" id="program-section">
+    <div class="section-header">
+        <div class="section-title-wrap">
+            <h2><i data-lucide="calendar-days"></i> Week Program</h2>
+            <span id="program-active-badge" class="badge active-badge hidden">
+                <i data-lucide="check-circle-2"></i> Active
+            </span>
+        </div>
+    </div>
+    <div class="table-container">
+        <table class="program-table" id="program-table">
+            <thead>
+                <tr id="table-head-row">
+                    <th class="time-col-header">Time Slot</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr>
+                    <td colspan="10" class="empty-hint">Loading program data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Day Programs Breakdown Card -->
+<section class="card section-card" id="daytypes-section">
+    <h2><i data-lucide="list-checks"></i> Day Programs Breakdown</h2>
+    <div class="daytypes-grid" id="daytypes-grid">
+        <p class="empty-hint">Loading day configurations...</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const CONFIG = {
+        dataUrl: {{ data_url | tojson }},
+        apiKey: {{ api_key | tojson }},
+        backUrl: {{ back_url | tojson }}
+    };
+
+    let currentData = null;
+
+    function getPresetClass(desc) {
+        const d = (desc || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+        if (d.includes('comfort')) return 'preset-comfort';
+        if (d.includes('econ')) return 'preset-economy';
+        if (d.includes('winter')) return 'preset-winter_safe';
+        if (d.includes('manual')) return 'preset-manual';
+        if (d.includes('off')) return 'preset-off';
+        return 'preset-default';
+    }
+
+    function formatTemp(val) {
+        if (val === null || val === undefined || isNaN(Number(val))) return '—';
+        return Number(val).toFixed(1) + ' °C';
+    }
+
+    function formatHhmm(hhmm) {
+        if (hhmm === null || hhmm === undefined) return '--:--';
+        const n = Number(hhmm);
+        const h = Math.floor(n / 100);
+        const m = n % 100;
+        return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    }
+
+    async function fetchTimetableData(timetableId) {
+        let urlStr = CONFIG.dataUrl;
+        if (timetableId) {
+            urlStr = urlStr + '/' + encodeURIComponent(timetableId);
+        }
+        const url = new URL(urlStr, window.location.origin);
+        if (CONFIG.apiKey) {
+            url.searchParams.set('api_key', CONFIG.apiKey);
+        }
+        const response = await fetch(url.toString(), { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error('Failed to load timetable data (' + response.status + ')');
+        }
+        return response.json();
+    }
+
+    function renderSelect(timetables, activeId, selectedId) {
+        const select = document.getElementById('timetable-select');
+        select.innerHTML = '';
+        timetables.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = String(t.id);
+            const isActive = Number(t.id) === Number(activeId);
+            opt.textContent = t.description + (isActive ? ' (Active)' : '');
+            if (Number(t.id) === Number(selectedId)) {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+    }
+
+    function renderSummary(data) {
+        const activeBadge = document.getElementById('active-badge');
+        const inactiveBadge = document.getElementById('inactive-badge');
+        const programActiveBadge = document.getElementById('program-active-badge');
+        const isActive = Number(data.selected_timetable_id) === Number(data.active_timetable_id);
+
+        const activeTtb = (data.timetables || []).find(t => Number(t.id) === Number(data.active_timetable_id));
+        const activeName = activeTtb ? activeTtb.description : 'Active';
+
+        if (isActive) {
+            if (activeBadge) activeBadge.classList.remove('hidden');
+            if (inactiveBadge) inactiveBadge.classList.add('hidden');
+            if (programActiveBadge) programActiveBadge.classList.remove('hidden');
+        } else {
+            if (activeBadge) activeBadge.classList.add('hidden');
+            if (inactiveBadge) {
+                inactiveBadge.classList.remove('hidden');
+                const activeScheduleName = document.getElementById('active-schedule-name');
+                if (activeScheduleName) activeScheduleName.textContent = activeName;
+            }
+            if (programActiveBadge) programActiveBadge.classList.add('hidden');
+        }
+
+        // Legend
+        const legend = document.getElementById('temp-legend');
+        legend.innerHTML = '<span class="legend-title">Presets:</span>';
+        (data.temp_legend || []).forEach(item => {
+            const span = document.createElement('span');
+            const presetClass = getPresetClass(item.description);
+            span.className = 'legend-item ' + presetClass;
+            span.textContent = item.description + ': ' + formatTemp(item.temp_c);
+            legend.appendChild(span);
+        });
+    }
+
+    function renderProgramTable(data) {
+        const theadRow = document.getElementById('table-head-row');
+        theadRow.innerHTML = '<th class="time-col-header">Time Slot</th>';
+
+        const days = data.days || [];
+        days.forEach(d => {
+            const th = document.createElement('th');
+            th.className = 'day-header';
+            th.innerHTML = '<span class="day-header-title">' + d.label + '</span>' +
+                           '<span class="day-header-badge" title="' + d.day_type_desc + '">' +
+                           d.day_type_desc + '</span>';
+            theadRow.appendChild(th);
+        });
+
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+
+        const timeSlots = data.time_slots || [];
+        if (timeSlots.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="' + (days.length + 1) + '" class="empty-hint">No time slots found.</td></tr>';
+            return;
+        }
+
+        timeSlots.forEach(slot => {
+            const tr = document.createElement('tr');
+            const timeTd = document.createElement('td');
+            timeTd.className = 'time-cell';
+            timeTd.textContent = slot.time_label;
+            tr.appendChild(timeTd);
+
+            days.forEach(d => {
+                const td = document.createElement('td');
+                const slotData = (slot.days && slot.days[d.key]) ? slot.days[d.key] : null;
+                if (slotData) {
+                    const presetClass = getPresetClass(slotData.temp_desc);
+                    td.innerHTML = '<div class="temp-badge ' + presetClass + '">' +
+                                   '<span class="temp-name">' + slotData.temp_desc + '</span>' +
+                                   '<span class="temp-degrees">' + formatTemp(slotData.temp_c) + '</span>' +
+                                   '</div>';
+                } else {
+                    td.innerHTML = '<span class="text-muted">—</span>';
+                }
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderDayTypes(data) {
+        const grid = document.getElementById('daytypes-grid');
+        grid.innerHTML = '';
+
+        const dayTypes = data.day_types || [];
+        if (dayTypes.length === 0) {
+            grid.innerHTML = '<p class="empty-hint">No day type configurations available.</p>';
+            return;
+        }
+
+        dayTypes.forEach(dt => {
+            const card = document.createElement('div');
+            card.className = 'daytype-card';
+
+            const daysList = (dt.days_using || []).join(', ');
+            let html = '<div class="daytype-header">' +
+                       '<span class="daytype-name">' + dt.description + '</span>' +
+                       '<span class="daytype-days">' + daysList + '</span>' +
+                       '</div>' +
+                       '<div class="daytype-slots">';
+
+            (dt.slots || []).forEach(s => {
+                const presetClass = getPresetClass(s.temp_desc);
+                html += '<div class="daytype-slot-row">' +
+                        '<span class="daytype-time">' + formatHhmm(s.time_hhmm) + '</span>' +
+                        '<span class="legend-item ' + presetClass + '">' +
+                        s.temp_desc + ' (' + formatTemp(s.temp_c) + ')' +
+                        '</span>' +
+                        '</div>';
+            });
+
+            html += '</div>';
+            card.innerHTML = html;
+            grid.appendChild(card);
+        });
+    }
+
+    async function loadTimetable(timetableId) {
+        try {
+            clearError();
+            const data = await fetchTimetableData(timetableId);
+            currentData = data;
+            renderSelect(data.timetables, data.active_timetable_id, data.selected_timetable_id);
+            renderSummary(data);
+            renderProgramTable(data);
+            renderDayTypes(data);
+            lucide.createIcons();
+
+            // Keep URL updated with ?id=
+            const url = new URL(window.location);
+            url.searchParams.set('id', data.selected_timetable_id);
+            if (CONFIG.apiKey) {
+                url.searchParams.set('api_key', CONFIG.apiKey);
+            }
+            window.history.replaceState({}, '', url);
+        } catch (err) {
+            showError(err.message || 'Error loading timetable data');
+        }
+    }
+
+    document.getElementById('timetable-select').addEventListener('change', (e) => {
+        const chosenId = e.target.value;
+        if (chosenId) {
+            loadTimetable(chosenId);
+        }
+    });
+
+    // Initialize on currently active timetable (as per gm_control)
+    lucide.createIcons();
+    updateClock();
+    setInterval(updateClock, 1000);
+    loadTimetable();
+</script>
+{% endblock %}

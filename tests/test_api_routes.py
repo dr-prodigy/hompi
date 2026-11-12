@@ -11,6 +11,9 @@ def test_routes_use_hompi_prefix():
     assert '{}/dashboard'.format(API_PREFIX) in rules
     assert '{}/_dashboard_status'.format(API_PREFIX) in rules
     assert '{}/'.format(API_PREFIX) in rules
+    assert '{}/timetable'.format(API_PREFIX) in rules
+    assert '{}/_timetable_data'.format(API_PREFIX) in rules
+    assert '{}/_timetable_data/<int:timetable_id>'.format(API_PREFIX) in rules
 
 
 def test_full_path_matches_like_flask_debug(monkeypatch):
@@ -189,5 +192,137 @@ def test_get_image_rejects_path_traversal(tmp_path, monkeypatch):
     client = app.test_client()
     rv = client.get(f'{API_PREFIX}/_get_image/..%2fsecret.txt')
     assert rv.status_code in (400, 403, 404)
+
+
+def test_dashboard_page_has_timetable_link(monkeypatch):
+    from hompi import api as api_mod
+    from hompi.config import config
+
+    monkeypatch.setattr(api_mod, 'API_KEY', '')
+    monkeypatch.setattr(config, 'DASHBOARD_API_URL', None)
+    client = app.test_client()
+    rv = client.get(f'{API_PREFIX}/dashboard')
+    assert rv.status_code == 200
+    assert f'{API_PREFIX}/timetable'.encode() in rv.data
+    assert b'Timetables' in rv.data
+
+
+def test_timetable_page_renders(monkeypatch):
+    from hompi import api as api_mod
+
+    monkeypatch.setattr(api_mod, 'API_KEY', '')
+    client = app.test_client()
+    rv = client.get(f'{API_PREFIX}/timetable')
+    assert rv.status_code == 200
+    assert b'text/html' in rv.content_type.encode()
+    assert b'Timetables' in rv.data
+    assert f'{API_PREFIX}/dashboard'.encode() in rv.data
+    assert b'Back to Dashboard' in rv.data
+    assert b'&larr;' not in rv.data
+    assert b'Schedule:' not in rv.data
+    assert b'Days on columns, time slots on rows' not in rv.data
+    assert f'{API_PREFIX}/_timetable_data'.encode() in rv.data
+    assert b'timetable-select' in rv.data
+    assert b'program-table' in rv.data
+    assert b'active-badge' in rv.data
+
+
+def test_timetable_page_back_link_preserves_api_key(monkeypatch):
+    import hashlib
+    from hompi import api as api_mod
+
+    secret = 'secret-test'
+    digest = hashlib.md5(secret.encode('utf-8')).hexdigest().upper()
+    monkeypatch.setattr(api_mod, 'API_KEY', digest)
+
+    client = app.test_client()
+    rv = client.get(f'{API_PREFIX}/timetable?api_key={digest}')
+    assert rv.status_code == 200
+    assert f'{API_PREFIX}/dashboard?api_key={digest}'.encode() in rv.data
+
+
+def test_timetable_data_endpoint(monkeypatch):
+    import json
+    from hompi import api as api_mod
+
+    monkeypatch.setattr(api_mod, 'API_KEY', '')
+    client = app.test_client()
+
+    # Default (active timetable)
+    rv = client.get(f'{API_PREFIX}/_timetable_data')
+    assert rv.status_code == 200
+    assert rv.content_type == 'application/json'
+    data = json.loads(rv.data)
+    assert 'timetables' in data
+    assert 'active_timetable_id' in data
+    assert 'selected_timetable_id' in data
+    assert 'days' in data
+    assert 'time_slots' in data
+    assert len(data['timetables']) > 0
+    assert len(data['days']) >= 7
+
+    # Specific timetable ID
+    rv2 = client.get(f'{API_PREFIX}/_timetable_data/2')
+    assert rv2.status_code == 200
+    data2 = json.loads(rv2.data)
+    assert data2['selected_timetable_id'] == 2
+    assert data2['selected_timetable']['description'] == 'Automatic'
+    assert len(data2['time_slots']) > 0
+
+
+def test_timetable_data_auth_gate(monkeypatch):
+    import hashlib
+    from hompi import api as api_mod
+
+    digest = hashlib.md5(b'testkey').hexdigest().upper()
+    monkeypatch.setattr(api_mod, 'API_KEY', digest)
+    client = app.test_client()
+
+    # Forbidden without key
+    rv = client.get(f'{API_PREFIX}/_timetable_data')
+    assert rv.status_code == 403
+
+    # Forbidden with wrong key
+    rv_bad = client.get(f'{API_PREFIX}/_timetable_data?api_key=WRONGKEY')
+    assert rv_bad.status_code == 403
+
+    # Success with correct key
+    rv_ok = client.get(f'{API_PREFIX}/_timetable_data?api_key={digest}')
+    assert rv_ok.status_code == 200
+
+
+def test_timetable_data_not_found(monkeypatch):
+    from hompi import api as api_mod
+
+    monkeypatch.setattr(api_mod, 'API_KEY', '')
+    client = app.test_client()
+    rv = client.get(f'{API_PREFIX}/_timetable_data/999999')
+    assert rv.status_code == 404
+
+
+def test_build_timetable_data_helper():
+    from hompi.api import _build_timetable_data
+
+    # Test loading default/active
+    data_default = _build_timetable_data()
+    assert data_default is not None
+    assert 'timetables' in data_default
+    assert 'active_timetable_id' in data_default
+    assert 'days' in data_default
+    assert 'time_slots' in data_default
+    assert len(data_default['days']) >= 7
+
+    # Test loading specific timetable
+    data_tt2 = _build_timetable_data(2)
+    assert data_tt2 is not None
+    assert data_tt2['selected_timetable_id'] == 2
+    assert data_tt2['selected_timetable']['description'] == 'Automatic'
+    assert len(data_tt2['time_slots']) > 0
+
+    # Test loading non-existent timetable
+    data_none = _build_timetable_data(999999)
+    assert data_none is None
+
+
 
 

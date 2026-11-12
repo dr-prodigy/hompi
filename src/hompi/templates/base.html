@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'%3E%3C/path%3E%3Cpolyline points='9 22 9 12 15 12 15 22'%3E%3C/polyline%3E%3C/svg%3E">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --hover-bg: rgba(255, 255, 255, 0.15);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-warn: #fbbf24;
+            --accent-on: #f97316;
+            --accent-off: #64748b;
+            --accent-safe: #06b6d4;
+            --accent-purple: #a855f7;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            padding: 2.5rem 1rem 1.5rem;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin: 0 0 0.5rem;
+            font-weight: 300;
+        }
+
+        header .subtitle {
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        header #clock {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.75rem;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 1.1rem;
+            border-radius: 999px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn:hover {
+            background: var(--hover-bg);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .nav-btn svg,
+        .nav-btn i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .error-banner {
+            display: none;
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 0 1.25rem;
+            padding: 0.85rem 1.25rem;
+            border-radius: 12px;
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            background: rgba(248, 113, 113, 0.12);
+            color: #fecaca;
+            text-align: center;
+        }
+
+        .error-banner.visible { display: block; }
+
+        main {
+            width: 90%;
+            max-width: 1200px;
+            padding-bottom: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .section-card h2 {
+            margin: 0 0 1rem;
+            font-weight: 400;
+            font-size: 1.15rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: var(--accent-blue);
+        }
+
+        .section-card h2 i,
+        .section-card h2 svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .empty-hint {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .badge.main {
+            color: var(--accent-blue);
+            border-color: rgba(56, 189, 248, 0.45);
+        }
+
+        .badge.manual {
+            color: var(--accent-warn);
+            border-color: rgba(251, 191, 36, 0.45);
+        }
+
+        .badge.sensor {
+            color: var(--text-muted);
+        }
+
+        .badge.active-badge {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: rgba(34, 197, 94, 0.45);
+            color: #4ade80;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+        }
+
+        .badge.active-badge svg,
+        .badge.active-badge i {
+            width: 14px;
+            height: 14px;
+            color: #4ade80;
+        }
+
+        .badge.inactive-badge {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .badge.inactive-badge strong {
+            color: var(--accent-blue);
+            margin-left: 0.25rem;
+        }
+
+        .badge.inactive-badge svg,
+        .badge.inactive-badge i {
+            width: 14px;
+            height: 14px;
+            color: var(--accent-blue);
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.75rem; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <h1>{% block header_title %}{{ title }}{% endblock %}</h1>
+        <p class="subtitle">{% block header_subtitle %}Hompi status{% endblock %}</p>
+        <p id="clock"></p>
+        <nav class="top-nav">
+            {% block top_nav %}{% endblock %}
+        </nav>
+    </header>
+
+    <div id="error-banner" class="error-banner" role="alert"></div>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        function showError(message) {
+            const banner = document.getElementById('error-banner');
+            if (banner) {
+                banner.textContent = message;
+                banner.classList.add('visible');
+            }
+        }
+
+        function clearError() {
+            const banner = document.getElementById('error-banner');
+            if (banner) {
+                banner.textContent = '';
+                banner.classList.remove('visible');
+            }
+        }
+
+        function pad2(n) {
+            return String(n).padStart(2, '0');
+        }
+
+        function formatDate(value) {
+            const d = value instanceof Date ? value : (value ? new Date(value) : new Date());
+            if (Number.isNaN(d.getTime())) return '—';
+            return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear();
+        }
+
+        function formatTimestamp(value) {
+            const d = value instanceof Date ? value : (value ? new Date(value) : new Date());
+            if (Number.isNaN(d.getTime())) return '—';
+            return formatDate(d) + ' ' +
+                pad2(d.getHours()) + '.' +
+                pad2(d.getMinutes()) + '.' +
+                pad2(d.getSeconds());
+        }
+
+        function updateClock() {
+            const clock = document.getElementById('clock');
+            if (clock) {
+                clock.textContent = formatTimestamp(new Date());
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
