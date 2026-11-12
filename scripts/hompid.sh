@@ -11,5 +11,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export HOMPI_HOME="${HOMPI_HOME:-$ROOT}"
 export HOMPI_VENV="${HOMPI_VENV:-${VIRTUAL_ENV:-$ROOT/venv}}"
+export PATH="${HOME:-/home/pi}/.local/bin:${HOME:-/home/pi}/bin:$PATH"
 
 exec bash "$ROOT/src/hompi/data/hompid.sh" "$@"

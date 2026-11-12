@@ -38,6 +38,7 @@ _kill_pidfile() {
 }
 
 _activate() {
+  export PATH="${HOME:-/home/pi}/bin:$PATH"
   cd "$HOMPI_HOME"
   if [ -n "${HOMPI_VENV:-}" ] && [ -f "$HOMPI_VENV/bin/activate" ]; then
     # shellcheck disable=SC1091

@@ -21,6 +21,7 @@ def test_init_creates_layout(tmp_path, monkeypatch):
     assert (home / 'config.yaml').is_file()
     assert (home / 'config.sample.yaml').is_file()
     assert (home / 'scripts' / 'hompid.sh').is_file()
+    assert '.local/bin' in (home / 'scripts' / 'hompid.sh').read_text()
     assert (home / 'uwsgi.ini').is_file()
     assert 'venv' in (home / 'uwsgi.ini').read_text() or str(venv) in (
         home / 'uwsgi.ini'
