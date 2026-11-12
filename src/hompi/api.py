@@ -161,7 +161,11 @@ def dashboard():
     # value clients must pass to ``_check_sharedkey``; do not re-hash here.
     # Browser always hits this instance; external URL is proxied server-side.
     api_key_param = request.args.get('api_key', '')
-    effective_key = api_key_param if (API_KEY and api_key_param.upper() == API_KEY) else (API_KEY or '')
+    effective_key = (
+        api_key_param
+        if (API_KEY and api_key_param.upper() == API_KEY)
+        else (API_KEY or '')
+    )
     timetable_url = '{}/timetable{}'.format(
         API_PREFIX,
         ('?api_key=' + effective_key) if effective_key else '',
@@ -190,159 +194,167 @@ def _build_timetable_data(timetable_id=None, dbmgr=None):
     if dbmgr is None:
         dbmgr = db.DatabaseManager()
 
-    cur = dbmgr.query(
-        "SELECT id, description, short_description FROM gm_timetable ORDER BY id"
-    )
-    timetables = [
-        dict((cur.description[i][0], value) for i, value in enumerate(row))
-        for row in cur.fetchall()
-    ]
-    if not timetables:
-        return None
-
-    cur = dbmgr.query("SELECT timetable_id FROM gm_control LIMIT 1")
-    row = cur.fetchone()
-    active_id = row[0] if (row and row[0] is not None) else timetables[0]['id']
-
-    target_id = timetable_id if (timetable_id and timetable_id > 0) else active_id
-
-    cur = dbmgr.query("SELECT * FROM gm_timetable WHERE id = ?", (target_id,))
-    row = cur.fetchone()
-    if not row:
-        return None
-    col_names = [col[0] for col in cur.description]
-    ttb_dict = dict((cur.description[i][0], value) for i, value in enumerate(row))
-
-    all_days = [
-        ('monday', 'Monday', 'Mon'),
-        ('tuesday', 'Tuesday', 'Tue'),
-        ('wednesday', 'Wednesday', 'Wed'),
-        ('thursday', 'Thursday', 'Thu'),
-        ('friday', 'Friday', 'Fri'),
-        ('saturday', 'Saturday', 'Sat'),
-        ('sunday', 'Sunday', 'Sun'),
-        ('pre_holiday', 'Pre-holiday', 'Pre-hol'),
-        ('holiday', 'Holiday', 'Holiday'),
-    ]
-    valid_days = [
-        d for d in all_days
-        if d[0] in col_names and ttb_dict.get(d[0]) is not None
-    ]
-
-    day_slots = {}
-    unique_times = set()
-    days_meta = []
-    for key, label, short_label in valid_days:
-        dt_id = ttb_dict[key]
-        dt_cur = dbmgr.query(
-            "SELECT description FROM gm_timetable_day_type WHERE id = ?",
-            (dt_id,),
+    try:
+        cur = dbmgr.query(
+            "SELECT id, description, short_description FROM gm_timetable ORDER BY id"
         )
-        dt_row = dt_cur.fetchone()
-        dt_desc = dt_row[0] if dt_row else 'Type {}'.format(dt_id)
-        slots_cur = dbmgr.query(
-            """
-            SELECT td.orderby, td.time_hhmm, t.id AS temp_id,
-                   t.description AS temp_desc, t.temp_c
-            FROM gm_timetable_type_data td
-            JOIN gm_temp t ON td.temp_id = t.id
-            WHERE td.day_type_id = ?
-            ORDER BY td.orderby, td.time_hhmm
-            """,
-            (dt_id,),
-        )
-        slots = [
-            dict((slots_cur.description[i][0], val) for i, val in enumerate(r))
-            for r in slots_cur.fetchall()
+        timetables = [
+            dict((cur.description[i][0], value) for i, value in enumerate(row))
+            for row in cur.fetchall()
         ]
-        day_slots[key] = {
-            'day_type_id': dt_id,
-            'day_type_desc': dt_desc,
-            'slots': slots,
-        }
-        days_meta.append({
-            'key': key,
-            'label': label,
-            'short_label': short_label,
-            'day_type_id': dt_id,
-            'day_type_desc': dt_desc,
-        })
-        for s in slots:
-            unique_times.add(s['time_hhmm'])
+        if not timetables:
+            return None
 
-    time_points = sorted(list(unique_times)) if unique_times else [0]
-    intervals = []
-    for i, t in enumerate(time_points):
-        next_t = time_points[i + 1] if i + 1 < len(time_points) else 2400
-        intervals.append((t, next_t))
+        cur = dbmgr.query("SELECT timetable_id FROM gm_control LIMIT 1")
+        row = cur.fetchone()
+        active_id = row[0] if (row and row[0] is not None) else timetables[0]['id']
 
-    time_slots = []
-    temps_seen = {}
-    for t_start, t_end in intervals:
-        t_label = '{:02d}:{:02d} - {:02d}:{:02d}'.format(
-            t_start // 100, t_start % 100,
-            t_end // 100, t_end % 100,
-        )
-        slot_row = {
-            'time_start': t_start,
-            'time_end': t_end,
-            'time_label': t_label,
-            'days': {},
-        }
-        for key, _, _ in valid_days:
-            slots = day_slots[key]['slots']
-            active = None
-            for s in slots:
-                if s['time_hhmm'] <= t_start:
-                    active = s
-                else:
-                    break
-            if not active and slots:
-                active = slots[0]
-            slot_row['days'][key] = active
-            if active:
-                temps_seen[active['temp_id']] = {
-                    'id': active['temp_id'],
-                    'description': active['temp_desc'],
-                    'temp_c': active['temp_c'],
-                }
-        time_slots.append(slot_row)
+        target_id = timetable_id if (timetable_id and timetable_id > 0) else active_id
 
-    distinct_dt = []
-    seen_dt = set()
-    for d in days_meta:
-        dt_id = d['day_type_id']
-        if dt_id not in seen_dt:
-            seen_dt.add(dt_id)
-            distinct_dt.append({
-                'id': dt_id,
-                'description': d['day_type_desc'],
-                'days_using': [
-                    item['label'] for item in days_meta
-                    if item['day_type_id'] == dt_id
-                ],
-                'slots': day_slots[d['key']]['slots'],
+        cur = dbmgr.query("SELECT * FROM gm_timetable WHERE id = ?", (target_id,))
+        row = cur.fetchone()
+        if not row:
+            return None
+        col_names = [col[0] for col in cur.description]
+        ttb_dict = dict((cur.description[i][0], value) for i, value in enumerate(row))
+
+        all_days = [
+            ('monday', 'Monday', 'Mon'),
+            ('tuesday', 'Tuesday', 'Tue'),
+            ('wednesday', 'Wednesday', 'Wed'),
+            ('thursday', 'Thursday', 'Thu'),
+            ('friday', 'Friday', 'Fri'),
+            ('saturday', 'Saturday', 'Sat'),
+            ('sunday', 'Sunday', 'Sun'),
+            ('pre_holiday', 'Pre-holiday', 'Pre-hol'),
+            ('holiday', 'Holiday', 'Holiday'),
+        ]
+        valid_days = [
+            d for d in all_days
+            if d[0] in col_names and ttb_dict.get(d[0]) is not None
+        ]
+
+        day_slots = {}
+        unique_times = set()
+        days_meta = []
+        for key, label, short_label in valid_days:
+            dt_id = ttb_dict[key]
+            dt_cur = dbmgr.query(
+                "SELECT description FROM gm_timetable_day_type WHERE id = ?",
+                (dt_id,),
+            )
+            dt_row = dt_cur.fetchone()
+            dt_desc = dt_row[0] if dt_row else 'Type {}'.format(dt_id)
+            slots_cur = dbmgr.query(
+                """
+                SELECT td.orderby, td.time_hhmm, t.id AS temp_id,
+                       t.description AS temp_desc, t.temp_c
+                FROM gm_timetable_type_data td
+                JOIN gm_temp t ON td.temp_id = t.id
+                WHERE td.day_type_id = ?
+                ORDER BY td.orderby, td.time_hhmm
+                """,
+                (dt_id,),
+            )
+            slots = [
+                dict((slots_cur.description[i][0], val) for i, val in enumerate(r))
+                for r in slots_cur.fetchall()
+            ]
+            day_slots[key] = {
+                'day_type_id': dt_id,
+                'day_type_desc': dt_desc,
+                'slots': slots,
+            }
+            days_meta.append({
+                'key': key,
+                'label': label,
+                'short_label': short_label,
+                'day_type_id': dt_id,
+                'day_type_desc': dt_desc,
             })
+            for s in slots:
+                unique_times.add(s['time_hhmm'])
 
-    return {
-        'timetables': timetables,
-        'active_timetable_id': active_id,
-        'selected_timetable_id': target_id,
-        'selected_timetable': ttb_dict,
-        'days': days_meta,
-        'time_slots': time_slots,
-        'temp_legend': sorted(
-            list(temps_seen.values()), key=lambda x: x['temp_c'], reverse=True
-        ),
-        'day_types': distinct_dt,
-    }
+        time_points = sorted(list(unique_times)) if unique_times else [0]
+        intervals = []
+        for i, t in enumerate(time_points):
+            next_t = time_points[i + 1] if i + 1 < len(time_points) else 2400
+            intervals.append((t, next_t))
+
+        time_slots = []
+        temps_seen = {}
+        for t_start, t_end in intervals:
+            t_label = '{:02d}:{:02d} - {:02d}:{:02d}'.format(
+                t_start // 100, t_start % 100,
+                t_end // 100, t_end % 100,
+            )
+            slot_row = {
+                'time_start': t_start,
+                'time_end': t_end,
+                'time_label': t_label,
+                'days': {},
+            }
+            for key, _, _ in valid_days:
+                slots = day_slots[key]['slots']
+                active = None
+                for s in slots:
+                    if s['time_hhmm'] <= t_start:
+                        active = s
+                    else:
+                        break
+                if not active and slots:
+                    active = slots[0]
+                slot_row['days'][key] = active
+                if active:
+                    temps_seen[active['temp_id']] = {
+                        'id': active['temp_id'],
+                        'description': active['temp_desc'],
+                        'temp_c': active['temp_c'],
+                    }
+            time_slots.append(slot_row)
+
+        distinct_dt = []
+        seen_dt = set()
+        for d in days_meta:
+            dt_id = d['day_type_id']
+            if dt_id not in seen_dt:
+                seen_dt.add(dt_id)
+                distinct_dt.append({
+                    'id': dt_id,
+                    'description': d['day_type_desc'],
+                    'days_using': [
+                        item['label'] for item in days_meta
+                        if item['day_type_id'] == dt_id
+                    ],
+                    'slots': day_slots[d['key']]['slots'],
+                })
+
+        return {
+            'timetables': timetables,
+            'active_timetable_id': active_id,
+            'selected_timetable_id': target_id,
+            'selected_timetable': ttb_dict,
+            'days': days_meta,
+            'time_slots': time_slots,
+            'temp_legend': sorted(
+                list(temps_seen.values()), key=lambda x: x['temp_c'], reverse=True
+            ),
+            'day_types': distinct_dt,
+        }
+    except Exception as exc:
+        print("_build_timetable_data(): database error: {}".format(exc))
+        return None
 
 
 @api.route('/timetable', methods=['GET'])
 def timetable():
     """Timetable program viewer UI."""
     api_key_param = request.args.get('api_key', '')
-    effective_key = api_key_param if (API_KEY and api_key_param.upper() == API_KEY) else (API_KEY or '')
+    effective_key = (
+        api_key_param
+        if (API_KEY and api_key_param.upper() == API_KEY)
+        else (API_KEY or '')
+    )
     back_url = '{}/dashboard{}'.format(
         API_PREFIX,
         ('?api_key=' + effective_key) if effective_key else '',

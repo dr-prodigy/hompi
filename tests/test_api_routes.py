@@ -1,7 +1,36 @@
 # Copyright (C)2018-26 Maurizio Montel (dr-prodigy) <dr.prodigy.github@gmail.com>
 # This file is part of hompi <https://github.com/dr-prodigy/hompi>
 
+import os
+
+try:
+    import pytest
+except ImportError:
+    pytest = None
+
 from hompi.api import API_PREFIX, app
+
+
+def _ensure_api_test_database_fn():
+    """Ensure database schema is ready for API route tests."""
+    import caribou
+    from hompi import db, paths
+
+    persistent = paths.db_file("hompi.sqlite")
+    os.makedirs(persistent.parent, exist_ok=True)
+    caribou.upgrade(str(persistent), str(paths.migrations_dir()))
+    if getattr(db.config, "TMPFS_ENABLE", False):
+        tmp_db = db._tmpfs_db_path()
+        os.makedirs(os.path.dirname(tmp_db) or ".", exist_ok=True)
+        caribou.upgrade(str(tmp_db), str(paths.migrations_dir()))
+
+
+_ensure_api_test_database_fn()
+
+if pytest is not None:
+    @pytest.fixture(scope="module", autouse=True)
+    def _ensure_api_test_database():
+        _ensure_api_test_database_fn()
 
 
 def test_routes_use_hompi_prefix():

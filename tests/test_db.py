@@ -22,8 +22,8 @@ def _configure_tmpfs(home, tmpfs, monkeypatch):
     )
     monkeypatch.setattr(db.config, 'TMPFS_ENABLE', True)
     monkeypatch.setattr(db.config, 'TMPFS_PATH', str(tmpfs) + '/')
-    db.persistent_db_path = str(home / 'db' / 'hompi.sqlite')
-    db.db_path = db.persistent_db_path
+    monkeypatch.setattr(db, 'persistent_db_path', str(home / 'db' / 'hompi.sqlite'))
+    monkeypatch.setattr(db, 'db_path', str(home / 'db' / 'hompi.sqlite'))
 
 
 def test_connect_uses_wal_and_foreign_keys(tmp_path, monkeypatch):
@@ -122,8 +122,8 @@ def test_migrate_without_tmpfs_updates_persistent(tmp_path, monkeypatch):
         db.paths, 'migrations_dir', lambda: db.paths._packaged_migrations_dir()
     )
     monkeypatch.setattr(db.config, 'TMPFS_ENABLE', False)
-    db.persistent_db_path = str(persistent)
-    db.db_path = str(persistent)
+    monkeypatch.setattr(db, 'persistent_db_path', str(persistent))
+    monkeypatch.setattr(db, 'db_path', str(persistent))
 
     db.migrate()
 
